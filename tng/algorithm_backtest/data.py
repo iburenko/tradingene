@@ -1,0 +1,50 @@
+import os
+from time import time
+import numpy as np
+import pandas as pd
+import datetime
+
+dt = np.dtype({
+    'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
+    'formats':
+    ['uint64', 'float64', 'float64', 'float64', 'float64', 'float64']
+})
+
+
+class Data:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def load_data(cls, filename, start_date, end_date):
+        def find_start_end(all_data, start_date, end_date):
+            while True:
+                start = all_data[all_data['time'] == start_date].index.values
+                if len(start):
+                    start = int(start)
+                    break
+                else:
+                    #works only if the first candle is in start day -- correct
+                    start_date += 100
+            while True:
+                end = all_data[all_data['time'] == end_date].index.values
+                if len(end):
+                    end = int(end)
+                    break
+                else:
+                    end_date += 100
+            return start, end
+
+        start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
+        end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
+        current_path = os.getcwd()
+        append_path = os.path.abspath(
+            os.path.join(current_path, 'tng/history_data/')) + "/"
+        #append_path = "../history_data/"
+        extension = ".csv"
+        all_data = pd.read_csv(append_path + filename + extension)
+        start, end = find_start_end(all_data, start_date, end_date)
+        hist_data = all_data.iloc[start:end]
+        hist_data = hist_data[::-1]
+        hist_data = hist_data.to_records(index=False)
+        return hist_data
