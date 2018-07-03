@@ -1,10 +1,8 @@
 import numpy as np
-from tng.algorithm_backtest.data_ import _defineRates
 
 
 # AD-indicator
 def ad(period=1, shift=0, hi=None, lo=None, cl=None, vol=None, prev=None):
-    (hi, lo, cl, vol) = _defineRates(hi=hi, lo=lo, cl=cl, vol=vol)
     if hi is None or lo is None or cl is None or vol is None:
         return None
 
@@ -38,100 +36,74 @@ def ad1(hi, lo, cl, vol):
 # end of ad1
 
 
-# ADX-indicator
-def adx(period=14, shift=0, hi=None, lo=None, cl=None, prev=None):
-    (hi, lo, cl) = _defineRates(hi=hi, lo=lo, cl=cl)
+# DMI-indicator
+def dmi(period=14, periodDI=14, shift=0, hi=None, lo=None, cl=None, prev=None):
     if hi is None or lo is None or cl is None:
         return None
+    if shift >= len(cl) - 1:
+        return None
 
+    if periodDX < 0:
+        periodDX = period
+
+    prevSmoothedTr = None
+    prevSmoothedPlusDM = None
+    prevSmoothedMinusDM = None
+    prevSmoothedDX = None
     if prev is not None:
-        if shift + 1 >= len(cl):
-            return None
+        prevSmoothedTr = prev['prevSmoothedTr']
+        prevSmoothedPlusDM = prev['prevSmoothedPlusDM']
+        prevSmoothedMinusDM = prev['prevSmoothedMinusDM']
+        prevSmoothedDX = prev['prevSmoothedDX']
 
-        smoothedTr = prev['trsm']
-        smoothedPlusDM = prev['pdmsm']
-        smoothedMinusDM = prev['pdmsm']
-        tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]),
-                 abs(lo[shift] - cl[shift + 1]))
-        plusDM = 0.0
-        minusDM = 0.0
-        upMove = hi[shift] - hi[shift + 1]
-        downMove = lo[shift + 1] - lo[shift]
-        if upMove > downMove and upMove > 0.0:
-            plusDM = upMove
-        if downMove > upMove and downMove > 0.0:
-            minusDM = downMove
+    tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]),
+             abs(lo[shift] - cl[shift + 1]))
 
-        smoothedTr = smoothedTr - smoothedTr / period + tr
-        if not (smoothedTr > 0.0):
-            return None
-        smoothedPlusDM = smoothedPlusDM - smoothedPlusDM / period + plusDM
-        smoothedMinusDM = smoothedMinusDM - smoothedMinusDM / period + minusDM
+    plusDM = 0.0
+    minusDM = 0.0
+    upMove = hi[shift] - hi[shift + 1]
+    downMove = lo[shift + 1] - lo[shift]
+    if upMove > downMove and upMove > 0.0:
+        plusDM = upMove
+    if downMove > upMove and downMove > 0.0:
+        minusDM = downMove
 
-        plusDI = 100.0 * (smoothedPlusDM / smoothedTr)
-        minusDI = 100.0 * (smoothedMinusDM / smoothedTr)
+    prevSmoothedTr = wma(
+        period=period, shift=0, rates=[tr], prev=prevSmoothedTr)
+    if prevSmoothedTr is None:
+        return None
+    smoothedTr = prevSmoothedTr['wma']
+    if not (smoothedTr > 0.0):
+        return None
+
+    prevSmoothedPlusDM = wma(
+        period=period, shift=0, rates=[plusDM], prev=prevSmoothedPlusDM)
+    if prevSmoothedPlusDM is None:
+        return None
+    prevSmoothedMinusDM = wma(
+        period=period, shift=0, rates=[minusDM], prev=prevSmoothedMinusDM)
+    if prevSmoothedMinusDM is None:
+        return None
+    smoothedPlusDM = prevSmoothedPlusDM['wma']
+    smoothedMinusDM = prevSmoothedMinusDM['wma']
+
+    plusDI = (smoothedPlusDM * 100.0 / smoothedTr)
+    minusDI = (smoothedMinusDM * 100.0 / smoothedTr)
+
+    if prevSmoothedTr['num'] >= period:  # Smoothed TR is not filled up
         sumDI = plusDI + minusDI
         if not (sumDI > 0.0):
             return None
         dx0 = 100.0 * (abs(plusDI - minusDI) / sumDI)
-        adx = (prev['adx'] * (period - 1.0) + dx0) / period
 
-    else:
-        st = shift + period * 2 - 2
-        if st + 1 >= len(cl):
+        prevSmoothedDX = wma(
+            period=periodDX, shift=0, rates=[dx0], prev=prevSmoothedDX)
+        if prevSmoothedDX is None:
             return None
-
-        plusDM = np.zeros(shape=period * 2, dtype="float")
-        minusDM = np.zeros(shape=period * 2, dtype="float")
-        tr = np.empty(shape=period * 2, dtype='float')
-
-        for i in range(st, shift - 1, -1):
-            upMove = hi[i] - hi[i + 1]
-            downMove = lo[i + 1] - lo[i]
-
-            index = i - shift
-            if upMove > downMove and upMove > 0.0:
-                plusDM[index] = upMove
-
-            if downMove > upMove and downMove > 0.0:
-                minusDM[index] = downMove
-
-            tr[index] = max(hi[i] - lo[i], abs(hi[i] - cl[i + 1]),
-                            abs(lo[i] - cl[i + 1]))
-
-        # for i in range(st, shift-1,-1):
-        # 	print str(i) + ": tr =" + str(tr[i-shift]) + ", plusDM=" + str(plusDM[i-shift]) + ", minusDM=" + str(minusDM[i-shift])
-
-        dx = np.empty(shape=period, dtype='float')
-        smoothedTr = None
-        smoothedPlusDM = None
-        smoothedMinusDM = None
-        for i in range(shift + period - 1, shift - 1, -1):
-            index = i - shift
-            if smoothedTr is None:
-                smoothedTr = np.sum(tr[index:index + period])
-            else:
-                smoothedTr = smoothedTr - smoothedTr / period + tr[index]
-            if smoothedPlusDM is None:
-                smoothedPlusDM = np.sum(plusDM[index:index + period])
-            else:
-                smoothedPlusDM = smoothedPlusDM - smoothedPlusDM / period + plusDM[index]
-            if smoothedMinusDM is None:
-                smoothedMinusDM = np.sum(minusDM[index:index + period])
-            else:
-                smoothedMinusDM = smoothedMinusDM - smoothedMinusDM / period + minusDM[index]
-
-            if not (smoothedTr > 0.0):
-                return None
-            plusDI = 100.0 * (smoothedPlusDM / smoothedTr)
-            minusDI = 100.0 * (smoothedMinusDM / smoothedTr)
-            sumDI = plusDI + minusDI
-            if not (sumDI > 0.0):
-                return None
-            dx[index] = 100.0 * (abs(plusDI - minusDI) / (plusDI + minusDI))
-
-        adx = np.mean(dx)
-        dx0 = dx[0]
+        adx = prevSmoothedDX['wma']
+    else:
+        adx = None
+        dx0 = None
 
     return ({
         'adx': adx,
@@ -139,8 +111,99 @@ def adx(period=14, shift=0, hi=None, lo=None, cl=None, prev=None):
         "pdi": plusDI,
         "mdi": minusDI,
         "pdmsm": smoothedPlusDM,
-        "pdmsm": smoothedMinusDM,
-        "trsm": smoothedTr
+        "mdmsm": smoothedMinusDM,
+        "trsm": smoothedTr,
+        'prevSmoothedTr': prevSmoothedTr,
+        'prevSmoothedPlusDM': prevSmoothedPlusDM,
+        'prevSmoothedMinusDM': prevSmoothedMinusDM,
+        'prevSmoothedDX': prevSmoothedDX
+    })
+
+
+# end of dmi
+
+
+# ADX-indicator
+def adx(period=14, periodDX=-1, shift=0, hi=None, lo=None, cl=None, prev=None):
+    if hi is None or lo is None or cl is None:
+        return None
+    if shift >= len(cl) - 1:
+        return None
+
+    if periodDX < 0:
+        periodDX = period
+
+    prevSmoothedTr = None
+    prevSmoothedPlusDM = None
+    prevSmoothedMinusDM = None
+    prevSmoothedDX = None
+    if prev is not None:
+        prevSmoothedTr = prev['prevSmoothedTr']
+        prevSmoothedPlusDM = prev['prevSmoothedPlusDM']
+        prevSmoothedMinusDM = prev['prevSmoothedMinusDM']
+        prevSmoothedDX = prev['prevSmoothedDX']
+
+    tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]),
+             abs(lo[shift] - cl[shift + 1]))
+
+    plusDM = 0.0
+    minusDM = 0.0
+    upMove = hi[shift] - hi[shift + 1]
+    downMove = lo[shift + 1] - lo[shift]
+    if upMove > downMove and upMove > 0.0:
+        plusDM = upMove
+    if downMove > upMove and downMove > 0.0:
+        minusDM = downMove
+
+    prevSmoothedTr = wma(
+        period=period, shift=0, rates=[tr], prev=prevSmoothedTr)
+    if prevSmoothedTr is None:
+        return None
+    smoothedTr = prevSmoothedTr['wma']
+    if not (smoothedTr > 0.0):
+        return None
+
+    prevSmoothedPlusDM = wma(
+        period=period, shift=0, rates=[plusDM], prev=prevSmoothedPlusDM)
+    if prevSmoothedPlusDM is None:
+        return None
+    prevSmoothedMinusDM = wma(
+        period=period, shift=0, rates=[minusDM], prev=prevSmoothedMinusDM)
+    if prevSmoothedMinusDM is None:
+        return None
+    smoothedPlusDM = prevSmoothedPlusDM['wma']
+    smoothedMinusDM = prevSmoothedMinusDM['wma']
+
+    plusDI = (smoothedPlusDM * 100.0 / smoothedTr)
+    minusDI = (smoothedMinusDM * 100.0 / smoothedTr)
+
+    if prevSmoothedTr['num'] >= period:  # Smoothed TR is not filled up
+        sumDI = plusDI + minusDI
+        if not (sumDI > 0.0):
+            return None
+        dx0 = 100.0 * (abs(plusDI - minusDI) / sumDI)
+
+        prevSmoothedDX = wma(
+            period=periodDX, shift=0, rates=[dx0], prev=prevSmoothedDX)
+        if prevSmoothedDX is None:
+            return None
+        adx = prevSmoothedDX['wma']
+    else:
+        adx = None
+        dx0 = None
+
+    return ({
+        'adx': adx,
+        'dx': dx0,
+        "pdi": plusDI,
+        "mdi": minusDI,
+        "pdmsm": smoothedPlusDM,
+        "mdmsm": smoothedMinusDM,
+        "trsm": smoothedTr,
+        'prevSmoothedTr': prevSmoothedTr,
+        'prevSmoothedPlusDM': prevSmoothedPlusDM,
+        'prevSmoothedMinusDM': prevSmoothedMinusDM,
+        'prevSmoothedDX': prevSmoothedDX
     })
 
 
@@ -224,7 +287,6 @@ def aroon(period=14, shift=0, rates=None):
 
 # ATR - Average True Range
 def atr(period=14, shift=0, hi=None, lo=None, cl=None, prev=None):
-    (hi, lo, cl) = _defineRates(hi=hi, lo=lo, cl=cl)
     if hi is None or lo is None or cl is None:
         return None
 
@@ -265,7 +327,6 @@ def tr(hi, lo, cl, shift):
 
 # Bollinger Bands
 def bollinger(period=20, shift=0, nStds=2.0, rates=None):
-    (rates, ) = _defineRates(cl=rates)
     if rates is None:
         return None
 
@@ -287,7 +348,6 @@ def bollinger(period=20, shift=0, nStds=2.0, rates=None):
 
 # CCI indicator
 def cci(period=20, shift=0, hi=None, lo=None, cl=None, cciConst=0.015):
-    (hi, lo, cl) = _defineRates(hi=hi, lo=lo, cl=cl)
     if hi is None or lo is None or cl is None:
         return None
 
@@ -377,7 +437,9 @@ def ema(period=10, shift=0, alpha=None, rates=None, prev=None, history=0):
                 emaValue = np.mean(rates[shift:end])
         else:
             end = shift + period + history - 1
-            if end < len(rates):
+            if end >= len(rates):
+                end = len(rates) - 1
+            if end >= shift:
                 emaValue = np.mean(rates[shift + history:end + 1])
                 for i in range(shift + history - 1, shift - 1, -1):
                     emaValue = (rates[i] - emaValue) * alpha + emaValue
@@ -483,7 +545,7 @@ def ppo(periodFast=12, periodSlow=26, shift=0, rates=None):
     return ((meanFast - meanSlow) * 100.0) / meanSlow
 
 
-# end of sma
+# end of ppo
 
 
 # RSI - Relative Strength Index
@@ -562,7 +624,6 @@ def roc(period=9, shift=0, rates=None):
 
 # SMA - Simple Moving Average
 def sma(period=10, shift=0, rates=None):
-    (rates, ) = _defineRates(cl=rates)
     if rates is None:
         return None
 
@@ -593,7 +654,6 @@ def stochastic(period=14,
                hi=None,
                lo=None,
                cl=None):
-    (hi, lo, cl) = _defineRates(hi=hi, lo=lo, cl=cl)
     if hi is None or lo is None or cl is None:
         return None
 
@@ -659,8 +719,31 @@ def williams(period=14, shift=0, hi=None, lo=None, cl=None):
 # end of williams
 
 
+def wma(period=10, shift=0, rates=None, prev=None):
+    if rates is None:
+        return None
+    numSummed = 0
+    summed = 0.0
+    smoothed = 0.0
+    if prev is not None:
+        numSummed = prev['num']
+        summed = prev['sum']
+        smoothed = prev['wma']
+
+    if numSummed < period:
+        summed = summed + rates[shift]
+        numSummed += 1
+        smoothed = summed / numSummed
+    else:
+        smoothed = (smoothed * (period - 1.0) + rates[shift]) / period
+
+    return ({'wma': smoothed, 'num': numSummed, 'sum': summed})
+
+
+# end of wma
+
+
 def awesome(period1=5, period2=34, shift=0, hi=None, lo=None):
-    (hi, lo) = _defineRates(hi=hi, lo=lo)
     if hi is None or lo is None:
         return None
 
@@ -681,7 +764,6 @@ def awesome(period1=5, period2=34, shift=0, hi=None, lo=None):
 
 
 def pNextHigher(period, rates):
-    (rates, ) = _defineRates(cl=rates)
     if rates is None:
         return None
 
@@ -700,7 +782,6 @@ def pNextHigher(period, rates):
 
 
 def pNextLower(period, rates):
-    (rates, ) = _defineRates(cl=rates)
     if rates is None:
         return None
 

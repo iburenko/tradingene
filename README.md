@@ -12,7 +12,7 @@ Tradingene's API (see documentaion [here](https://lk.tradingene.com/doc)).
 
 ***
 
-Our package allows you to test your trading ideas. You write a code that reflects your trading logic and after backtest you are able to check is your idea was good or not based on our backtest statistics. The best algorithms will have an opportunity to run live on an exchange (see [Tradingene.com](https://tradingene.com/) web site).
+Our package allows you to test your trading ideas. You write a code that reflects your trading logic and after backtest you are able to check whether your idea was good or not based on our backtest statistics. The best algorithms will have an opportunity to run live on an exchange (see [Tradingene.com](https://tradingene.com/) web site).
 
 ***
 
@@ -31,7 +31,7 @@ All needed functionality is contained in a TNG class, class constructor takes 4 
 
 > **If you don't know what class and/or constructor is -- don't worry!** It is easy to follow the logic and meaning of this variables, particular implementation is not important!
 
-Fisrt you have to specify name of your algorithm, regime which it will use, start and end of backtest (other possible initializations see [here](where?)).
+Fisrt you have to specify name of your algorithm, regime that algorithm will use, start and end of backtest (other possible initializations see [here](where?)).
 
 ```python
 from tng

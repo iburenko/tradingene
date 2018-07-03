@@ -263,12 +263,13 @@ class IndHlp:
     @staticmethod
     def getIndexToCalculate(dtmsInd, dtmsRates):
         indexStart = -1
-        if len(dtmsInd) > 0:
-            if dtmsInd[0] < dtmsRates[0]:
-                for i in range(1, len(dtmsRates)):
-                    if dtmsInd[0] == dtmsRates[i]:
-                        indexStart = i - 1
-                        break
+        if len(dtmsInd) == 0:
+            return IndHlp.historySize - 1
+        if dtmsInd[0] < dtmsRates[0]:
+            for i in range(1, len(dtmsRates)):
+                if dtmsInd[0] == dtmsRates[i]:
+                    indexStart = i
+                    break
         return indexStart
 
     # end of getIndexToCalculate
@@ -317,9 +318,9 @@ class Indicator:
 
     def recalculate(self, rates):
         indexStart = IndHlp.getIndexToCalculate(self.dtms, rates['time'])
-        if indexStart == -1:
-            indexStart = IndHlp.historySize - 1
         for i in range(indexStart, -1, -1):
+            # if i < 5:
+            #     print(i)
             self.calculate(rates, i)
 
     def calculate(self, rates, shift=0):
