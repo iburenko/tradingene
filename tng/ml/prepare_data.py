@@ -1,13 +1,9 @@
 import numpy as np
 
-log_message = ""
-
 
 # Calculates (inputs, label, profit) for each data index by index
 #def prepare_data(rates, calc_inp, calc_out, params=None, normalize=False):
 def prepare_data(rates, calc_inp, calc_out, params=None):
-    global log_message
-    log_message = ""
     return_value = None
     op = rates['open']
     hi = rates['high']

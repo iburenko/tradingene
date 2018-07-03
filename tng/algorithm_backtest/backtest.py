@@ -27,6 +27,13 @@ class Backtest(Environment):
 
 ################################################################################
 
+    def run_backtest(self, on_bar_function, pre_load=True):
+        self._load_data(self.start_date, self.end_date, pre_load)
+        self._set_spread()
+        candle_generator = self._iterate_data(self.start_date, self.end_date,
+                                              self.history_data)
+        self._run_generator(candle_generator, on_bar_function)
+
     def _run_generator(self, generator, on_bar_function):
         candles = next(generator)
         minutes_left = 1
@@ -62,13 +69,6 @@ class Backtest(Environment):
                 self._minute_to_ticks(candles)
         except StopIteration:
             self._update_last_candle()
-
-    def run_backtest(self, on_bar_function, pre_load=True):
-        self._load_data(self.start_date, self.end_date, pre_load)
-        self._set_spread()
-        candle_generator = self._iterate_data(self.start_date, self.end_date,
-                                              self.history_data)
-        self._run_generator(candle_generator, on_bar_function)
 
     def _update_recent_price(self, candles):
         ticker = list(self.ticker_timeframes)[0]
