@@ -5,6 +5,10 @@ from tng.algorithm_backtest.instrument import Instrument
 
 
 class Environment(Algorithm):
+    """
+
+    
+    """
     def __init__(self, *args):
         super(Environment, self).__init__(args[0], args[1])
         self._start_date = args[2]

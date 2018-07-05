@@ -8,7 +8,7 @@ class TimeEvent:
     @classmethod
     def check(cls, obj):
         expired = [event for event in obj.time_events \
-                              if obj.now >= time_event.time]
+                              if obj.now >= obj.time_events.time]
         for event in expired:
             event.handler()
             obj.time_events.remove(event)

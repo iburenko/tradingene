@@ -215,6 +215,7 @@ class TradeActivity(Backtest):
             if is_closed is not None and not is_closed:
                 last_pos = self.positions[-1]
                 last_pos.close_time = self.now
+                last_pos.close_trades(self.now)
                 last_pos.closed = True
                 closed = True
                 if last_pos.on_close is not None:
@@ -229,6 +230,7 @@ class TradeActivity(Backtest):
                              " because it is closed already!")
                     else:
                         pos.close_time = self.now
+                        last_pos.close_trades(self.now)
                         pos.closed = True
                         closed = True
                         if pos.on_close is not None:

@@ -3,6 +3,8 @@ class Algorithm:
 
         In the initialization step you may specify:
 
+        # Arguments:
+
         # 1. Name of your algorithm, by default set to empty string
         # 2. Regime of backtest. By default it is set to "SP"
              ("single position"), other possibility is "MP"

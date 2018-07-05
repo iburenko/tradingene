@@ -1,4 +1,4 @@
-import tng.algorithm_backtest.ind.ti as ti
+import tng.ind.ti as ti
 from tng.algorithm_backtest.limits import LOOKBACK_PERIOD
 
 class Indicators:

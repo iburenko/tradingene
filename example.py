@@ -1,7 +1,6 @@
 import tng.algorithm_backtest.tng as tng
 from datetime import datetime
 
-
 name = "Cornucopia"
 regime = "SP"
 start_date = datetime(2018, 1, 1)

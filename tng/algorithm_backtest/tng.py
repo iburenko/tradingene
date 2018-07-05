@@ -12,6 +12,15 @@ class TNG(TradeActivity):
         and the backtest regime. If you do not specify these
         arguments default values will be used.
 
+        Arguments:
+            name (str, optional): Name of the algorithm.
+                Default value is "Cornucopia".
+            regime (str, optional): Controls number of trades
+                in a single position. In "SP" regime only one trade is
+                allowed, in "MP" multiple trades are allowed.
+            start_date (datetime): Start time of the backtest.
+            end_date (datetime): End time of the backtest.            
+
         Examples:
             ```python
                 # Constructor with only two parameters.

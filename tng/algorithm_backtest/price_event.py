@@ -17,7 +17,6 @@ class PriceEvent:
         expired = [event for event in obj.price_events\
                 if (event.threshold - obj.recent_price)*event.trigger < 0]
         for event in expired:
-            print(obj.recent_price)
             event.handler()
             obj.price_events.remove(event)
 
