@@ -1,6 +1,6 @@
 from numpy import zeros
 from tng.algorithm_backtest.limits import LOOKBACK_PERIOD as lookback
-from tng.algorithm_backtest.ind.ind import Indicators
+from tng.ind.ind import Indicators
 
 
 class Instrument(Indicators):
