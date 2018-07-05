@@ -13,8 +13,8 @@ def import_data(ticker, timeframe, start_date, end_date):
     alg = TNG(name, regime, start_date, end_date)
     alg.addInstrument(ticker)
     alg.addTimeframe(ticker, timeframe)
-    alg.run_backtest(on_bar, pre_load=False)
-    hist = list(alg.instruments)[0].rates[1:]
+    alg.run_backtest(on_bar)
+    hist = list(alg.instruments)[0].rates[1:-50]
     del alg
     return hist
 

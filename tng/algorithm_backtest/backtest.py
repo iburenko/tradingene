@@ -27,8 +27,25 @@ class Backtest(Environment):
 
 ################################################################################
 
-    def run_backtest(self, on_bar_function, pre_load=True):
-        self._load_data(self.start_date, self.end_date, pre_load)
+    def run_backtest(self, on_bar_function):
+        """ Runs backtest of an algorithm. 
+        
+        Args:
+            on_bar_function (function): user-define function
+                that is called after each fully formed candle.
+
+        Returns:
+            None.
+        
+        Raises:
+            TypeError: if argument is not callable.
+        
+        """
+        if not callable(on_bar_function):
+            err_str = "on_bar_function must be callable, not of "+\
+                      "{} type!".format(type(on_bar_function).__name__)
+            raise TypeError(err_str)
+        self._load_data(self.start_date, self.end_date)
         self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
                                               self.history_data)
@@ -122,7 +139,6 @@ class Backtest(Environment):
                 continue
             if instrument.open[0] == 0:
                 instrument.open[0] = candle.open
-                #instrument.times[0] = candle.time
             instrument.high[0] = max(instrument.high[0], candle['high'])
             if instrument.low[0] == 0:
                 instrument.low[0] = candle['low']
@@ -233,10 +249,9 @@ class Backtest(Environment):
                           if set(completed_timeframes) & set(timeframes)}
         return list(new_set | set(ct))
 
-    def _load_data(self, start_date, end_date, pre_load):
+    def _load_data(self, start_date, end_date):
         for ticker in self.ticker_timeframes.keys():
-            if pre_load:
-                self._load_pre_data()
+            self._load_pre_data()
             ticker_data = Data.load_data(ticker, start_date, end_date)
             self.history_data[ticker] = ticker_data
             ticker_instrs = [

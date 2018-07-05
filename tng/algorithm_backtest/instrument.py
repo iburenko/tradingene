@@ -1,6 +1,6 @@
 from numpy import zeros
 from tng.algorithm_backtest.limits import LOOKBACK_PERIOD as lookback
-from tng.algorithm_backtest.ind import Indicators
+from tng.algorithm_backtest.ind.ind import Indicators
 
 
 class Instrument(Indicators):
@@ -16,6 +16,7 @@ class Instrument(Indicators):
         self.vol = zeros(lookback)
         self.rates = None
         self.candle_start_time = None
+        #self.ind = Indicators(timeframe)
 
     def __str__(self):
         s = ""

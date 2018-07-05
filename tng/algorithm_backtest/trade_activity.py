@@ -10,9 +10,11 @@ from tng.algorithm_backtest.limits import MAX_AVAILABLE_VOLUME
 
 
 class TradeActivity(Backtest):
-    """
-    Working with positions. This version works if algorithms
-    uses only one instrument.
+    """Class contains methods needed for mimicking trading activity.
+
+    Class instance will be initialized automatically in the __init__ method;
+    This class adds position argument for the class instance, it will
+    contain all positions (trades) made by an algorithm.
     """
 
     def __init__(self, *args):
@@ -22,15 +24,27 @@ class TradeActivity(Backtest):
         self.positions = list()
 
     def openPosition(self, ticker=None):
-        """Open position without acquiring any asset
+        """Open position without acquiring any asset.
 
         # Arguments:
             ticker (str): Asset for which position will open.
                     If an algorithm uses only one asset you can
                     not to specify explicitly ticker, but if an
                     algorithm uses several instruments ticker
-                    must be specified
+                    must be specified.
+
+        # Warns:
+            warn: If you are trying to open a new position
+                but the last is not closed. Only one opened
+                position is allowed.
+
+        # Returns:
+            int: Random int if the first position is opened.
+                Increased by one last position's id if there
+                was opened position.
+            None: If position wasn't opened.
         """
+
         new_pos = None
         is_closed = self._is_last_pos_closed()
         pos_ticker = list(self.ticker_timeframes)[0]
@@ -50,11 +64,24 @@ class TradeActivity(Backtest):
             return None
 
     def buy(self, volume=1):
+        """ Buys specified volume of an asset.
+
+        In Single Position regime:
+        buys 1 lot despite of volume received 
+        by the function. If the last position
+        was closed new position will be opened.
+        If the last position is open and short then this
+        position will be closed then new position will open 
+        and 1 lot will be bought.
+
+        In Multiple Position regime:
+        buys specified number of lots. If the last position
+        was closed new position will be opened.
+        If the last position is open and short then
+
+         
         """
-        Opens position if position was closed and buys volume lots.
-        If volume of already bought lots +  current volume exceeds given
-        volume limit, buy as much as posiible.
-        """
+
         if volume <= 0:
             warn("Volume must be positive! Nothing will happen!")
             return None
@@ -72,17 +99,17 @@ class TradeActivity(Backtest):
                     else:
                         self.closePosition()
                         self.openPosition()
-                        trade_id = self._open_trade(volume, side=1)
+                        self._open_trade(volume, side=1)
                 else:
-                    trade_id = self._open_trade(volume, side=1)
+                    self._open_trade(volume, side=1)
             else:
                 self.openPosition()
-                trade_id = self._open_trade(volume, side=1)
+                self._open_trade(volume, side=1)
         else:
             is_closed = self._is_last_pos_closed()
             if is_closed == None or is_closed > 0:
                 self.openPosition()
-                trade_id = self._open_trade(volume, side=1)
+                self._open_trade(volume, side=1)
             else:
                 volume_used = self.positions[-1].volume_used
                 if abs(volume_used + volume) > MAX_AVAILABLE_VOLUME:
@@ -91,7 +118,7 @@ class TradeActivity(Backtest):
                         "will exceed the upper limit!"
                     raise ValueError(s)
                 else:
-                    trade_id = self._open_trade(volume, side=1)
+                    self._open_trade(volume, side=1)
 
     def sell(self, volume=1):
         if volume <= 0:
@@ -111,18 +138,18 @@ class TradeActivity(Backtest):
                     else:
                         self.closePosition()
                         self.openPosition()
-                        trade_id = self._open_trade(volume, side=-1)
+                        self._open_trade(volume, side=-1)
                 else:
-                    trade_id = self._open_trade(volume, side=-1)
+                    self._open_trade(volume, side=-1)
             else:
                 self.openPosition()
-                trade_id = self._open_trade(volume, side=-1)
+                self._open_trade(volume, side=-1)
         else:
             volume *= -1
             is_closed = self._is_last_pos_closed()
             if is_closed == None or is_closed > 0:
                 self.openPosition()
-                trade_id = self._open_trade(volume, side=-1)
+                self._open_trade(volume, side=-1)
             else:
                 volume_used = self.positions[-1].volume_used
                 if abs(volume_used + volume) > MAX_AVAILABLE_VOLUME:
@@ -131,7 +158,7 @@ class TradeActivity(Backtest):
                         "will exceed the upper limit!"
                     raise ValueError(s)
                 else:
-                    trade_id = self._open_trade(volume, side=-1)
+                    self._open_trade(volume, side=-1)
 
     def openLong(self, volume=1):
         is_closed = self._is_last_pos_closed()
@@ -174,8 +201,8 @@ class TradeActivity(Backtest):
                 raise ValueError("Cannot set stoploss! Stoploss can't be None")
 
     def setSLTP(self, loss, profit):
-        self.set_sl(loss)
-        self.set_tp(profit)
+        self.setSL(loss)
+        self.setTP(profit)
 
     def closePosition(self, id=None):
         """
@@ -318,10 +345,12 @@ class TradeActivity(Backtest):
             raise TypeError("Time must be of datetime type")
 
     def _is_last_pos_closed(self):
-        """
-        Returns last position id if last position is closed;
-        Returns False if last position is open;
-        Returns None if there is no last position
+        """ Returns status of the last position.
+
+        Returns:
+            int: last position id if last position is closed;
+            bool: False if last position is open;
+            None: if there is no last position.
         """
 
         if self.positions:
