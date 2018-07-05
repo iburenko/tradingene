@@ -9,14 +9,35 @@ dt = np.dtype({
     'formats':
     ['uint64', 'float64', 'float64', 'float64', 'float64', 'float64']
 })
+""" np.dtype: Numpy dtype of signle minute candle stored from history data.
 
+    Single element of history consists of the following fields:
+        time (uint64): Open time of a minute candle.
+        open (float64): Open price of a minute candle.
+        high (float64): The highest price of a minute candle.
+        low (float64): The lowest price of a minute candle.
+        close (float64): Close price of a minute candle.
+        vol (float64): Volume of a minute candle.
+"""
 
 class Data:
+    """ Class for loading instrument history. """
+
     def __init__(self):
         pass
 
     @classmethod
     def load_data(cls, filename, start_date, end_date):
+        """ Loads file from the drive and returns history data. 
+        
+            # Arguments:
+                filename (str): Name of the asset. Its history will
+                    be loaded from .csv file.
+                start_date (datetime.datetime): From this timestamp data
+                    will be loaded.
+                end_date (datetime.datetime): Till this timestamp data
+                    will be loaded.
+        """
         def find_start_end(all_data, start_date, end_date):
             while True:
                 start = all_data[all_data['time'] == start_date].index.values
@@ -40,7 +61,6 @@ class Data:
         current_path = os.getcwd()
         append_path = os.path.abspath(
             os.path.join(current_path, 'tng/history_data/')) + "/"
-        #append_path = "../history_data/"
         extension = ".csv"
         all_data = pd.read_csv(append_path + filename + extension)
         start, end = find_start_end(all_data, start_date, end_date)

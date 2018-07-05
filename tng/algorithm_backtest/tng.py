@@ -18,8 +18,8 @@ class TNG(TradeActivity):
             regime (str, optional): Controls number of trades
                 in a single position. In "SP" regime only one trade is
                 allowed, in "MP" multiple trades are allowed.
-            start_date (datetime): Start time of the backtest.
-            end_date (datetime): End time of the backtest.            
+            start_date (datetime.datetime): Start time of the backtest.
+            end_date (datetime.datetime): End time of the backtest.            
 
         Examples:
             ```python

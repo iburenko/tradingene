@@ -5,9 +5,22 @@ from tng.algorithm_backtest.instrument import Instrument
 
 
 class Environment(Algorithm):
-    """
+    """ For handling instruments and timeframes.
 
-    
+        Constructor of this class will invoke by the inherited 
+        class Backtest.
+
+        # Arguments:
+            args (tuple): Tuple of variables that needed for initialization
+                of the super class Algorithm.
+
+        # Attributes:
+            start_date (datetime.datetime): Start time of the backtest.
+            end_date (datetime.datetime): End time of the backtest.
+            ticker_timeframes (dict): Keys of this dictioanry are tickers
+                used by an algorithm, values are list of timeframes 
+                that was added by a trader for this particular instrument.
+
     """
     def __init__(self, *args):
         super(Environment, self).__init__(args[0], args[1])

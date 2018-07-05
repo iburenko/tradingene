@@ -1,6 +1,6 @@
 from warnings import warn
-import numpy as np
 import time
+import numpy as np
 from datetime import datetime, timedelta
 from tng.algorithm_backtest.environment import Environment
 from tng.algorithm_backtest.position import Position
@@ -11,6 +11,11 @@ from tng.algorithm_backtest.data import Data, dt
 
 
 class Backtest(Environment):
+    """ Runs the backtest.
+
+        Constructor of this class will invoke by the inherited 
+        class TradeActivity.
+    """
     def __init__(self, *args):
         name, regime = args[0], args[1]
         start_date, end_date = args[2], args[3]

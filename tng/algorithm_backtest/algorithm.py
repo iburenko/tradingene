@@ -1,23 +1,22 @@
 class Algorithm:
-    """ Base class for algorithm
+    """ Base class for algorithm.
 
-        In the initialization step you may specify:
+        Constructor of this class will invoke by the inherited 
+        class Environment.
 
         # Arguments:
-
-        # 1. Name of your algorithm, by default set to empty string
-        # 2. Regime of backtest. By default it is set to "SP"
-             ("single position"), other possibility is "MP"
-             ("multiple position").
-             The former means that you are able to operate with only one lot
-             in algorithm logic, while the last means that you are able to
-             operate with multiple positions in your algorithm but total
-             volume available is still 1.
-
-        If you'll try to delete attribute value it'll be set to default value
+            name (str, optional): Name of your algorithm, 
+                by default set to "Cornucopia".
+            regime (str, optional): Regime of backtest. 
+                By default it is set to "SP" ("single position"), 
+                other possibility is "MP" ("multiple positions").
+                The former means that you are able to operate with only one lot
+                in algorithm logic, while the last means that you are able to
+                operate with multiple positions in your algorithm but total
+                volume available is still 1.
     """
 
-    def __init__(self, name="", regime="SP"):
+    def __init__(self, name, regime="SP"):
         self._name = name
         self._regime = regime
 
@@ -32,7 +31,7 @@ class Algorithm:
 
     @name.deleter
     def name(self):
-        self._name = ""
+        self._name = "Cornucopia"
 
     @property
     def regime(self):

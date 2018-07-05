@@ -12,9 +12,8 @@ from tng.algorithm_backtest.limits import MAX_AVAILABLE_VOLUME
 class TradeActivity(Backtest):
     """Class contains methods needed for mimicking trading activity.
 
-    Class instance will be initialized automatically in the __init__ method;
-    This class adds position argument for the class instance, it will
-    contain all positions (trades) made by an algorithm.
+        Constructor of this class will invoke by the inherited 
+        class TNG.
     """
 
     def __init__(self, *args):
