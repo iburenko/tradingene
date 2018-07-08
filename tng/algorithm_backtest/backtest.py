@@ -91,6 +91,11 @@ class Backtest(Environment):
                 self._minute_to_ticks(candles)
         except StopIteration:
             self._update_last_candle()
+            try:
+                self.positions[-1].close_time = self.now
+                self.positions[-1].closed = True
+            except:
+                pass
 
     def _update_recent_price(self, candles):
         ticker = list(self.ticker_timeframes)[0]

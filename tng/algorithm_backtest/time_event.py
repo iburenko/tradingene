@@ -1,4 +1,16 @@
 class TimeEvent:
+    """ Handles callbackes on a given time.
+
+        # Arguments:
+            ticker (str): Name of an asset.
+            time (int): Time stamp. At the moment when backtest will reach
+                specified time stamp callaback will invoke.
+            handler (function): Callback.
+        
+        # Attributes:
+        
+    """
+
     def __init__(self, ticker=None, time=None, handler=None):
         self._ticker = ticker
         self._time = time
