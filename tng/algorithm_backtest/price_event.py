@@ -1,19 +1,47 @@
 class PriceEvent:
     def __init__(self, \
                  ticker = None, price = None, trigger = None, handler = None):
-        """
-        trigger = 1 if the price in the moment of initializing was lower
-        than price of an event and -1 otherwise
-        """
+        """ Handles callbackes on a given price.
+
+        # Arguments:
+            ticker (str): See attributes.
+            price (float): See attributes.
+            trigger (int): See attributes.
+            handler (function): See attributes.
+            
+        
+        # Attributes:
+            ticker (str): Name of an asset.
+            price (): Time stamp. At the moment when backtest will reach
+                specified time stamp callaback will invoke.
+            trigger (int): Indicates whether from below or from above current
+                price need to strike specified:
+                    a) trigger = 1, if current price at the moment of setting
+                        price event was below strike price;
+                    b) trigger = -1, otherwise.
+            handler (function): Callback that is called when current price
+                strikes the specified price.
+
+        # Raises:
+            TypeError: If handler is not callable.
+    """
 
         self._ticker = ticker
         self._threshold = price
         self._trigger = trigger
         self._handler = handler
-        self._id = 0
 
     @classmethod
     def check(cls, obj):
+        """ Checks whether any price event should be handled
+
+            # Attributes:
+                obj (TNG): TNG class instance that contains all price events
+                    if any.
+
+            # Returns:
+                None
+        """
         expired = [event for event in obj.price_events\
                 if (event.threshold - obj.recent_price)*event.trigger < 0]
         for event in expired:
@@ -74,18 +102,6 @@ class PriceEvent:
     def handler(self):
         self._handler = None
 
-    @property
-    def id(self):
-        return self._id
-
-    @id.setter
-    def id(self, value):
-        self._id = value
-
-    @id.deleter
-    def id(self):
-        self._id = 0
-
     def __eq__(self, other):
         eq = False
         if self.threshold == other.threshold:
@@ -93,9 +109,3 @@ class PriceEvent:
                 if self.handler == other.handler:
                     eq = True
         return eq
-
-    def __str__(self):
-        print("PRICE EVENT IS PRINTING!")
-        for key, value in self.__dict__.items():
-            print(key, value)
-        return ""

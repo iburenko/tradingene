@@ -3,8 +3,17 @@ from numpy import sign
 
 class Trade:
     """ Contains information about one particular trade. 
+
+        # Arguments:
+            id (int): See attributes.
+            open_price (float): See attributes.
+            close_price (float): See attributes.
+            volume (float): See attributes.
+            side (int): See attributes.
+            open_time (int): See attributes.
+            close_time (int): See attributes.
     
-        Attributes:
+        # Attributes:
             id (int): id of the trade. The first trade has
                 random int. The next trade in the position
                 has id increased by one. Trade in the next
@@ -21,8 +30,8 @@ class Trade:
                 If trade is not closed, then close_time is 0.
     """
 
-    def __init__(self, id, open_price, volume, open_time):
-        self.id = id
+    def __init__(self, id_, open_price, volume, open_time):
+        self.id = id_
         self.open_price = open_price
         self.close_price = 0
         self.volume = volume

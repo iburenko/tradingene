@@ -2,8 +2,6 @@ import time
 import datetime
 import numpy as np
 
-#import matplotlib.pyplot as plt
-
 
 class BacktestStatistics:
     def __init__(self, positions):
@@ -211,6 +209,17 @@ class BacktestStatistics:
                     current_cons_losses = 0
                 flag = 0
         return max(cons_losses)
+
+    def _calculate_correlation(self):
+        price_array = np.zeros((len(self.all_positions_)))
+        profit_array = np.zeros((len(self.all_positions_)))
+        i = 0
+        for pos in self.all_positions_:
+            price_array[i] = pos.trades[0].open_price
+            profit_array[i] = pos.profit
+            i += 1
+        corr = np.corrcoef(price_array, profit_array)[0][1]
+        return corr
 
     def backtest_results(self):
         all_stats = [method for method in dir(BacktestStatistics) \

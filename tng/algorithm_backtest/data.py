@@ -38,6 +38,9 @@ class Data:
                     will be loaded.
                 end_date (datetime.datetime): Till this timestamp data
                     will be loaded.
+
+            # Returns:
+                hist_data(np.record): Numpy array of minute candles.
         """
 
         def find_start_end(all_data, start_date, end_date):

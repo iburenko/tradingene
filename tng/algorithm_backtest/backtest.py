@@ -13,8 +13,34 @@ from tng.algorithm_backtest.data import Data, dt
 class Backtest(Environment):
     """ Runs the backtest.
 
-        Constructor of this class will invoke by the inherited 
-        class TradeActivity.
+        Constructor of this class will automatically 
+        invoke by the inherited class TradeActivity.
+
+        # Arguments:
+            args (tuple): Tuple of variables that needed for initialization
+                of the super class Algorithm.
+
+        # Attributes:
+            history_data (dict): Contains loaded history data 
+                of the specified instrument.
+            completed_timeframes (list): List of timeframes that was completed
+                while run of backtest.
+            completed_tickers (list): List of tickers that have at least one
+                completed timeframe and appears in the last minute candle that
+                was send to backtest.
+            now (int): Time of the beggining of the most recent minute candle.
+            recent_price (float): The most recent price of an instrument.
+                Minute candle divides into four ticks:
+                a) if a candle goes down: open, high, low, close;
+                b) otherwise: open, low, high, close.
+            spread (float): Spread. Specified for each instrument.
+            instruments (set): Set of intances of Instrument class.
+                each instance contains information about opens, highs,
+                lows, closes, volumes, values of indicators. 
+            time_events (list): List of instances of TimeEvents class.
+                Time events added by user in the onBar function.
+            price_events (list): List of instances of PriceEvent class.
+                Price events added by user in the onBar function.
     """
 
     def __init__(self, *args):
@@ -44,7 +70,7 @@ class Backtest(Environment):
             None.
         
         Raises:
-            TypeError: if argument is not callable.
+            TypeError: if on_bar_function is not callable.
         
         """
         if not callable(on_bar_function):

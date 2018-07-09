@@ -16,16 +16,3 @@ class Instrument(Indicators):
         self.vol = zeros(lookback)
         self.rates = None
         self.candle_start_time = None
-        #self.ind = Indicators(timeframe)
-
-    def __str__(self):
-        s = ""
-        for key, val in self.__dict__.items():
-            if isinstance(val, list):
-                s += (key + " = " + str(val) + "\n")
-                pass
-            else:
-                s += ("\n" + key + " = " + str(val) + "\n")
-        return s
-
-    __repr__ = __str__

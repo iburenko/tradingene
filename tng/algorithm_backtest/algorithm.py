@@ -1,8 +1,8 @@
 class Algorithm:
     """ Base class for algorithm.
 
-        Constructor of this class will invoke by the inherited 
-        class Environment.
+        Constructor of this class will automatically invoke 
+        by the inherited class Environment.
 
         # Arguments:
             name (str, optional): Name of your algorithm, 

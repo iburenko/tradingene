@@ -4,7 +4,12 @@ from tng.algorithm_backtest.limits import MAX_AVAILABLE_VOLUME
 class Position:
     """ Stores all the information about opened position.
 
-        Attributes:
+        # Arguments:
+            id (int): Id of the position.
+            ticker (str): Name of the underlying asset.
+            now (int): Timestamp that indicates when position was opened.
+
+        # Attributes:
             id (int): id of the position. The first position has random int
                 id. Next position has id increased by one.
             ticker (str): Name of the asset.
@@ -69,6 +74,9 @@ class Position:
             reached stop_loss or take_profit level. If not (or there none
             stop_loss and take_profit) then nothing happens, if one of these
             levels reached then position will close by closePosition() method.
+
+            # Arguments:
+                obj (TNG): TNG instance.
         """
 
         try:
