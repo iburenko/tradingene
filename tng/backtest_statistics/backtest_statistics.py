@@ -205,7 +205,7 @@ class BacktestStatistics:
                 flag = 0
         return max(cons_losses)
 
-    def call_all(self):
+    def backtest_results(self):
         all_stats = [method for method in dir(BacktestStatistics) \
                             if callable(getattr(BacktestStatistics, method)) \
                             if method.startswith('calculate_')]
