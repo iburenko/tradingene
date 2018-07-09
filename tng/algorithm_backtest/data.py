@@ -20,6 +20,7 @@ dt = np.dtype({
         vol (float64): Volume of a minute candle.
 """
 
+
 class Data:
     """ Class for loading instrument history. """
 
@@ -38,6 +39,7 @@ class Data:
                 end_date (datetime.datetime): Till this timestamp data
                     will be loaded.
         """
+
         def find_start_end(all_data, start_date, end_date):
             while True:
                 start = all_data[all_data['time'] == start_date].index.values

@@ -16,6 +16,7 @@ class Backtest(Environment):
         Constructor of this class will invoke by the inherited 
         class TradeActivity.
     """
+
     def __init__(self, *args):
         name, regime = args[0], args[1]
         start_date, end_date = args[2], args[3]

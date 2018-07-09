@@ -22,6 +22,7 @@ class Environment(Algorithm):
                 that was added by a trader for this particular instrument.
 
     """
+
     def __init__(self, *args):
         super(Environment, self).__init__(args[0], args[1])
         self._start_date = args[2]
