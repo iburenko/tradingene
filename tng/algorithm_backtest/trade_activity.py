@@ -589,6 +589,7 @@ class TradeActivity(Backtest):
                     if instrument.open[1] > 10000:
                         alg.closePosition()
         """
+
         closed = False
         if id == None:
             is_closed = self._is_last_pos_closed()
@@ -625,6 +626,35 @@ class TradeActivity(Backtest):
             self.positions[-1].profit -= (2 * volume_traded * self.spread)
 
     def onPositionClose(self, pos_id, handler):
+        """ Call handler right after position close.
+
+            Invokes handler function when position with pos_id was closed.
+
+            # Arguments:
+                pos_id (int): id of a position.
+                handler (function): method to be invoked after position close.
+
+            # Raises:
+                ValueError: If position with pos_id was not find.
+                TypeError: If handler is not callable.
+            
+            # Returns:
+                None
+
+            # Examples:
+            ```python
+                # Works in any regime.
+                pos_id = None
+                def onBar(instrument):
+                    global pos_id
+                    pos_id = alg.openLong()
+                    alg.onPositionClose(pos_id, handler)
+                    alg.closePosition(pos_id)
+                
+                def handler():
+                    print("Position closed!")
+            ```
+        """
         pos = [pos for pos in self.positions if pos.id == pos_id]
         if len(pos):
             pos = pos[0]
@@ -638,6 +668,42 @@ class TradeActivity(Backtest):
         return None
 
     def getAvailableVolume(self):
+        """ Returns available volume for trading.
+
+            If the last position is open calculates available volume.
+
+            # Warns:
+                warn: If the last position was close.
+
+            # Returns:
+                None: if the last position is not open
+                float: if the last position is open.
+                    Notice that for available volume holds inequallity:
+                    0 <= available volume <= MAX_AVAILABLE_VOLUME.
+
+            # Examples:
+            ```python
+                # In SP regime
+                def onBar(instrument):
+                    alg.buy()
+                    alg.getAvailableVolume() # returns 0
+            ```
+            ```python
+                # In MP regime
+                def onBar(instrument):
+                    def onBar(function):
+                        alg.buy(0.2)
+                        alg.getAvailableVolume() # returns 0.8
+            ```
+            ```python
+                # In MP regime
+                def onBar(instrument):
+                    def onBar(function):
+                        alg.sell(0.5)
+                        alg.getAvailableVolume() # returns 0.5
+            ```
+        """
+
         is_closed = self._is_last_pos_closed()
         if is_closed == False:
             return self.positions[-1].available_volume()
@@ -648,6 +714,13 @@ class TradeActivity(Backtest):
             return None
 
     def getLastPrice(self, ticker=None):
+        """ Returns last price in the backtest.
+
+            # Arguments:
+                ticker (str): 
+
+
+        """
         try:
             if not ticker:
                 assert len(self.ticker_timeframes) == 1
@@ -663,6 +736,50 @@ class TradeActivity(Backtest):
             raise NameError("Ticker {} was not specified!".format(ticker))
 
     def on(self, type_=None, params=None, handler=None):
+        """ Wait for specified event and call handler.
+
+            User can define two types of events: Price event and Time event.
+            Price event:
+                Wait for the specified price. At the moment when current price
+                strikes specified price handler will call.
+            Time event:
+                Wait for the specified time. At the momene then current time
+                is equal or exceeds specified time handler will call.
+
+            # Arguments:
+                type_ (str): Name of the type of the event: Price or Time.
+                params: For Price event -- price (float).
+                    For Time event -- time (int).
+                handler (function): method that will invoke when speicified
+                    event happend.
+            # Returns:
+                id of the event.
+
+            # Raises:
+                ValueError: If type_ was not Price neither Time.
+
+            # Examples:
+                ```python
+                    # Works in any regime.
+                    event_id = None
+                    def onBar(instrument):
+                        global event_id
+                        event_id = alg.on("Price", 10000, handler)
+                    
+                    def handler():
+                        print("Price event handler!")
+                ```
+                ```python
+                    # Works in any regime.
+                    event_id = None
+                    def onBar(instrument):
+                        global event_id
+                        event_id = alg.on("Time", 20180201000000, handler)
+                    
+                    def handler():
+                        print("Time event handler!")
+                ```
+        """
         ticker = list(self.ticker_timeframes)[0]
         if type_ == "Price":
             if self._check_price_params(params, handler):
@@ -685,6 +802,46 @@ class TradeActivity(Backtest):
             raise ValueError("Unknown type of an event {}!".format(type_))
 
     def off(self, id):
+        """ Disables event.
+
+            If some event was setted by on() method, off() will cancels it.
+
+            # Arguments:
+                id (int): id of the event.
+            
+            # Returns:
+                None
+
+            # Warns:
+                warn: if the event with specified id was not found.
+
+            # Examples:
+            ```python
+                    # Works in any regime.
+                    event_id = None
+                    def onBar(instrument):
+                        global event_id
+                        event_id = alg.on("Price", 10000, handler)
+                        if alg.getLastPrice() > 10000:
+                            alg.off(event_id)
+                    
+                    def handler():
+                        global event_id
+                        print("Price event handler!")
+                ```
+                ```python
+                    # Works in any regime.
+                    event_id = None
+                    def onBar(instrument):
+                        global event_id
+                        event_id = alg.on("Time", 20180201000000, handler)
+                        if instrument.time > 20180201000000:
+                            alg.off(event_id)
+                    
+                    def handler():
+                        print("Time event handler!")
+                ```
+        """
         for price_event in self.price_events:
             if price_event.id == id:
                 self.price_events.remove(price_event)
