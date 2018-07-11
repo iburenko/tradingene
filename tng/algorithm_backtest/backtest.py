@@ -8,6 +8,7 @@ from tng.algorithm_backtest.time_event import TimeEvent
 from tng.algorithm_backtest.price_event import PriceEvent
 import tng.algorithm_backtest.limits as limits
 from tng.algorithm_backtest.data import Data, dt
+from tng.ind.spread_estimation_corwin_schultz import corwin_schultz
 
 
 class Backtest(Environment):
@@ -192,6 +193,8 @@ class Backtest(Environment):
             time_ -= timedelta(minutes=total_minutes)
             time_ = int(time_.strftime("%Y%m%d%H%M%S"))
             return time_
+
+        self._set_spread()
 
         candle = candles[instrument.ticker]
         for instr in self.instruments:

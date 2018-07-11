@@ -14,6 +14,14 @@ class TradeActivity(Backtest):
 
         Constructor of this class will invoke by the inherited 
         class TNG.
+
+        # Arguments:
+            args (tuple): Tuple of variables that needed for initialization
+                of the super class Backtest.
+
+        # Attributes:
+            positions (list): List of all positions. Each position is
+                an instance of Position class.
     """
 
     def __init__(self, *args):
@@ -25,23 +33,64 @@ class TradeActivity(Backtest):
     def openPosition(self, ticker=None):
         """Open position without acquiring any asset.
 
-        # Arguments:
-            ticker (str): Asset for which position will open.
-                    If an algorithm uses only one asset you can
-                    not to specify explicitly ticker, but if an
-                    algorithm uses several instruments ticker
-                    must be specified.
+            # Arguments:
+                ticker (str): Asset for which position will open.
+                        At the moment algorithm is not able to use
+                        several instruments. Only the first added
+                        instrument will be used despite of ticker
+                        received by the function.
 
-        # Warns:
-            warn: If you are trying to open a new position
-                but the last is not closed. Only one opened
-                position is allowed.
+            # Warns:
+                warn: If you are trying to open a new position
+                    but the last is not closed. Only one opened
+                    position is allowed.
 
-        # Returns:
-            int: Random int if the first position is opened.
-                Increased by one last position's id if there
-                was opened position.
-            None: If position wasn't opened.
+            # Returns:
+                int: Random int if the first position is opened.
+                    Increased by one last position's id if there
+                    was opened position.
+                None: If position wasn't opened.
+
+            # Example:
+            ```python
+                # This example opens a position for btcusd.
+                alg = TNG(ticker, timeframe, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 10)
+                alg.openPosition()
+            ```
+            ```python
+                # This example opens a position for btcusd.
+                alg = TNG(ticker, timeframe, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 10)
+                alg.openPosition("btcusd")
+            ```
+            ```python
+                # This example opens a position for btcusd.
+                alg = TNG(ticker, timeframe, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 10)
+                alg.openPosition("ethbtc")
+            ```
+            ```python
+                # This example opens a position for btcusd.
+                alg = TNG(ticker, timeframe, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addInstrument("ethbtc")
+                alg.addTimeframe("btcusd", 10)
+                alg.addTimeframe("ethbtc", 30)
+                alg.openPosition("ethbtc")
+            ```
+            ```python
+                # This example opens a position for ethbtc.
+                alg = TNG(ticker, timeframe, start_date, end_date)
+                alg.addInstrument("ethbtc")
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 10)
+                alg.addTimeframe("ethbtc", 30)
+                alg.openPosition("ethbtc")
+            ```
         """
 
         new_pos = None
@@ -65,20 +114,82 @@ class TradeActivity(Backtest):
     def buy(self, volume=1):
         """ Buys specified volume of an asset.
 
-        In Single Position regime:
-        buys 1 lot despite of volume received 
-        by the function. If the last position
-        was closed new position will be opened.
-        If the last position is open and short then this
-        position will be closed then new position will open 
-        and 1 lot will be bought.
+            In Single Position regime:
+            buys 1 lot despite of volume received 
+            by the function. If the last position
+            was closed new position will open automatically.
+            If the last position is open and short then this
+            position will close then a new position will open 
+            and 1 lot will be bought.
+            If the last position is open and long then nothing will happen.
 
-        In Multiple Position regime:
-        buys specified number of lots. If the last position
-        was closed new position will be opened.
-        If the last position is open and short then
+            In Multiple Position regime:
+            buys specified number of lots. If the last position
+            was closed new position will open.
+            If the last trade in a position is open and short then position
+            won't close but specified number of lots will be bought.
+            If the last trade in a position is open ang long then
+            specified number of lots will be bought.
+            Notice that volume position limited as follows:
+            -MAX_AVAILABLE_VOLUME <= used_volume <= MAX_AVAILABLE_VOLUME.
 
-         
+            # Arguments:
+                volume (float): Number of lots that will be bought.
+
+            # Warns:
+                warn: If specified volume is negative.
+                warn: In SP regime if the last position is open and long.
+
+            # Raises:
+                ValueError: In SP regime if specified volume 
+                    exceeds MAX_AVAILABLE_VOLUME.
+                ValueError: In MP regime if cumulative volume of positions
+                    exceeds MAX_AVAILABLE_VOLUME.
+
+            # Returns:
+                None
+
+            # Examples:
+            ```python
+                # In SP regime open a position and buy 1 lot.
+                # Used volume is 1, available volume is 0.
+                def onBar(instrument):
+                    alg.openPosition()
+                    alg.buy()
+            ```
+            ```python
+                # In SP regime open a position and buy 1 lot.
+                # Used volume is 1, available volume is 0.
+                def onBar(instrument):
+                    alg.openPosition()
+                    alg.buy(0.1)
+            ```
+            ```python
+                # In SP regime buy 1 lot. 
+                # Position will open automatically.
+                # Used volume is 1, available volume is 0.
+                def onBar(instrument):
+                    alg.buy()
+            ```
+            ```python
+                # In SP regime buy 1 lot using buy()
+                # then close opened long and sell 1 lot.
+                def onBar(instrument):
+                    alg.buy() # used volume is 1, available is 0;
+                    alg.sell() # used volume is -1, available volume is 0.
+            ```
+            ```python
+                # In MP regime buy 0.1 lots then buy 0.2 lots
+                def onBar(instrument):
+                    alg.buy(0.1) # used volume is 0.1, available is 0.9;
+                    alg.buy(0.2) # used volume is 0.3, available volume is 0.7.
+            ```
+            ```python
+                # In MP regime buy 0.1 lots then sell 0.2 lots
+                def onBar(instrument):
+                    alg.buy(0.1) # used volume is 0.1, available is 0.9;
+                    alg.sell(0.2) # used volume is -0.1, available volume is 0.9.
+            ```
         """
 
         if volume <= 0:
@@ -120,6 +231,86 @@ class TradeActivity(Backtest):
                     self._open_trade(volume, side=1)
 
     def sell(self, volume=1):
+        """ Sells specified volume of an asset.
+
+            In Single Position regime:
+            sells 1 lot despite of volume received 
+            by the function. If the last position
+            was closed new position will open automatically.
+            If the last position is open and long then this
+            position will close then a new position will open 
+            and 1 lot will be sold.
+            If the last position is open and short then nothing will happen.
+
+            In Multiple Position regime:
+            sells specified number of lots. If the last position
+            was closed new position will open.
+            If the last trade in a position is open and long then position
+            won't close but specified number of lots will be sold.
+            If the last trade in a position is open ang shoer then
+            specified number of lots will be sold.
+            Notice that volume position limited as follows:
+            -MAX_AVAILABLE_VOLUME <= used_volume <= MAX_AVAILABLE_VOLUME.
+
+            # Arguments:
+                volume (float): Number of lots that will be sold.
+
+            # Warns:
+                warn: If specified volume is negative.
+                warn: In SP regime if the last position is open and short.
+
+            # Raises:
+                ValueError: In SP regime if specified volume 
+                    exceeds MAX_AVAILABLE_VOLUME.
+                ValueError: In MP regime if cumulative volume of positions
+                    exceeds MAX_AVAILABLE_VOLUME.
+
+            # Returns:
+                None
+
+            # Examples:
+            ```python
+                # In SP regime open a position and sell 1 lot.
+                # Used volume is -1, available volume is 0.
+                def onBar(instrument):
+                    alg.openPosition()
+                    alg.sell()
+            ```
+            ```python
+                # In SP regime open a position and sell 1 lot.
+                # Used volume is -1, available volume is 0.
+                def onBar(instrument):
+                    alg.openPosition()
+                    alg.sell(0.1)
+            ```
+            ```python
+                # In SP regime sell 1 lot. 
+                # Position will open automatically.
+                # Used volume is -1, available volume is 0.
+                def onBar(instrument):
+                    alg.sell()
+            ```
+            ```python
+                # In SP regime sell 1 lot using sell()
+                # then close opened short and buy 1 lot.
+                def onBar(instrument):
+                    alg.sell() # used volume is -1, available is 0;
+                    alg.buy() # used volume is 1, available volume is 0.
+            ```
+            ```python
+                # In MP regime sell 0.1 lots then sell 0.2 lots
+                def onBar(instrument):
+                    alg.sell(0.1) # used volume is -0.1, available is 0.9;
+                    alg.sell(0.2) # used volume is -0.3, available volume is 0.7.
+            ```
+            ```python
+                # In MP regime sell 0.1 lots then buy 0.2 lots
+                def onBar(instrument):
+                    alg.sell(0.1) # used volume is -0.1, available is 0.9;
+                    alg.buy(0.2) # used volume is 0.1, available volume is 0.9.
+            ```
+        """
+
         if volume <= 0:
             warn("Volume must be positive! Nothing will happen!")
             return None
@@ -160,6 +351,51 @@ class TradeActivity(Backtest):
                     self._open_trade(volume, side=-1)
 
     def openLong(self, volume=1):
+        """ Opens a position and buys specified number of lots.
+
+            This function combains functionality of the following code:
+            ```python:
+                alg.openPosition()
+                alg.buy(volume)
+            ```
+
+            # Arguments:
+                volume (float): Number of lots that will be bought.
+
+            # Warns:
+                warn: If there is opened long position
+
+            # Returns:
+                None: If the last position is open and long;
+                pos_id (int): Position id returned by openPosition() function.
+            
+            # Examples:
+            ```python
+                # In SP regime open position and buy 1 lot.
+                # Used volume is 1, available volume is 0.
+                def onBar(instrument):
+                    alg.openLong()
+            ```
+            ```python
+                # In SP regime open position and buy 1 lot.
+                # Used volume is 1, available volume is 0.
+                def onBar(instrument):
+                    alg.openLong(0.1)
+            ```
+            ```python
+                # In MP regime open position and buy 1 lot.
+                # Used volume is 1, available volume is 0.
+                def onBar(instrument):
+                    alg.openLong()
+            ```
+            ```python
+                # In MP regime open position and buy 0.1 lot.
+                # Used volume is 0.1, available volume is 0.9.
+                def onBar(instrument):
+                    alg.openLong(0.1)
+            ```
+        """
+
         is_closed = self._is_last_pos_closed()
         if is_closed is not None and not is_closed:
             warn("Can't open long since there is an open position")
@@ -170,6 +406,50 @@ class TradeActivity(Backtest):
         return pos_id
 
     def openShort(self, volume=1):
+        """ Opens a position and sells specified number of lots.
+
+            This function combains functionality of the following code:
+            ```python:
+                alg.openPosition()
+                alg.sell(volume)
+            ```
+
+            # Arguments:
+                volume (float): Number of lots that will be sold.
+
+            # Warns:
+                warn: If there is opened short position
+
+            # Returns:
+                None: If the last position is open and short;
+                pos_id (int): Position id returned by openPosition() function.
+            
+            # Examples:
+            ```python
+                # In SP regime open position and sell 1 lot.
+                # Used volume is -1, available volume is 0.
+                def onBar(instrument):
+                    alg.openShort()
+            ```
+            ```python
+                # In SP regime open position and sell 1 lot.
+                # Used volume is -1, available volume is 0.
+                def onBar(instrument):
+                    alg.openShort(0.1)
+            ```
+            ```python
+                # In MP regime open position and sell 1 lot.
+                # Used volume is -1, available volume is 0.
+                def onBar(instrument):
+                    alg.openShort()
+            ```
+            ```python
+                # In MP regime open position and sell 0.1 lot.
+                # Used volume is -0.1, available volume is 0.9.
+                def onBar(instrument):
+                    alg.openShort(0.1)
+            ```
+        """
         is_closed = self._is_last_pos_closed()
         if is_closed is not None and not is_closed:
             warn("Can't open short since there is an open position")
@@ -180,6 +460,32 @@ class TradeActivity(Backtest):
         return pos_id
 
     def setSL(self, loss=None):
+        """ Sets the maximum loss for a position.
+
+            After opening a position user can define the maximum
+            acceptable loss. Backtest algorithm after each tick
+            checks current profit of the position. If current profit
+            becomes lower than specified loss value then position 
+            will automatically close.
+
+            # Arguments:
+                loss (float): Value of the stoploss.
+
+            # Raises:
+                ValueError: If loss is not nonnegative.
+            
+            # Returns:
+                None
+
+            # Examples:
+            ```python
+                # Works in any regime.
+                def onBar(instrument):
+                    alg.buy()
+                    alg.setSL(loss = 300)
+            ```
+        """
+
         is_closed = self._is_last_pos_closed()
         if not is_closed:
             if loss > 0:
@@ -190,6 +496,32 @@ class TradeActivity(Backtest):
                 raise ValueError("Cannot set stoploss! Stoploss can't be None")
 
     def setTP(self, profit=None):
+        """ Sets the maximum profit for a position.
+
+            After opening a position user can define the maximum
+            acceptable profit. Backtest algorithm after each tick
+            checks current profit of the position. If current profit
+            becomes greater than specified profit value then position 
+            will automatically close.
+
+            # Arguments:
+                profit (float): Value of the takeprofit.
+
+            # Raises:
+                ValueError: If profit is not nonnegative.
+
+            # Returns:
+                None
+
+            # Examples:
+            ```python
+                # Works in any regime.
+                def onBar(instrument):
+                    alg.buy()
+                    alg.setTP(profit = 300)
+            ```
+        """
+
         is_closed = self._is_last_pos_closed()
         if not is_closed:
             if profit > 0:
@@ -199,14 +531,63 @@ class TradeActivity(Backtest):
             else:
                 raise ValueError("Cannot set stoploss! Stoploss can't be None")
 
-    def setSLTP(self, loss, profit):
+    def setSLTP(self, loss=None, profit=None):
+        """ Sets stoploss and takeprofit simultaneously.
+
+            Invoke of this function is equivalent to the following code:
+            ```python
+                alg.setSL(loss)
+                alg.setTP(profit)
+
+            # Arguments:
+                loss (float): Value of the stoploss.
+                profit (float): Value of the takeprofit.
+            
+            # Returns:
+                None
+
+            # Examples:
+            ```python
+                # Set stoploss and takeprofit using single function.
+                # Works in any regime.
+                def onBar(instrument):
+                    alg.buy()
+                    alg.setSLTP(loss = 300, profit = 300)
+                    # equivalelnt to
+                    # alg.setSL(loss = 300)
+                    # alg.setTP(profit = 300)
+            ```
+        """
+
         self.setSL(loss)
         self.setTP(profit)
 
     def closePosition(self, id=None):
-        """
-        Closes last opened position if id == None,
-        otherwise closes position with specified id
+        """ Close opened position.
+
+            Closes last opened position if id == None,
+            otherwise closes position with specified id (if this position
+            is open).
+
+            # Arguments:
+                id (int): id of position to be closed.
+
+            # Warns:
+                warn: If there is no opened position.
+                warn: If position with specified id is already closed.
+
+            # Returns:
+                None
+
+            # Examples:
+            ```python
+                # On the first bar open long position with 1 lot.
+                # Close position if the last open price was greater
+                # than 10000.
+                def onBar(instrument):
+                    alg.openLong(1)
+                    if instrument.open[1] > 10000:
+                        alg.closePosition()
         """
         closed = False
         if id == None:

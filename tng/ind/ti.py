@@ -36,115 +36,31 @@ def ad1(hi, lo, cl, vol):
 # end of ad1
 
 
-# DMI-indicator
-def dmi(period=14, periodDI=14, shift=0, hi=None, lo=None, cl=None, prev=None):
-    if hi is None or lo is None or cl is None:
-        return None
-    if shift >= len(cl) - 1:
-        return None
-
-    if periodDX < 0:
-        periodDX = period
-
-    prevSmoothedTr = None
-    prevSmoothedPlusDM = None
-    prevSmoothedMinusDM = None
-    prevSmoothedDX = None
-    if prev is not None:
-        prevSmoothedTr = prev['prevSmoothedTr']
-        prevSmoothedPlusDM = prev['prevSmoothedPlusDM']
-        prevSmoothedMinusDM = prev['prevSmoothedMinusDM']
-        prevSmoothedDX = prev['prevSmoothedDX']
-
-    tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]),
-             abs(lo[shift] - cl[shift + 1]))
-
-    plusDM = 0.0
-    minusDM = 0.0
-    upMove = hi[shift] - hi[shift + 1]
-    downMove = lo[shift + 1] - lo[shift]
-    if upMove > downMove and upMove > 0.0:
-        plusDM = upMove
-    if downMove > upMove and downMove > 0.0:
-        minusDM = downMove
-
-    prevSmoothedTr = wma(
-        period=period, shift=0, rates=[tr], prev=prevSmoothedTr)
-    if prevSmoothedTr is None:
-        return None
-    smoothedTr = prevSmoothedTr['wma']
-    if not (smoothedTr > 0.0):
-        return None
-
-    prevSmoothedPlusDM = wma(
-        period=period, shift=0, rates=[plusDM], prev=prevSmoothedPlusDM)
-    if prevSmoothedPlusDM is None:
-        return None
-    prevSmoothedMinusDM = wma(
-        period=period, shift=0, rates=[minusDM], prev=prevSmoothedMinusDM)
-    if prevSmoothedMinusDM is None:
-        return None
-    smoothedPlusDM = prevSmoothedPlusDM['wma']
-    smoothedMinusDM = prevSmoothedMinusDM['wma']
-
-    plusDI = (smoothedPlusDM * 100.0 / smoothedTr)
-    minusDI = (smoothedMinusDM * 100.0 / smoothedTr)
-
-    if prevSmoothedTr['num'] >= period:  # Smoothed TR is not filled up
-        sumDI = plusDI + minusDI
-        if not (sumDI > 0.0):
-            return None
-        dx0 = 100.0 * (abs(plusDI - minusDI) / sumDI)
-
-        prevSmoothedDX = wma(
-            period=periodDX, shift=0, rates=[dx0], prev=prevSmoothedDX)
-        if prevSmoothedDX is None:
-            return None
-        adx = prevSmoothedDX['wma']
-    else:
-        adx = None
-        dx0 = None
-
-    return ({
-        'adx': adx,
-        'dx': dx0,
-        "pdi": plusDI,
-        "mdi": minusDI,
-        "pdmsm": smoothedPlusDM,
-        "mdmsm": smoothedMinusDM,
-        "trsm": smoothedTr,
-        'prevSmoothedTr': prevSmoothedTr,
-        'prevSmoothedPlusDM': prevSmoothedPlusDM,
-        'prevSmoothedMinusDM': prevSmoothedMinusDM,
-        'prevSmoothedDX': prevSmoothedDX
-    })
-
-
-# end of dmi
-
-
 # ADX-indicator
-def adx(period=14, periodDX=-1, shift=0, hi=None, lo=None, cl=None, prev=None):
+def adx(periodADX=14,
+        periodDI=-1,
+        shift=0,
+        hi=None,
+        lo=None,
+        cl=None,
+        prev=None):
     if hi is None or lo is None or cl is None:
         return None
     if shift >= len(cl) - 1:
         return None
 
-    if periodDX < 0:
-        periodDX = period
+    if periodDI < 0:
+        periodDI = periodADX
 
     prevSmoothedTr = None
     prevSmoothedPlusDM = None
     prevSmoothedMinusDM = None
-    prevSmoothedDX = None
+    prevADX = None
     if prev is not None:
-        prevSmoothedTr = prev['prevSmoothedTr']
-        prevSmoothedPlusDM = prev['prevSmoothedPlusDM']
-        prevSmoothedMinusDM = prev['prevSmoothedMinusDM']
-        prevSmoothedDX = prev['prevSmoothedDX']
-
-    tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]),
-             abs(lo[shift] - cl[shift + 1]))
+        prevSmoothedTr = prev['smoothedTr']
+        prevSmoothedPlusDM = prev['smoothedPlusDM']
+        prevSmoothedMinusDM = prev['smoothedMinusDM']
+        prevADX = prev['adx']
 
     plusDM = 0.0
     minusDM = 0.0
@@ -155,55 +71,41 @@ def adx(period=14, periodDX=-1, shift=0, hi=None, lo=None, cl=None, prev=None):
     if downMove > upMove and downMove > 0.0:
         minusDM = downMove
 
-    prevSmoothedTr = wma(
-        period=period, shift=0, rates=[tr], prev=prevSmoothedTr)
-    if prevSmoothedTr is None:
+    smoothedPlusDM = smma(
+        period=periodDI, shift=0, rates=[plusDM], prev=prevSmoothedPlusDM)
+    if smoothedPlusDM is None:
         return None
-    smoothedTr = prevSmoothedTr['wma']
-    if not (smoothedTr > 0.0):
+    smoothedMinusDM = smma(
+        period=periodDI, shift=0, rates=[minusDM], prev=prevSmoothedMinusDM)
+    if smoothedMinusDM is None:
         return None
 
-    prevSmoothedPlusDM = wma(
-        period=period, shift=0, rates=[plusDM], prev=prevSmoothedPlusDM)
-    if prevSmoothedPlusDM is None:
-        return None
-    prevSmoothedMinusDM = wma(
-        period=period, shift=0, rates=[minusDM], prev=prevSmoothedMinusDM)
-    if prevSmoothedMinusDM is None:
-        return None
-    smoothedPlusDM = prevSmoothedPlusDM['wma']
-    smoothedMinusDM = prevSmoothedMinusDM['wma']
+    tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]),
+             abs(lo[shift] - cl[shift + 1]))
+    smoothedTr = smma(
+        period=periodDI, shift=0, rates=[tr], prev=prevSmoothedTr)
 
-    plusDI = (smoothedPlusDM * 100.0 / smoothedTr)
-    minusDI = (smoothedMinusDM * 100.0 / smoothedTr)
-
-    if prevSmoothedTr['num'] >= period:  # Smoothed TR is not filled up
-        sumDI = plusDI + minusDI
-        if not (sumDI > 0.0):
-            return None
-        dx0 = 100.0 * (abs(plusDI - minusDI) / sumDI)
-
-        prevSmoothedDX = wma(
-            period=periodDX, shift=0, rates=[dx0], prev=prevSmoothedDX)
-        if prevSmoothedDX is None:
-            return None
-        adx = prevSmoothedDX['wma']
-    else:
-        adx = None
-        dx0 = None
+    plusDI = None
+    minusDI = None
+    adx = None
+    dx = None
+    if smoothedTr is not None:
+        if smoothedTr > 0.0:
+            plusDI = (smoothedPlusDM * 100.0 / smoothedTr)
+            minusDI = (smoothedMinusDM * 100.0 / smoothedTr)
+            sumDI = plusDI + minusDI
+            if sumDI > 0.0:
+                dx = 100.0 * (abs(plusDI - minusDI) / sumDI)
+                adx = smma(period=periodADX, shift=0, rates=[dx], prev=prevADX)
 
     return ({
-        'adx': adx,
-        'dx': dx0,
+        'smoothedTr': smoothedTr,
+        'smoothedPlusDM': smoothedPlusDM,
+        'smoothedMinusDM': smoothedMinusDM,
         "pdi": plusDI,
         "mdi": minusDI,
-        "pdmsm": smoothedPlusDM,
-        "mdmsm": smoothedMinusDM,
-        "trsm": smoothedTr,
-        'prevSmoothedTr': prevSmoothedTr,
-        'prevSmoothedPlusDM': prevSmoothedPlusDM,
-        'prevSmoothedMinusDM': prevSmoothedMinusDM,
-        'prevSmoothedDX': prevSmoothedDX
+        'dx': dx,
+        'adx': adx,
     })
 
 
@@ -337,7 +239,6 @@ def bollinger(period=20, shift=0, nStds=2.0, rates=None):
     bandMiddle = np.mean(rates[shift:en])
     bandStd = np.std(rates[shift:en])
 
-    #print "bandMiddle=%s , nStds=%s ,bandStd = %s" % (str(bandMiddle),str(nStds),str(bandStd))
     top = (bandMiddle + nStds * bandStd)
     bottom = (bandMiddle - nStds * bandStd)
     return ({'ma': bandMiddle, 'std': bandStd, 'top': top, 'bottom': bottom})
@@ -412,9 +313,6 @@ def chande(period=10, shift=0, rates=None):
 
 # EMA - Exponential Moving Average
 def ema(period=10, shift=0, alpha=None, rates=None, prev=None, history=0):
-    global _close
-    if rates is None:
-        rates = _close
     if rates is None:
         return None
 
@@ -449,6 +347,59 @@ def ema(period=10, shift=0, alpha=None, rates=None, prev=None, history=0):
 # end of ema
 
 
+# Keltner Channels
+def keltner(period=20,
+            multiplier=1.0,
+            shift=0,
+            hi=None,
+            lo=None,
+            cl=None,
+            prev=None):
+    if hi is None or lo is None or cl is None:
+        return None
+    lenRates = len(cl)
+    if lenRates <= shift:
+        return None
+
+    if prev is not None:
+        hlc = (hi[shift] + lo[shift] + cl[shift]) / 3.0
+        priceList = [hlc]
+        emaBasis = ema(
+            period=period, rates=priceList, shift=0, prev=prev['basis'])
+        if lenRates > shift + 1:
+            trList = [tr(hi, lo, cl, shift)]
+            atr = ema(period=period, rates=trList, shift=0, prev=prev['atr'])
+        else:
+            atr = None
+    else:
+        priceList = []
+        trList = []
+        firstIndex = shift + period - 1
+        if firstIndex > lenRates - 1:
+            firstIndex = lenRates - 1
+        for i in range(firstIndex, shift - 1, -1):
+            hlc = (hi[i] + lo[i] + cl[i]) / 3.0
+            priceList.append(hlc)
+        if firstIndex > lenRates - 2:
+            firstIndex = lenRates - 2
+        for i in range(firstIndex, shift - 1, -1):
+            trList.append(tr(hi, lo, cl, i))
+        emaBasis = ema(period=period, rates=priceList, shift=0)
+        atr = ema(period=period, rates=trList, shift=0)
+
+    if emaBasis is None or atr is None:
+        upper = None
+        lower = None
+    else:
+        upper = emaBasis + atr * multiplier
+        lower = emaBasis - atr * multiplier
+
+    return ({'basis': emaBasis, 'upper': upper, 'lower': lower, 'atr': atr})
+
+
+# end of keltners
+
+
 # MACD - Moving Average Convergence/Divergence Oscillator
 def macd(periodFast=12,
          periodSlow=26,
@@ -461,10 +412,6 @@ def macd(periodFast=12,
         rates = _close
     if rates is None:
         return None
-
-    #st = shift + periodSlow + periodSignal - 1
-    #if st >= len(rates):
-    #	return None
 
     if prev is not None:
         emaFast = ema(
@@ -523,7 +470,7 @@ def momentum(period=9, shift=0, rates=None):
     return (rates[shift] - rates[nPeriodsAgoIndex])
 
 
-# end of roc
+# end of momentum
 
 
 # PPO - Percent Price Oscillator
@@ -639,8 +586,9 @@ def sma(period=10, shift=0, rates=None):
 
 
 # SMMA - Smooothed Moving Average
-def smma(period, shift=0, rates=None):
-    return ema(period=period, shift=shift, alpha=1.0 / period, rates=rates)
+def smma(period, shift=0, rates=None, prev=None):
+    return ema(
+        period=period, shift=shift, alpha=1.0 / period, rates=rates, prev=prev)
 
 
 # end of smma

@@ -131,6 +131,22 @@ class Indicators:
             return ind.getValues()
         return None
 
+    def keltner(self, period=14, multiplier=1.0):
+        indParameters = {
+            'name': 'keltner',
+            'period': period,
+            'multiplier': multiplier
+        }
+        ind = IndHlp.findIndicator(self.indicators, indParameters)
+        if ind is None:
+            ind = IndKeltner(period, multiplier)
+            indParameters['ind'] = ind
+            self.indicators.append(indParameters)
+        if ind is not None:
+            ind.recalculate(self.rates)
+            return ind.getValues()
+        return None
+
 
     def macd(self, periodFast=26, periodSlow=12, periodSignal=9, \
                    priceType='close'):
@@ -357,9 +373,11 @@ class IndAD(Indicator):
 
 
 class IndADX(Indicator):
-    def __init__(self, period=1):
-        Indicator.__init__(self, period)
+    def __init__(self, periodADX=14, periodDI=-1):
+        Indicator.__init__(self, 0)
         self.prev = None
+        self.periodADX = periodADX
+        self.periodDI = periodDI
         self.indVals = IndVals()
         self.indVals.adx = []
         self.indVals.pdi = []
@@ -372,7 +390,7 @@ class IndADX(Indicator):
             self.indVals.mdi.pop()
             self.dtms.pop()
 
-        new = ti.adx(period=self.period, shift=shift, prev=self.prev, \
+        new = ti.adx(periodADX=self.periodADX, periodDI=self.periodDI, shift=shift, prev=self.prev, \
                         hi=rates['high'], lo=rates['low'], cl=rates['close'])
         newADX = None
         newPDI = None
@@ -386,8 +404,8 @@ class IndADX(Indicator):
                 newMDI = new['mdi']
         if overwrite:
             self.indVals.adx[0] = newADX
-            self.indVals.pdi.insert(0, newPDI)
-            self.indVals.mdi.insert(0, newMDI)
+            self.indVals.pdi[0] = newPDI
+            self.indVals.mdi[0] = newMDI
         else:
             self.indVals.adx.insert(0, newADX)
             self.indVals.pdi.insert(0, newPDI)
@@ -577,6 +595,60 @@ class IndEMA(Indicator):
 
 
 # end of IndEMA
+
+
+class IndKeltner(Indicator):
+    def __init__(self, period=20, multiplier=1.0):
+        Indicator.__init__(self, period)
+        self.multiplier = multiplier
+        self.prev = None
+        self.indVals = IndVals()
+        self.indVals.basis = []
+        self.indVals.upper = []
+        self.indVals.lower = []
+        self.indVals.atr = []
+
+    def calculate(self, rates, shift=0, overwrite=False):
+        if len(self.values) >= IndHlp.historySize:
+            self.indVals.basis.pop()
+            self.indVals.upper.pop()
+            self.indVals.lower.pop()
+            self.indVals.lower.atr()
+            self.dtms.pop()
+
+        new = ti.keltner(period=self.period, multiplier=self.multiplier, shift=shift, prev=self.prev, \
+                        hi=rates['high'], lo=rates['low'], cl=rates['close'])
+        newBasis = None
+        newUpper = None
+        newLower = None
+        newAtr = None
+        if new is not None:
+            if new['basis'] is not None:
+                newBasis = new['basis']
+            if new['upper'] is not None:
+                newUpper = new['upper']
+            if new['lower'] is not None:
+                newLower = new['lower']
+            if new['atr'] is not None:
+                newAtr = new['atr']
+        if overwrite:
+            self.indVals.basis[0] = newBasis
+            self.indVals.upper[0] = newUpper
+            self.indVals.lower[0] = newLower
+            self.indVals.atr[0] = newAtr
+        else:
+            self.indVals.basis.insert(0, newBAsis)
+            self.indVals.upper.insert(0, newUpper)
+            self.indVals.lower.insert(0, newLower)
+            self.indVals.atr.insert(0, newAtr)
+            self.dtms.insert(0, rates['time'][shift])
+        self.prev = new
+
+    def getValues(self):
+        return self.indVals
+
+
+# end of IndKeltner
 
 
 class IndMACD(Indicator):
