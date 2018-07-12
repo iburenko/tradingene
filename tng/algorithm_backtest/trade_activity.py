@@ -716,11 +716,63 @@ class TradeActivity(Backtest):
     def getLastPrice(self, ticker=None):
         """ Returns last price in the backtest.
 
+            Returns last price of the specified instrument. If instrument
+            is not specified then the last price of the first added 
+            instrument will return. If user added several instruments (highly
+            bad practice at time) it is possible to get last price of the
+            specified instrument.
+
             # Arguments:
-                ticker (str): 
+                ticker (str, optional): Name of the underlying asset.
 
+            # Returns
+                float: Last price of the instrument.
 
+            # Raises:
+                AssertionError: If only one instrument was added by user,
+                    but non-exisiting ticker was specified.
+                NameError: If ticker was not found among added instruments.
+
+            # Examples:
+            ```python
+                # Works in any regime.
+                alg = TNG(name, regime, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 10)
+                def onBar(instrument):
+                    alg.getLastPrice()
+            ```
+            ```python
+                # Works in any regime.
+                alg = TNG(name, regime, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 10)
+                def onBar(instrument):
+                    alg.getLastPrice("btcusd")
+            ```
+            ```python
+                # Works in any regime.
+                alg = TNG(name, regime, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addInstrument("ethbtc")
+                alg.addTimeframe("btcusd", 10)
+                alg.addTimeframe("ethbtc", 15, 30)
+                def onBar(instrument):
+                    alg.getLastPrice() # Returns the last price of btcusd
+            ```
+            ```python
+                # Works in any regime.
+                alg = TNG(name, regime, start_date, end_date)
+                alg.addInstrument("btcusd")
+                alg.addInstrument("ethbtc")
+                alg.addTimeframe("btcusd", 10)
+                alg.addTimeframe("ethbtc", 15, 30)
+                def onBar(instrument):
+                    alg.getLastPrice() # Returns the last price of btcusd
+                    alg.getLastPrice("ethbtc")
+            ```
         """
+
         try:
             if not ticker:
                 assert len(self.ticker_timeframes) == 1

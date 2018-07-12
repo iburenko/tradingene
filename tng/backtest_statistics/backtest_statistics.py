@@ -5,17 +5,23 @@ import numpy as np
 
 class BacktestStatistics:
     def __init__(self, positions):
-        if positions[-1].close_time == 0:
-            self.all_positions_ = positions[:-1]
-        else:
-            self.all_positions_ = positions
-        self.winning_trades_ = [
-            pos for pos in self.all_positions_ if pos.profit >= 0
-        ]
-        self.losing_trades_ = [
-            pos for pos in self.all_positions_ if pos.profit < 0
-        ]
-        self.number_of_positions = len(self.all_positions_)
+        try:
+            assert len(positions) > 0
+            if positions[-1].close_time == 0:
+                self.all_positions_ = positions[:-1]
+            else:
+                self.all_positions_ = positions
+            self.winning_trades_ = [
+                pos for pos in self.all_positions_ if pos.profit >= 0
+            ]
+            self.losing_trades_ = [
+                pos for pos in self.all_positions_ if pos.profit < 0
+            ]
+            self.number_of_positions = len(self.all_positions_)
+            self.winning_trades = len(self.winning_trades_)
+            self.losing_trades = len(self.losing_trades_)
+        except AssertionError:
+            print("No positions was open while backtest!") 
         self.PnL = 0
         self.max_drawdown = 0
         self.reliability = 0
@@ -27,8 +33,6 @@ class BacktestStatistics:
         self.loss = 0
         self.average_winning_trade = 0
         self.average_losing_trade = 0
-        self.winning_trades = len(self.winning_trades_)
-        self.losing_trades = len(self.losing_trades_)
         self.largest_winning_trade = 0
         self.largest_losing_trade = 0
         self.average_time_in_winning_trade = 0

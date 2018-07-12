@@ -14,17 +14,29 @@ alg.addTimeframe("btcusd", 1440)
 
 
 def onBar(instrument):
-    print(instrument.time, "ema(10)[1] = ",instrument.ema(10)[1], \
-                           "rsi(10)[1] = ",instrument.rsi(10)[1])
-    if instrument.open[1] > instrument.close[1]:
-        # If price goes down during the day then sell;
-        alg.sell()
-    elif instrument.open[1] < instrument.close[1]:
-        # If price goes up during the day then buy;
-        alg.buy()
-    else:
-        # If price did not change then do nothing;
-        pass
+    print(instrument.time)
+    # print(instrument.adx()[1])
+    print(instrument.aroon()[1])
+    print(instrument.atr()[1])
+    # print(instrument.bollinger()[1])
+    print(instrument.cci()[1])
+    # print(instrument.chande()[1])
+    # print(instrument.keltner()[1])
+    # print(instrument.macd()[1])
+    print(instrument.momentum()[1])
+    print(instrument.ppo()[1])
+    # print(instrument.stochastic()[1])
+    print(instrument.williams()[1])
+    print("======================================")
+    # if instrument.open[1] > instrument.close[1]:
+    #     # If price goes down during the day then sell;
+    #     alg.sell()
+    # elif instrument.open[1] < instrument.close[1]:
+    #     # If price goes up during the day then buy;
+    #     alg.buy()
+    # else:
+    #     # If price did not change then do nothing;
+    #     pass
 
 
 alg.run_backtest(onBar)
