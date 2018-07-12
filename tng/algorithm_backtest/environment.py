@@ -10,11 +10,11 @@ class Environment(Algorithm):
         Constructor of this class will invoke by the inherited 
         class Backtest.
 
-        # Arguments:
+        Arguments:
             args (tuple): Tuple of variables that needed for initialization
                 of the super class Algorithm.
 
-        # Attributes:
+        Attributes:
             start_date (datetime.datetime): Start time of the backtest.
             end_date (datetime.datetime): End time of the backtest.
             ticker_timeframes (dict): Keys of this dictioanry are tickers
@@ -38,7 +38,7 @@ class Environment(Algorithm):
             procedure won't warn or raise an error
             if you'll add more that one instrument.
 
-            # Example:
+            Example:
 
             '''python
                 # Add new instrument to your algorithm
@@ -50,13 +50,13 @@ class Environment(Algorithm):
                 # btcusd.
             '''
 
-            # Args:
+            Args:
                 ticker (str): name of the underlying asset.
 
-            # Returns:
+            Returns:
                 None
 
-            # Warns:
+            Warns:
                 Warning is raised if you are trying to add
                 an instrument that was already added.
         """
@@ -72,7 +72,7 @@ class Environment(Algorithm):
     def deleteInstrument(self, ticker):
         """ Deletes specified instrument from an algorithm.
 
-            # Example:
+            Example:
 
             '''python
                 # Add new instrument to your algorithm
@@ -85,10 +85,10 @@ class Environment(Algorithm):
                 # ethusd.
             '''
 
-            # Args:
+            Args:
                 ticker (str): name the asset to delete.
 
-            # Returns:
+            Returns:
                 None
         """
 
@@ -100,7 +100,7 @@ class Environment(Algorithm):
     def addTimeframe(self, ticker, *timeframes):
         """ Adds specified timeframes to an algorithm.
 
-            # Example:
+            Example:
 
             '''python
                 # Add new instrument to your algorithm
@@ -115,13 +115,13 @@ class Environment(Algorithm):
                 # fully formed.
             '''
 
-            # Args:
+            Args:
                 timeframes (tuple): tuple of ints
 
-            # Returns:
+            Returns:
                 None
 
-            # Raises:
+            Raises:
                 TypeError: if tuple has non int element.
         """
 
@@ -141,7 +141,7 @@ class Environment(Algorithm):
     def deleteTimeframe(self, ticker, *timeframes):
         """ Deletes specified timeframes from an algorithm.
 
-            # Example:
+            Example:
 
             '''python
                 # Add new instrument to your algorithm
@@ -156,13 +156,13 @@ class Environment(Algorithm):
                 # will invoke after 15 minutes candles fully formed.
             '''
 
-            # Args:
+            Args:
                 timeframes (tuple): tuple of ints
 
-            # Returns:
+            Returns:
                 None
 
-            # Raises:
+            Raises:
                 TypeError: if tuple has non int element.
         """
 

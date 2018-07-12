@@ -3,14 +3,14 @@ class PriceEvent:
                  ticker = None, price = None, trigger = None, handler = None):
         """ Handles callbackes on a given price.
 
-        # Arguments:
+        Arguments:
             ticker (str): See attributes.
             price (float): See attributes.
             trigger (int): See attributes.
             handler (function): See attributes.
             
         
-        # Attributes:
+        Attributes:
             ticker (str): Name of an asset.
             price (): Time stamp. At the moment when backtest will reach
                 specified time stamp callaback will invoke.
@@ -22,7 +22,7 @@ class PriceEvent:
             handler (function): Callback that is called when current price
                 strikes the specified price.
 
-        # Raises:
+        Raises:
             TypeError: If handler is not callable.
     """
 
@@ -35,11 +35,11 @@ class PriceEvent:
     def check(cls, obj):
         """ Checks whether any price event should be handled
 
-            # Attributes:
+            Attributes:
                 obj (TNG): TNG class instance that contains all price events
                     if any.
 
-            # Returns:
+            Returns:
                 None
         """
         expired = [event for event in obj.price_events\

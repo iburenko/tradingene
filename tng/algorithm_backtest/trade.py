@@ -4,7 +4,7 @@ from numpy import sign
 class Trade:
     """ Contains information about one particular trade. 
 
-        # Arguments:
+        Arguments:
             id (int): See attributes.
             open_price (float): See attributes.
             close_price (float): See attributes.
@@ -13,7 +13,7 @@ class Trade:
             open_time (int): See attributes.
             close_time (int): See attributes.
     
-        # Attributes:
+        Attributes:
             id (int): id of the trade. The first trade has
                 random int. The next trade in the position
                 has id increased by one. Trade in the next

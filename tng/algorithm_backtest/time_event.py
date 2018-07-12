@@ -1,20 +1,20 @@
 class TimeEvent:
     """ Handles callbackes on a given time.
 
-        # Arguments:
+        Arguments:
             ticker (str): See attributes.
             time (int): See attributes.
             handler (function): See attributes.
             
         
-        # Attributes:
+        Attributes:
             ticker (str): Name of an asset.
             time (int): Time stamp. At the moment when backtest will reach
                 specified time stamp callaback will invoke.
             handler (function): Callback that is called when current backtest
                 time reaches specified time or exceeds it.
 
-        # Raises:
+        Raises:
             TypeError: If handler is not callable.
     """
 
@@ -27,11 +27,11 @@ class TimeEvent:
     def check(cls, obj):
         """ Checks whether any time event should be handled
 
-            # Attributes:
+            Attributes:
                 obj (TNG): TNG class instance that contains all time events
                     if any.
 
-            # Returns:
+            Returns:
                 None
         """
         expired = [event for event in obj.time_events \

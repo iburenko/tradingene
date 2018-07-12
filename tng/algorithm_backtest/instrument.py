@@ -20,11 +20,11 @@ class Instrument(Indicators):
         ```
         then backtest procedure will store seven instances of Instrument class.
 
-        # Arguments:
+        Arguments:
             ticker (str): Name of the underlying asset.
             timeframe (int): Timeframe of the instrument.
 
-        # Attributes:
+        Attributes:
             ticker (str): Name of the underlying asset.
             timeframe (int): Timeframe of the instrument.
             time (int): Time of the beginning of the last fully formed candle.

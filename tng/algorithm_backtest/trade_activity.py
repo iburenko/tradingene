@@ -15,11 +15,11 @@ class TradeActivity(Backtest):
         Constructor of this class will invoke by the inherited 
         class TNG.
 
-        # Arguments:
+        Arguments:
             args (tuple): Tuple of variables that needed for initialization
                 of the super class Backtest.
 
-        # Attributes:
+        Attributes:
             positions (list): List of all positions. Each position is
                 an instance of Position class.
     """
@@ -33,48 +33,48 @@ class TradeActivity(Backtest):
     def openPosition(self, ticker=None):
         """Open position without acquiring any asset.
 
-            # Arguments:
+            Arguments:
                 ticker (str): Asset for which position will open.
                         At the moment algorithm is not able to use
                         several instruments. Only the first added
                         instrument will be used despite of ticker
                         received by the function.
 
-            # Warns:
+            Warns:
                 warn: If you are trying to open a new position
                     but the last is not closed. Only one opened
                     position is allowed.
 
-            # Returns:
+            Returns:
                 int: Random int if the first position is opened.
                     Increased by one last position's id if there
                     was opened position.
                 None: If position wasn't opened.
 
-            # Example:
+            Example:
             ```python
-                # This example opens a position for btcusd.
+                This example opens a position for btcusd.
                 alg = TNG(ticker, timeframe, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addTimeframe("btcusd", 10)
                 alg.openPosition()
             ```
             ```python
-                # This example opens a position for btcusd.
+                This example opens a position for btcusd.
                 alg = TNG(ticker, timeframe, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addTimeframe("btcusd", 10)
                 alg.openPosition("btcusd")
             ```
             ```python
-                # This example opens a position for btcusd.
+                This example opens a position for btcusd.
                 alg = TNG(ticker, timeframe, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addTimeframe("btcusd", 10)
                 alg.openPosition("ethbtc")
             ```
             ```python
-                # This example opens a position for btcusd.
+                This example opens a position for btcusd.
                 alg = TNG(ticker, timeframe, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addInstrument("ethbtc")
@@ -83,7 +83,7 @@ class TradeActivity(Backtest):
                 alg.openPosition("ethbtc")
             ```
             ```python
-                # This example opens a position for ethbtc.
+                This example opens a position for ethbtc.
                 alg = TNG(ticker, timeframe, start_date, end_date)
                 alg.addInstrument("ethbtc")
                 alg.addInstrument("btcusd")
@@ -133,62 +133,62 @@ class TradeActivity(Backtest):
             Notice that volume position limited as follows:
             -MAX_AVAILABLE_VOLUME <= used_volume <= MAX_AVAILABLE_VOLUME.
 
-            # Arguments:
+            Arguments:
                 volume (float): Number of lots that will be bought.
 
-            # Warns:
+            Warns:
                 warn: If specified volume is negative.
                 warn: In SP regime if the last position is open and long.
 
-            # Raises:
+            Raises:
                 ValueError: In SP regime if specified volume 
                     exceeds MAX_AVAILABLE_VOLUME.
                 ValueError: In MP regime if cumulative volume of positions
                     exceeds MAX_AVAILABLE_VOLUME.
 
-            # Returns:
+            Returns:
                 None
 
-            # Examples:
+            Examples:
             ```python
-                # In SP regime open a position and buy 1 lot.
-                # Used volume is 1, available volume is 0.
+                In SP regime open a position and buy 1 lot.
+                Used volume is 1, available volume is 0.
                 def onBar(instrument):
                     alg.openPosition()
                     alg.buy()
             ```
             ```python
-                # In SP regime open a position and buy 1 lot.
-                # Used volume is 1, available volume is 0.
+                In SP regime open a position and buy 1 lot.
+                Used volume is 1, available volume is 0.
                 def onBar(instrument):
                     alg.openPosition()
                     alg.buy(0.1)
             ```
             ```python
-                # In SP regime buy 1 lot. 
-                # Position will open automatically.
-                # Used volume is 1, available volume is 0.
+                In SP regime buy 1 lot. 
+                Position will open automatically.
+                Used volume is 1, available volume is 0.
                 def onBar(instrument):
                     alg.buy()
             ```
             ```python
-                # In SP regime buy 1 lot using buy()
-                # then close opened long and sell 1 lot.
+                In SP regime buy 1 lot using buy()
+                then close opened long and sell 1 lot.
                 def onBar(instrument):
-                    alg.buy() # used volume is 1, available is 0;
-                    alg.sell() # used volume is -1, available volume is 0.
+                    alg.buy() used volume is 1, available is 0;
+                    alg.sell() used volume is -1, available volume is 0.
             ```
             ```python
-                # In MP regime buy 0.1 lots then buy 0.2 lots
+                In MP regime buy 0.1 lots then buy 0.2 lots
                 def onBar(instrument):
-                    alg.buy(0.1) # used volume is 0.1, available is 0.9;
-                    alg.buy(0.2) # used volume is 0.3, available volume is 0.7.
+                    alg.buy(0.1) used volume is 0.1, available is 0.9;
+                    alg.buy(0.2) used volume is 0.3, available volume is 0.7.
             ```
             ```python
-                # In MP regime buy 0.1 lots then sell 0.2 lots
+                In MP regime buy 0.1 lots then sell 0.2 lots
                 def onBar(instrument):
-                    alg.buy(0.1) # used volume is 0.1, available is 0.9;
-                    alg.sell(0.2) # used volume is -0.1, available volume is 0.9.
+                    alg.buy(0.1) used volume is 0.1, available is 0.9;
+                    alg.sell(0.2) used volume is -0.1, available volume is 0.9.
             ```
         """
 
@@ -252,62 +252,62 @@ class TradeActivity(Backtest):
             Notice that volume position limited as follows:
             -MAX_AVAILABLE_VOLUME <= used_volume <= MAX_AVAILABLE_VOLUME.
 
-            # Arguments:
+            Arguments:
                 volume (float): Number of lots that will be sold.
 
-            # Warns:
+            Warns:
                 warn: If specified volume is negative.
                 warn: In SP regime if the last position is open and short.
 
-            # Raises:
+            Raises:
                 ValueError: In SP regime if specified volume 
                     exceeds MAX_AVAILABLE_VOLUME.
                 ValueError: In MP regime if cumulative volume of positions
                     exceeds MAX_AVAILABLE_VOLUME.
 
-            # Returns:
+            Returns:
                 None
 
-            # Examples:
+            Examples:
             ```python
-                # In SP regime open a position and sell 1 lot.
-                # Used volume is -1, available volume is 0.
+                In SP regime open a position and sell 1 lot.
+                Used volume is -1, available volume is 0.
                 def onBar(instrument):
                     alg.openPosition()
                     alg.sell()
             ```
             ```python
-                # In SP regime open a position and sell 1 lot.
-                # Used volume is -1, available volume is 0.
+                In SP regime open a position and sell 1 lot.
+                Used volume is -1, available volume is 0.
                 def onBar(instrument):
                     alg.openPosition()
                     alg.sell(0.1)
             ```
             ```python
-                # In SP regime sell 1 lot. 
-                # Position will open automatically.
-                # Used volume is -1, available volume is 0.
+                In SP regime sell 1 lot. 
+                Position will open automatically.
+                Used volume is -1, available volume is 0.
                 def onBar(instrument):
                     alg.sell()
             ```
             ```python
-                # In SP regime sell 1 lot using sell()
-                # then close opened short and buy 1 lot.
+                In SP regime sell 1 lot using sell()
+                then close opened short and buy 1 lot.
                 def onBar(instrument):
-                    alg.sell() # used volume is -1, available is 0;
-                    alg.buy() # used volume is 1, available volume is 0.
+                    alg.sell() used volume is -1, available is 0;
+                    alg.buy() used volume is 1, available volume is 0.
             ```
             ```python
-                # In MP regime sell 0.1 lots then sell 0.2 lots
+                In MP regime sell 0.1 lots then sell 0.2 lots
                 def onBar(instrument):
-                    alg.sell(0.1) # used volume is -0.1, available is 0.9;
-                    alg.sell(0.2) # used volume is -0.3, available volume is 0.7.
+                    alg.sell(0.1) used volume is -0.1, available is 0.9;
+                    alg.sell(0.2) used volume is -0.3, available volume is 0.7.
             ```
             ```python
-                # In MP regime sell 0.1 lots then buy 0.2 lots
+                In MP regime sell 0.1 lots then buy 0.2 lots
                 def onBar(instrument):
-                    alg.sell(0.1) # used volume is -0.1, available is 0.9;
-                    alg.buy(0.2) # used volume is 0.1, available volume is 0.9.
+                    alg.sell(0.1) used volume is -0.1, available is 0.9;
+                    alg.buy(0.2) used volume is 0.1, available volume is 0.9.
             ```
         """
 
@@ -359,38 +359,38 @@ class TradeActivity(Backtest):
                 alg.buy(volume)
             ```
 
-            # Arguments:
+            Arguments:
                 volume (float): Number of lots that will be bought.
 
-            # Warns:
+            Warns:
                 warn: If there is opened long position
 
-            # Returns:
+            Returns:
                 None: If the last position is open and long;
                 pos_id (int): Position id returned by openPosition() function.
             
-            # Examples:
+            Examples:
             ```python
-                # In SP regime open position and buy 1 lot.
-                # Used volume is 1, available volume is 0.
+                In SP regime open position and buy 1 lot.
+                Used volume is 1, available volume is 0.
                 def onBar(instrument):
                     alg.openLong()
             ```
             ```python
-                # In SP regime open position and buy 1 lot.
-                # Used volume is 1, available volume is 0.
+                In SP regime open position and buy 1 lot.
+                Used volume is 1, available volume is 0.
                 def onBar(instrument):
                     alg.openLong(0.1)
             ```
             ```python
-                # In MP regime open position and buy 1 lot.
-                # Used volume is 1, available volume is 0.
+                In MP regime open position and buy 1 lot.
+                Used volume is 1, available volume is 0.
                 def onBar(instrument):
                     alg.openLong()
             ```
             ```python
-                # In MP regime open position and buy 0.1 lot.
-                # Used volume is 0.1, available volume is 0.9.
+                In MP regime open position and buy 0.1 lot.
+                Used volume is 0.1, available volume is 0.9.
                 def onBar(instrument):
                     alg.openLong(0.1)
             ```
@@ -414,38 +414,38 @@ class TradeActivity(Backtest):
                 alg.sell(volume)
             ```
 
-            # Arguments:
+            Arguments:
                 volume (float): Number of lots that will be sold.
 
-            # Warns:
+            Warns:
                 warn: If there is opened short position
 
-            # Returns:
+            Returns:
                 None: If the last position is open and short;
                 pos_id (int): Position id returned by openPosition() function.
             
-            # Examples:
+            Examples:
             ```python
-                # In SP regime open position and sell 1 lot.
-                # Used volume is -1, available volume is 0.
+                In SP regime open position and sell 1 lot.
+                Used volume is -1, available volume is 0.
                 def onBar(instrument):
                     alg.openShort()
             ```
             ```python
-                # In SP regime open position and sell 1 lot.
-                # Used volume is -1, available volume is 0.
+                In SP regime open position and sell 1 lot.
+                Used volume is -1, available volume is 0.
                 def onBar(instrument):
                     alg.openShort(0.1)
             ```
             ```python
-                # In MP regime open position and sell 1 lot.
-                # Used volume is -1, available volume is 0.
+                In MP regime open position and sell 1 lot.
+                Used volume is -1, available volume is 0.
                 def onBar(instrument):
                     alg.openShort()
             ```
             ```python
-                # In MP regime open position and sell 0.1 lot.
-                # Used volume is -0.1, available volume is 0.9.
+                In MP regime open position and sell 0.1 lot.
+                Used volume is -0.1, available volume is 0.9.
                 def onBar(instrument):
                     alg.openShort(0.1)
             ```
@@ -468,18 +468,18 @@ class TradeActivity(Backtest):
             becomes lower than specified loss value then position 
             will automatically close.
 
-            # Arguments:
+            Arguments:
                 loss (float): Value of the stoploss.
 
-            # Raises:
+            Raises:
                 ValueError: If loss is not nonnegative.
             
-            # Returns:
+            Returns:
                 None
 
-            # Examples:
+            Examples:
             ```python
-                # Works in any regime.
+                Works in any regime.
                 def onBar(instrument):
                     alg.buy()
                     alg.setSL(loss = 300)
@@ -504,18 +504,18 @@ class TradeActivity(Backtest):
             becomes greater than specified profit value then position 
             will automatically close.
 
-            # Arguments:
+            Arguments:
                 profit (float): Value of the takeprofit.
 
-            # Raises:
+            Raises:
                 ValueError: If profit is not nonnegative.
 
-            # Returns:
+            Returns:
                 None
 
-            # Examples:
+            Examples:
             ```python
-                # Works in any regime.
+                Works in any regime.
                 def onBar(instrument):
                     alg.buy()
                     alg.setTP(profit = 300)
@@ -539,23 +539,23 @@ class TradeActivity(Backtest):
                 alg.setSL(loss)
                 alg.setTP(profit)
 
-            # Arguments:
+            Arguments:
                 loss (float): Value of the stoploss.
                 profit (float): Value of the takeprofit.
             
-            # Returns:
+            Returns:
                 None
 
-            # Examples:
+            Examples:
             ```python
-                # Set stoploss and takeprofit using single function.
-                # Works in any regime.
+                Set stoploss and takeprofit using single function.
+                Works in any regime.
                 def onBar(instrument):
                     alg.buy()
                     alg.setSLTP(loss = 300, profit = 300)
-                    # equivalelnt to
-                    # alg.setSL(loss = 300)
-                    # alg.setTP(profit = 300)
+                    equivalelnt to
+                    alg.setSL(loss = 300)
+                    alg.setTP(profit = 300)
             ```
         """
 
@@ -569,21 +569,21 @@ class TradeActivity(Backtest):
             otherwise closes position with specified id (if this position
             is open).
 
-            # Arguments:
+            Arguments:
                 id (int): id of position to be closed.
 
-            # Warns:
+            Warns:
                 warn: If there is no opened position.
                 warn: If position with specified id is already closed.
 
-            # Returns:
+            Returns:
                 None
 
-            # Examples:
+            Examples:
             ```python
-                # On the first bar open long position with 1 lot.
-                # Close position if the last open price was greater
-                # than 10000.
+                On the first bar open long position with 1 lot.
+                Close position if the last open price was greater
+                than 10000.
                 def onBar(instrument):
                     alg.openLong(1)
                     if instrument.open[1] > 10000:
@@ -630,20 +630,20 @@ class TradeActivity(Backtest):
 
             Invokes handler function when position with pos_id was closed.
 
-            # Arguments:
+            Arguments:
                 pos_id (int): id of a position.
                 handler (function): method to be invoked after position close.
 
-            # Raises:
+            Raises:
                 ValueError: If position with pos_id was not find.
                 TypeError: If handler is not callable.
             
-            # Returns:
+            Returns:
                 None
 
-            # Examples:
+            Examples:
             ```python
-                # Works in any regime.
+                Works in any regime.
                 pos_id = None
                 def onBar(instrument):
                     global pos_id
@@ -672,35 +672,35 @@ class TradeActivity(Backtest):
 
             If the last position is open calculates available volume.
 
-            # Warns:
+            Warns:
                 warn: If the last position was close.
 
-            # Returns:
+            Returns:
                 None: if the last position is not open
                 float: if the last position is open.
                     Notice that for available volume holds inequallity:
                     0 <= available volume <= MAX_AVAILABLE_VOLUME.
 
-            # Examples:
+            Examples:
             ```python
-                # In SP regime
+                In SP regime
                 def onBar(instrument):
                     alg.buy()
-                    alg.getAvailableVolume() # returns 0
+                    alg.getAvailableVolume() returns 0
             ```
             ```python
-                # In MP regime
+                In MP regime
                 def onBar(instrument):
                     def onBar(function):
                         alg.buy(0.2)
-                        alg.getAvailableVolume() # returns 0.8
+                        alg.getAvailableVolume() returns 0.8
             ```
             ```python
-                # In MP regime
+                In MP regime
                 def onBar(instrument):
                     def onBar(function):
                         alg.sell(0.5)
-                        alg.getAvailableVolume() # returns 0.5
+                        alg.getAvailableVolume() returns 0.5
             ```
         """
 
@@ -722,20 +722,20 @@ class TradeActivity(Backtest):
             bad practice at time) it is possible to get last price of the
             specified instrument.
 
-            # Arguments:
+            Arguments:
                 ticker (str, optional): Name of the underlying asset.
 
-            # Returns
+            Returns
                 float: Last price of the instrument.
 
-            # Raises:
+            Raises:
                 AssertionError: If only one instrument was added by user,
                     but non-exisiting ticker was specified.
                 NameError: If ticker was not found among added instruments.
 
-            # Examples:
+            Examples:
             ```python
-                # Works in any regime.
+                Works in any regime.
                 alg = TNG(name, regime, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addTimeframe("btcusd", 10)
@@ -743,7 +743,7 @@ class TradeActivity(Backtest):
                     alg.getLastPrice()
             ```
             ```python
-                # Works in any regime.
+                Works in any regime.
                 alg = TNG(name, regime, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addTimeframe("btcusd", 10)
@@ -751,24 +751,24 @@ class TradeActivity(Backtest):
                     alg.getLastPrice("btcusd")
             ```
             ```python
-                # Works in any regime.
+                Works in any regime.
                 alg = TNG(name, regime, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addInstrument("ethbtc")
                 alg.addTimeframe("btcusd", 10)
                 alg.addTimeframe("ethbtc", 15, 30)
                 def onBar(instrument):
-                    alg.getLastPrice() # Returns the last price of btcusd
+                    alg.getLastPrice() Returns the last price of btcusd
             ```
             ```python
-                # Works in any regime.
+                Works in any regime.
                 alg = TNG(name, regime, start_date, end_date)
                 alg.addInstrument("btcusd")
                 alg.addInstrument("ethbtc")
                 alg.addTimeframe("btcusd", 10)
                 alg.addTimeframe("ethbtc", 15, 30)
                 def onBar(instrument):
-                    alg.getLastPrice() # Returns the last price of btcusd
+                    alg.getLastPrice() Returns the last price of btcusd
                     alg.getLastPrice("ethbtc")
             ```
         """
@@ -798,21 +798,21 @@ class TradeActivity(Backtest):
                 Wait for the specified time. At the momene then current time
                 is equal or exceeds specified time handler will call.
 
-            # Arguments:
+            Arguments:
                 type_ (str): Name of the type of the event: Price or Time.
                 params: For Price event -- price (float).
                     For Time event -- time (int).
                 handler (function): method that will invoke when speicified
                     event happend.
-            # Returns:
+            Returns:
                 id of the event.
 
-            # Raises:
+            Raises:
                 ValueError: If type_ was not Price neither Time.
 
-            # Examples:
+            Examples:
                 ```python
-                    # Works in any regime.
+                    Works in any regime.
                     event_id = None
                     def onBar(instrument):
                         global event_id
@@ -822,7 +822,7 @@ class TradeActivity(Backtest):
                         print("Price event handler!")
                 ```
                 ```python
-                    # Works in any regime.
+                    Works in any regime.
                     event_id = None
                     def onBar(instrument):
                         global event_id
@@ -858,18 +858,18 @@ class TradeActivity(Backtest):
 
             If some event was setted by on() method, off() will cancels it.
 
-            # Arguments:
+            Arguments:
                 id (int): id of the event.
             
-            # Returns:
+            Returns:
                 None
 
-            # Warns:
+            Warns:
                 warn: if the event with specified id was not found.
 
-            # Examples:
+            Examples:
             ```python
-                    # Works in any regime.
+                    Works in any regime.
                     event_id = None
                     def onBar(instrument):
                         global event_id
@@ -882,7 +882,7 @@ class TradeActivity(Backtest):
                         print("Price event handler!")
                 ```
                 ```python
-                    # Works in any regime.
+                    Works in any regime.
                     event_id = None
                     def onBar(instrument):
                         global event_id

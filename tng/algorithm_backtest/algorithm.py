@@ -4,7 +4,7 @@ class Algorithm:
         Constructor of this class will automatically invoke 
         by the inherited class Environment.
 
-        # Arguments:
+        Arguments:
             name (str, optional): Name of your algorithm, 
                 by default set to "Cornucopia".
             regime (str, optional): Regime of backtest. 

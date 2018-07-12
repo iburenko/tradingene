@@ -8,7 +8,7 @@ from tng.algorithm_backtest.time_event import TimeEvent
 from tng.algorithm_backtest.price_event import PriceEvent
 import tng.algorithm_backtest.limits as limits
 from tng.algorithm_backtest.data import Data, dt
-from tng.ind.spread_estimation_corwin_schultz import corwin_schultz
+#from tng.ind.spread_estimation_corwin_schultz import corwin_schultz
 
 
 class Backtest(Environment):
@@ -17,11 +17,11 @@ class Backtest(Environment):
         Constructor of this class will automatically 
         invoke by the inherited class TradeActivity.
 
-        # Arguments:
+        Arguments:
             args (tuple): Tuple of variables that needed for initialization
                 of the super class Algorithm.
 
-        # Attributes:
+        Attributes:
             history_data (dict): Contains loaded history data 
                 of the specified instrument.
             completed_timeframes (list): List of timeframes that was completed

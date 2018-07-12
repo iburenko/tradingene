@@ -1,5 +1,5 @@
-from tng.algorithm_backtest.trade_activity import TradeActivity
 from datetime import datetime
+from tng.algorithm_backtest.trade_activity import TradeActivity
 
 
 class TNG(TradeActivity):

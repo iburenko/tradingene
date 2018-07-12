@@ -31,7 +31,7 @@ class Data:
     def load_data(cls, filename, start_date, end_date):
         """ Loads file from the drive and returns history data. 
         
-            # Arguments:
+            Arguments:
                 filename (str): Name of the asset. Its history will
                     be loaded from .csv file.
                 start_date (datetime.datetime): From this timestamp data
@@ -39,7 +39,7 @@ class Data:
                 end_date (datetime.datetime): Till this timestamp data
                     will be loaded.
 
-            # Returns:
+            Returns:
                 hist_data(np.record): Numpy array of minute candles.
         """
 
