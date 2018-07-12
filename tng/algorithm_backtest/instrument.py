@@ -53,7 +53,7 @@ class Instrument(Indicators):
     """
 
     def __init__(self, ticker, timeframe):
-        self.ind = Indicators(timeframe)
+        Indicators.__init__(self, timeframe)
         self.ticker = ticker
         self.timeframe = timeframe
         self.time = 0
