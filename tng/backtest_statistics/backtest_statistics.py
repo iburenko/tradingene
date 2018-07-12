@@ -21,7 +21,7 @@ class BacktestStatistics:
             self.winning_trades = len(self.winning_trades_)
             self.losing_trades = len(self.losing_trades_)
         except AssertionError:
-            print("No positions was open while backtest!") 
+            print("No positions was open while backtest!")
         self.PnL = 0
         self.max_drawdown = 0
         self.reliability = 0
