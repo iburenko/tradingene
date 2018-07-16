@@ -841,9 +841,8 @@ class TradeActivity(Backtest):
                     trigger = 1
                 elif self.recent_price > params:
                     trigger = -1
-                new_price_event = PriceEvent(
-                        ticker, params, trigger, arguments, handler
-                    )
+                new_price_event = PriceEvent(ticker, params, trigger,
+                                             arguments, handler)
                 new_price_event.id = randint(2**1, 2**32 - 1)
                 self.price_events.append(new_price_event)
                 return new_price_event.id
@@ -898,7 +897,7 @@ class TradeActivity(Backtest):
                         print("Time event handler!")
                 ```
         """
-        
+
         for price_event in self.price_events:
             if price_event.id == id:
                 self.price_events.remove(price_event)

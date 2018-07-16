@@ -1,9 +1,11 @@
 # UNCOMMENT!!!!
-import tng.ind.ti as ti 
+import tng.ind.ti as ti
 # UNCOMMENT!!!!
-from tng.algorithm_backtest.limits import LOOKBACK_PERIOD 
+from tng.algorithm_backtest.limits import LOOKBACK_PERIOD
+
 # COMMENT !!!!
-#import ti 
+#import ti
+
 
 class Indicators:
     def __init__(self, _timeframeMin):
@@ -47,7 +49,11 @@ class Indicators:
         return None
 
     def adx(self, periodADX=14, periodDI=-1):
-        indParameters = {'name': 'adx', 'periodADX': periodADX, 'periodDI': periodDI}
+        indParameters = {
+            'name': 'adx',
+            'periodADX': periodADX,
+            'periodDI': periodDI
+        }
         ind = IndHlp.findIndicator(self.indicators, indParameters)
         if ind is None:
             ind = IndADX(periodADX, periodDI)
@@ -96,7 +102,6 @@ class Indicators:
             return ind.getValues()
         return None
 
-
     def bollinger(self, period=14, priceType='close', nStds=2.0):
         indParameters = {'name': 'bollinger', 'period': period, \
                          'priceType': priceType, 'nStds': nStds}
@@ -111,7 +116,7 @@ class Indicators:
         return None
 
     def cci(self, period=14, cciConst=0.015):
-        indParameters = {'name': 'cci', 'period': period, 'cciConst':cciConst}
+        indParameters = {'name': 'cci', 'period': period, 'cciConst': cciConst}
         ind = IndHlp.findIndicator(self.indicators, indParameters)
         if ind is None:
             ind = IndCCI(period, cciConst)
@@ -135,12 +140,15 @@ class Indicators:
             return ind.getValues()
         return None
 
-
     def keltner(self, period=14, multiplier=1.0):
-        indParameters = {'name': 'keltner', 'period': period, 'multiplier':multiplier}
+        indParameters = {
+            'name': 'keltner',
+            'period': period,
+            'multiplier': multiplier
+        }
         ind = IndHlp.findIndicator(self.indicators, indParameters)
         if ind is None:
-            ind = IndKeltner(period,multiplier)
+            ind = IndKeltner(period, multiplier)
             indParameters['ind'] = ind
             self.indicators.append(indParameters)
         if ind is not None:
@@ -176,7 +184,6 @@ class Indicators:
             return ind.getValues()
         return None
 
-
     def ppo(self, periodFast=12, periodSlow=26, priceType='close'):
         indParameters = {'name': 'ppo', 'periodFast': periodFast, \
                          'periodSlow': periodSlow, 'priceType': priceType}
@@ -190,7 +197,6 @@ class Indicators:
             return ind.getValues()
         return None
 
-
     def roc(self, period=9, priceType='close'):
         indParameters = {'name': 'roc', 'period': period, \
                          'priceType': priceType}
@@ -203,7 +209,6 @@ class Indicators:
             ind.recalculate(self.rates)
             return ind.getValues()
         return None
-
 
     def sma(self, period=9, priceType='close'):
         indParameters = {'name': 'sma', 'period': period, \
@@ -231,7 +236,6 @@ class Indicators:
             return ind.getValues()
         return None
 
-
     def stochastic(self, period=14, periodD=3, smoothing=1):
         indParameters = {'name': 'stochastic', 'period': period, \
                          'periodD':periodD, 'smoothing':smoothing}
@@ -245,7 +249,7 @@ class Indicators:
             return ind.getValues()
         return None
 
-    def williams(self, period=14 ):
+    def williams(self, period=14):
         indParameters = {'name': 'williams', 'period': period}
         ind = IndHlp.findIndicator(self.indicators, indParameters)
         if ind is None:
@@ -256,11 +260,14 @@ class Indicators:
             ind.recalculate(self.rates)
             return ind.getValues()
         return None
+
+
 # end of Indicators
+
 
 class IndHlp:
 
-    historySize = 50 # LOOKBACK_PERIOD # UNCOMMENT!!!!
+    historySize = 50  # LOOKBACK_PERIOD # UNCOMMENT!!!!
 
     @staticmethod
     def getRatesByPriceType(rates, priceType):
@@ -274,6 +281,7 @@ class IndHlp:
             return rates['low']
         else:
             return rates['close']
+
     # end of def
 
     @staticmethod
@@ -281,7 +289,7 @@ class IndHlp:
         indexStart = -1
         indexToOverwrite0 = -1
         if len(dtmsInd) == 0:
-            return IndHlp.historySize-1, indexToOverwrite0
+            return IndHlp.historySize - 1, indexToOverwrite0
 
         if dtmsInd[0] < dtmsRates[0]:
             for i in range(1, len(dtmsRates)):
@@ -290,6 +298,7 @@ class IndHlp:
                     indexToOverwrite0 = i
                     break
         return indexStart, indexToOverwrite0
+
     # end of getIndexToCalculate
 
     @staticmethod
@@ -310,19 +319,24 @@ class IndHlp:
         return ind
 
     @staticmethod
-    def insertTime( dtmsIndex, dtms, timeIndex, time ):
+    def insertTime(dtmsIndex, dtms, timeIndex, time):
         if timeIndex < len(time):
             dtms.insert(dtmsIndex, time[timeIndex])
         else:
-            dtms.insert(dtmsIndex, None )         
+            dtms.insert(dtmsIndex, None)
+
+
 # end of IndHlp
 
 
 class IndVals:
     def __init__(self):
         return
+
     def __setattr__(self, name, value):
         self.__dict__[name] = value
+
+
 # end of class IndicatorValues
 
 
@@ -337,12 +351,15 @@ class Indicator:
         return self.values
 
     def recalculate(self, rates):
-        indexStart, indexToOverwrite0 = IndHlp.getIndexToCalculate(self.dtms, rates['time'])
+        indexStart, indexToOverwrite0 = IndHlp.getIndexToCalculate(
+            self.dtms, rates['time'])
         for i in range(indexStart, -1, -1):
-            self.calculate(rates, i, indexToOverwrite0==i) # 
+            self.calculate(rates, i, indexToOverwrite0 == i)  #
 
     def calculate(self, rates, shift=0, overwrite=False):
-         raise NotImplementedError("Must override calculate()")
+        raise NotImplementedError("Must override calculate()")
+
+
 # end of class Indicator
 
 
@@ -360,11 +377,15 @@ class IndAD(Indicator):
                         hi=rates['high'], lo=rates['low'], \
                         cl=rates['close'], vol=rates['vol'])
         if overwrite:
-            self.values[0] = new            
+            self.values[0] = new
         else:
-            self.values.insert(0, new) 
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            self.values.insert(0, new)
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
+
+
 # end of IndAD
 
 
@@ -398,7 +419,7 @@ class IndADX(Indicator):
                 newPDI = new['pdi']
             if new['mdi'] is not None:
                 newMDI = new['mdi']
-        if overwrite: 
+        if overwrite:
             self.indVals.adx[0] = newADX
             self.indVals.pdi[0] = newPDI
             self.indVals.mdi[0] = newMDI
@@ -406,11 +427,15 @@ class IndADX(Indicator):
             self.indVals.adx.insert(0, newADX)
             self.indVals.pdi.insert(0, newPDI)
             self.indVals.mdi.insert(0, newMDI)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
 
     def getValues(self):
         return self.indVals
+
+
 # end of IndADX
 
 
@@ -437,8 +462,12 @@ class IndAPO(Indicator):
             self.values[0] = newAPO
         else:
             self.values.insert(0, newAPO)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
+
+
 # end of IndAPO
 
 
@@ -463,17 +492,21 @@ class IndAroon(Indicator):
                 newUp = new['up']
             if new['down'] is not None:
                 newDown = new['down']
-        if overwrite: 
+        if overwrite:
             self.indVals.up[0] = newUp
             self.indVals.down[0] = newDown
         else:
             self.indVals.up.insert(0, newUp)
             self.indVals.down.insert(0, newDown)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
 
     def getValues(self):
         return self.indVals
+
+
 # end of IndAroon
 
 
@@ -494,8 +527,12 @@ class IndATR(Indicator):
             self.values[0] = new
         else:
             self.values.insert(0, new)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
+
+
 # end of IndATR
 
 
@@ -517,7 +554,8 @@ class IndBollinger(Indicator):
             self.dtms.pop()
 
         rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
-        new = ti.bollinger(period=self.period, shift=shift, nStds=self.nStds, rates=rates1d)
+        new = ti.bollinger(
+            period=self.period, shift=shift, nStds=self.nStds, rates=rates1d)
         newMA = None
         newTop = None
         newBottom = None
@@ -536,11 +574,15 @@ class IndBollinger(Indicator):
             self.indVals.ma.insert(0, newMA)
             self.indVals.top.insert(0, newTop)
             self.indVals.bottom.insert(0, newBottom)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
 
     def getValues(self):
         return self.indVals
+
+
 # end of IndBollinger
 
 
@@ -565,28 +607,37 @@ class IndCCI(Indicator):
             self.values[0] = newCCI
         else:
             self.values.insert(0, newCCI)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
+
+
 # end of IndCCI
 
 
 class IndEMA(Indicator):
-    def __init__(self, period = 9, priceType="close"):
+    def __init__(self, period=9, priceType="close"):
         Indicator.__init__(self, period, priceType)
         self.prev = None
 
-    def calculate(self, rates, shift = 0, overwrite=False):
+    def calculate(self, rates, shift=0, overwrite=False):
         if len(self.values) >= IndHlp.historySize:
             self.values.pop()
             self.dtms.pop()
 
         rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
-        new = ti.ema(period=self.period, shift=shift, rates=rates1d, prev=self.prev)
+        new = ti.ema(
+            period=self.period, shift=shift, rates=rates1d, prev=self.prev)
         if overwrite:
             self.values[0] = new
         else:
             self.values.insert(0, new)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
+
+
 # end of IndEMA
 
 
@@ -623,10 +674,10 @@ class IndKeltner(Indicator):
             if new['lower'] is not None:
                 newLower = new['lower']
             if new['atr'] is not None:
-                newAtr= new['atr']
-        if overwrite: 
+                newAtr = new['atr']
+        if overwrite:
             self.indVals.basis[0] = newBasis
-            self.indVals.upper[0]= newUpper
+            self.indVals.upper[0] = newUpper
             self.indVals.lower[0] = newLower
             self.indVals.atr[0] = newAtr
         else:
@@ -634,16 +685,24 @@ class IndKeltner(Indicator):
             self.indVals.upper.insert(0, newUpper)
             self.indVals.lower.insert(0, newLower)
             self.indVals.atr.insert(0, newAtr)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
 
     def getValues(self):
         return self.indVals
+
+
 # end of IndKeltner
 
 
 class IndMACD(Indicator):
-    def __init__(self, periodFast=12, periodSlow=26, periodSignal=9, priceType='close'):
+    def __init__(self,
+                 periodFast=12,
+                 periodSlow=26,
+                 periodSignal=9,
+                 priceType='close'):
         Indicator.__init__(self, 0, priceType)
         self.periodFast = periodFast
         self.periodSlow = periodSlow
@@ -683,11 +742,15 @@ class IndMACD(Indicator):
             self.indVals.macd.insert(0, newMACD)
             self.indVals.signal.insert(0, newSignal)
             self.indVals.histogram.insert(0, newHistogram)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
 
     def getValues(self):
         return self.indVals
+
+
 # end of IndMACD
 
 
@@ -706,7 +769,11 @@ class IndMomentum(Indicator):
             self.values[0] = new
         else:
             self.values.insert(0, new)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
+
+
 # end of IndMomentum
 
 
@@ -714,7 +781,7 @@ class IndPPO(Indicator):
     def __init__(self, periodFast=12, periodSlow=26, priceType="close"):
         Indicator.__init__(self, 0, priceType)
         self.periodFast = periodFast
-        self.periodSlow = periodSlow        
+        self.periodSlow = periodSlow
 
     def calculate(self, rates, shift=0, overwrite=False):
         if len(self.values) >= IndHlp.historySize:
@@ -722,12 +789,20 @@ class IndPPO(Indicator):
             self.dtms.pop()
 
         rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
-        new = ti.ppo(periodFast=self.periodFast, periodSlow=self.periodSlow, shift=shift, rates=rates1d)
+        new = ti.ppo(
+            periodFast=self.periodFast,
+            periodSlow=self.periodSlow,
+            shift=shift,
+            rates=rates1d)
         if overwrite:
             self.values[0] = new
         else:
             self.values.insert(0, new)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
+
+
 # end of IndPPO
 
 
@@ -746,7 +821,11 @@ class IndROC(Indicator):
             self.values[0] = new
         else:
             self.values.insert(0, new)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
+
+
 # end of IndROC
 
 
@@ -770,8 +849,12 @@ class IndRSI(Indicator):
             self.values[0] = newRSI
         else:
             self.values.insert(0, newRSI)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
+
+
 # end of IndRSI
 
 
@@ -788,9 +871,13 @@ class IndSMA(Indicator):
         new = ti.sma(period=self.period, shift=shift, rates=rates1d)
         if overwrite:
             self.values[0] = new
-        else: 
+        else:
             self.values.insert(0, new)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
+
+
 # end of IndSMA
 
 
@@ -826,11 +913,15 @@ class IndStochastic(Indicator):
         else:
             self.indVals.k.insert(0, newK)
             self.indVals.d.insert(0, newD)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
         self.prev = new
 
     def getValues(self):
         return self.indVals
+
+
 # end of IndStochastic
 
 
@@ -843,13 +934,21 @@ class IndWilliams(Indicator):
             self.values.pop()
             self.dtms.pop()
 
-        new = ti.williams(period=self.period, shift=shift, hi=rates['high'], lo=rates['low'], cl=rates['close'])
+        new = ti.williams(
+            period=self.period,
+            shift=shift,
+            hi=rates['high'],
+            lo=rates['low'],
+            cl=rates['close'])
         if overwrite:
             self.values[0] = new
         else:
             self.values.insert(0, new)
-            IndHlp.insertTime( 0, self.dtms, shift, rates['time'] ) # dtmsIndex, dtms, timeIndex, time
-# end of IndWilliams
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
+
+# end of IndWilliams
 
 #######################################################################################################################################
