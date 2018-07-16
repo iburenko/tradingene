@@ -18,9 +18,10 @@ class TimeEvent:
             TypeError: If handler is not callable.
     """
 
-    def __init__(self, ticker=None, time=None, handler=None):
+    def __init__(self, ticker=None, time=None, arguments=None, handler=None):
         self._ticker = ticker
         self._time = time
+        self.arguments = arguments
         self._handler = handler
 
     @classmethod
@@ -37,7 +38,7 @@ class TimeEvent:
         expired = [event for event in obj.time_events \
                               if obj.now >= obj.time_events.time]
         for event in expired:
-            event.handler()
+            event.handler(event.arguments)
             obj.time_events.remove(event)
 
 

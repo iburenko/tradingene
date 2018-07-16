@@ -202,23 +202,23 @@ class TradeActivity(Backtest):
             is_closed = self._is_last_pos_closed()
             if not is_closed:
                 if is_closed == None:
-                    self.openPosition()
+                    pos_id = self.openPosition()
                 if self.positions[-1].trades:
                     if self.positions[-1].trades[-1].side == 1:
                         warn("Can't buy since there is an open buy!")
                     else:
                         self.closePosition()
-                        self.openPosition()
+                        pos_id = self.openPosition()
                         self._open_trade(volume, side=1)
                 else:
                     self._open_trade(volume, side=1)
             else:
-                self.openPosition()
+                pos_id = self.openPosition()
                 self._open_trade(volume, side=1)
         else:
             is_closed = self._is_last_pos_closed()
             if is_closed == None or is_closed > 0:
-                self.openPosition()
+                pos_id = self.openPosition()
                 self._open_trade(volume, side=1)
             else:
                 volume_used = self.positions[-1].volume_used
@@ -229,6 +229,7 @@ class TradeActivity(Backtest):
                     raise ValueError(s)
                 else:
                     self._open_trade(volume, side=1)
+        return pos_id
 
     def sell(self, volume=1):
         """ Sells specified volume of an asset.
@@ -787,7 +788,7 @@ class TradeActivity(Backtest):
         except AssertionError:
             raise NameError("Ticker {} was not specified!".format(ticker))
 
-    def on(self, type_=None, params=None, handler=None):
+    def on(self, type_=None, params=None, arguments=None, handler=None):
         """ Wait for specified event and call handler.
 
             User can define two types of events: Price event and Time event.
@@ -802,6 +803,7 @@ class TradeActivity(Backtest):
                 type_ (str): Name of the type of the event: Price or Time.
                 params: For Price event -- price (float).
                     For Time event -- time (int).
+                argument (tuple): Arguments for handler method.
                 handler (function): method that will invoke when speicified
                     event happend.
             Returns:
@@ -839,14 +841,16 @@ class TradeActivity(Backtest):
                     trigger = 1
                 elif self.recent_price > params:
                     trigger = -1
-                new_price_event = PriceEvent(ticker, params, trigger, handler)
+                new_price_event = PriceEvent(
+                        ticker, params, trigger, arguments, handler
+                    )
                 new_price_event.id = randint(2**1, 2**32 - 1)
                 self.price_events.append(new_price_event)
                 return new_price_event.id
         elif type_ == "Time":
             time = self._check_time_params(params, handler)
             if time is not None:
-                new_time_event = TimeEvent(ticker, time, handler)
+                new_time_event = TimeEvent(ticker, time, arguments, handler)
                 new_time_event.id = randint(2**1, 2**32 - 1)
                 self.time_events.append(new_time_event)
                 return new_time_event.id
@@ -894,6 +898,7 @@ class TradeActivity(Backtest):
                         print("Time event handler!")
                 ```
         """
+        
         for price_event in self.price_events:
             if price_event.id == id:
                 self.price_events.remove(price_event)

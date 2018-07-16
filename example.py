@@ -15,8 +15,8 @@ alg.addTimeframe("btcusd", 1440)
 
 def onBar(instrument):
     print(instrument.time)
-    # print(instrument.adx()[1])
-    print(instrument.aroon()[1])
+    print(instrument.adx()[1])
+    # print(instrument.aroon()[1])
     print(instrument.atr()[1])
     # print(instrument.bollinger()[1])
     print(instrument.cci()[1])

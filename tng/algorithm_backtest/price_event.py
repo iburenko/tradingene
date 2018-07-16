@@ -1,6 +1,7 @@
 class PriceEvent:
     def __init__(self, \
-                 ticker = None, price = None, trigger = None, handler = None):
+                 ticker = None, price = None, trigger = None, \
+                 arguments = None, handler = None):
         """ Handles callbackes on a given price.
 
         Arguments:
@@ -29,6 +30,7 @@ class PriceEvent:
         self._ticker = ticker
         self._threshold = price
         self._trigger = trigger
+        self.arguments = arguments
         self._handler = handler
 
     @classmethod
@@ -45,7 +47,7 @@ class PriceEvent:
         expired = [event for event in obj.price_events\
                 if (event.threshold - obj.recent_price)*event.trigger < 0]
         for event in expired:
-            event.handler()
+            event.handler(event.arguments)
             obj.price_events.remove(event)
 
 

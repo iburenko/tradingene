@@ -91,9 +91,11 @@ class Position:
                     if pos_profit < -last_pos.stop_loss:
                         last_pos.profit = -last_pos.stop_loss
                         obj.closePosition()
+                        print("close sl")
                 if last_pos.take_profit is not None:
                     if pos_profit > last_pos.take_profit:
                         last_pos.profit = last_pos.take_profit
                         obj.closePosition()
+                        print("close tp")
         except AssertionError:
             return None
