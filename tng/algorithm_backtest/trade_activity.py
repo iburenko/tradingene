@@ -1,4 +1,5 @@
 from datetime import datetime
+from numpy import sign
 from numpy.random import randint
 from warnings import warn
 from tng.algorithm_backtest.backtest import Backtest
@@ -202,26 +203,27 @@ class TradeActivity(Backtest):
             is_closed = self._is_last_pos_closed()
             if not is_closed:
                 if is_closed == None:
-                    pos_id = self.openPosition()
+                    self.openPosition()
                 if self.positions[-1].trades:
                     if self.positions[-1].trades[-1].side == 1:
                         warn("Can't buy since there is an open buy!")
                     else:
                         self.closePosition()
-                        pos_id = self.openPosition()
+                        self.openPosition()
                         self._open_trade(volume, side=1)
                 else:
                     self._open_trade(volume, side=1)
             else:
-                pos_id = self.openPosition()
+                self.openPosition()
                 self._open_trade(volume, side=1)
         else:
             is_closed = self._is_last_pos_closed()
             if is_closed == None or is_closed > 0:
-                pos_id = self.openPosition()
+                self.openPosition()
                 self._open_trade(volume, side=1)
             else:
                 volume_used = self.positions[-1].volume_used
+                self.positions[-1].id
                 if abs(volume_used + volume) > MAX_AVAILABLE_VOLUME:
                     s = "You use {} number of lots.".format(volume_used)+\
                         "Can't buy {} lots, since total volume".format(volume)+\
@@ -229,6 +231,7 @@ class TradeActivity(Backtest):
                     raise ValueError(s)
                 else:
                     self._open_trade(volume, side=1)
+        pos_id = self.positions[-1].id
         return pos_id
 
     def sell(self, volume=1):
@@ -343,6 +346,7 @@ class TradeActivity(Backtest):
                 self._open_trade(volume, side=-1)
             else:
                 volume_used = self.positions[-1].volume_used
+                self.positions[-1].id
                 if abs(volume_used + volume) > MAX_AVAILABLE_VOLUME:
                     s = "You use {} number of lots.".format(volume_used)+\
                         "Can't sell {} lots, since total volume".format(volume)+\
@@ -350,6 +354,8 @@ class TradeActivity(Backtest):
                     raise ValueError(s)
                 else:
                     self._open_trade(volume, side=-1)
+        pos_id = self.positions[-1].id
+        return pos_id
 
     def openLong(self, volume=1):
         """ Opens a position and buys specified number of lots.
@@ -612,7 +618,7 @@ class TradeActivity(Backtest):
                              " because it is closed already!")
                     else:
                         pos.close_time = self.now
-                        last_pos.close_trades(self.now)
+                        pos.close_trades(self.now)
                         pos.closed = True
                         closed = True
                         if pos.on_close is not None:
@@ -787,6 +793,23 @@ class TradeActivity(Backtest):
                     raise NameError("Ticker {} was not found!".format(ticker))
         except AssertionError:
             raise NameError("Ticker {} was not specified!".format(ticker))
+
+    def getPositionSide(self, pos_id):
+        if not isinstance(pos_id, int):
+            raise TypeError("Position id must be int!")
+        pos = [pos for pos in self.positions if pos.id == pos_id]
+        if not pos:
+            raise ValueError(
+                "Position with id {} was not found!".format(pos_id)
+            )
+        try:
+            assert len(pos) == 1
+        except:
+            raise ValueError(
+                "Two or more position with the same id was foung!"
+            )
+        return sign(pos[0].volume_used)
+        
 
     def on(self, type_=None, params=None, arguments=None, handler=None):
         """ Wait for specified event and call handler.
