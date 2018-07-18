@@ -1,33 +1,44 @@
 import tng.algorithm_backtest.tng as tng
 from datetime import datetime
 import tng.backtest_statistics.backtest_statistics as bs
+import pandas as pd
 
 name = "Cornucopia"
 regime = "SP"
-start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 2, 1)
+start_date = datetime(2017, 3, 1)
+end_date = datetime(2018, 5, 1)
 
 alg = tng.TNG(name, regime, start_date, end_date)
 
 alg.addInstrument("btcusd")
-alg.addTimeframe("btcusd", 1440)
+alg.addTimeframe("btcusd", 30)
 
+df = pd.DataFrame(columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
 
 def onBar(instrument):
-    print(instrument.time)
-    print(instrument.adx()[1])
-    # print(instrument.aroon()[1])
-    print(instrument.atr()[1])
+    global df
+    to_append = pd.DataFrame([[int(instrument.rates['time'][1]*1000),
+            instrument.rates['open'][1],
+            instrument.rates['high'][1],
+            instrument.rates['low'][1],
+            instrument.rates['close'][1],
+            instrument.rates['vol'][1]]], columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
+    #print(to_append)
+    df = df.append(to_append, ignore_index = True)
+    # print(instrument.time)
+    # print(instrument.adx().adx[1])
+    # print(instrument.aroon().up[1])
+    # print(instrument.atr()[1])
     # print(instrument.bollinger()[1])
-    print(instrument.cci()[1])
+    # print(instrument.cci()[1])
     # print(instrument.chande()[1])
     # print(instrument.keltner()[1])
     # print(instrument.macd()[1])
-    print(instrument.momentum()[1])
-    print(instrument.ppo()[1])
+    # print(instrument.momentum()[1])
+    # print(instrument.ppo()[1])
     # print(instrument.stochastic()[1])
-    print(instrument.williams()[1])
-    print("======================================")
+    # print(instrument.williams()[1])
+    # print("======================================")
     # if instrument.open[1] > instrument.close[1]:
     #     # If price goes down during the day then sell;
     #     alg.sell()
@@ -40,8 +51,9 @@ def onBar(instrument):
 
 
 alg.run_backtest(onBar)
-new_stat = bs.BacktestStatistics(alg.positions)
-new_stat.backtest_results()
+df.to_csv("btcusd30.csv", index = False, header = False)
+# new_stat = bs.BacktestStatistics(alg.positions)
+# new_stat.backtest_results()
 #new_stat.calculate_ATT()
 # new_stat.print_statistics()
 # print(new_stat.calculate_drawdown())

@@ -53,7 +53,7 @@ class Backtest(Environment):
         self.completed_timeframes = list()
         self.completed_tickers = list()
         self._now = 0
-        self._recent_price = 0
+        self._recent_price = (0, 0)
         self.spread = 0
         self.instruments = set()
         self.time_events = list()
@@ -82,7 +82,7 @@ class Backtest(Environment):
         self._load_data(self.start_date, self.end_date)
         self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
-                                              self.history_data)
+                                            self.history_data)
         self._run_generator(candle_generator, on_bar_function)
 
     def _run_generator(self, generator, on_bar_function):
@@ -125,22 +125,22 @@ class Backtest(Environment):
         ticker = list(self.ticker_timeframes)[0]
         if ticker in candles.keys():
             candle = np.array(([candles[ticker]]), dtype=dt)
-            self.recent_price = candle['open']
+            self.recent_price = (candle['open'], 1)
 
     def _minute_to_ticks(self, candles):
         ticker = list(self.ticker_timeframes)[0]
         if ticker in candles.keys():
             candle = np.array(([candles[ticker]]), dtype=dt)
-            self.recent_price = candle['open']
+            self.recent_price = (candle['open'], 1)
             if candle['open'] < candle['close']:
-                self.recent_price = candle['low']
+                self.recent_price = (candle['low'], 1)
             else:
-                self.recent_price = candle['high']
+                self.recent_price = (candle['high'], 1)
             if candle['open'] < candle['close']:
-                self.recent_price = candle['high']
+                self.recent_price = (candle['high'], 1)
             else:
-                self.recent_price = candle['low']
-            self.recent_price = candle['close']
+                self.recent_price = (candle['low'], 1)
+            self.recent_price = (candle['close'], 1)
 
     def _iterate_data(self, start_date, end_date, history_data):
         current_time = start_date
@@ -194,8 +194,6 @@ class Backtest(Environment):
             time_ -= timedelta(minutes=total_minutes)
             time_ = int(time_.strftime("%Y%m%d%H%M%S"))
             return time_
-
-        self._set_spread()
 
         candle = candles[instrument.ticker]
         for instr in self.instruments:
@@ -370,10 +368,11 @@ class Backtest(Environment):
 
     @recent_price.setter
     def recent_price(self, value):
-        self._recent_price = value
-        Position.check_sltp(self)
-        PriceEvent.check(self)
+        self._recent_price = value[0]
+        if value[1]:
+            Position.check_sltp(self)
+            PriceEvent.check(self)
 
     @recent_price.deleter
     def recent_price(self):
-        self._recent_price = None
+        self._recent_price = (None, 0)

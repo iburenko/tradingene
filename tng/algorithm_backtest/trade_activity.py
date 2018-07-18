@@ -961,7 +961,10 @@ class TradeActivity(Backtest):
             trade_id = self.positions[-1].trades[-1].id + 1
         else:
             trade_id = randint(2**1, 2**32 - 1)
-        open_price = self.recent_price
+        if side == 1:
+            open_price = self.recent_price + self.spread
+        elif side == -1:
+            open_price = self.recent_price - self.spread
         new_trade = Trade(trade_id, open_price, volume, self.now)
         self.positions[-1].trades.append(new_trade)
         self.positions[-1].volume_used += volume
