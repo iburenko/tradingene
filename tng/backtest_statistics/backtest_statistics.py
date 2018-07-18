@@ -67,7 +67,6 @@ class BacktestStatistics:
         drawdown_price_array = np.array([])
         drawdown_flag = 0
         for i in range(1, len(cumulative_profit)):
-            diff = cumulative_profit[i] - cumulative_profit[i - 1]
             if drawdown_flag:
                 if cumulative_profit[i] > drawdown_price_array[0]:
                     drawdown_flag = 0
@@ -81,6 +80,7 @@ class BacktestStatistics:
                     drawdown_price_array = np.append(drawdown_price_array, \
                                                      cumulative_profit[i])
             else:
+                diff = cumulative_profit[i] - cumulative_profit[i - 1]
                 if diff < 0:
                     drawdown_flag = 1
                     drawdown_start_pos = i - 1
@@ -89,14 +89,15 @@ class BacktestStatistics:
                         [cumulative_profit[i - 1], cumulative_profit[i]])
                 else:
                     pass
-        drawdown_len = i - 1 - drawdown_start_pos
-        drawdown = \
-                drawdown_price_array[0] - np.min(drawdown_price_array)
-        drawdown_price_array = np.array([])
-        drawdown_values = np.append(drawdown_values, drawdown)
-        drawdown_lens = np.append(drawdown_lens, drawdown_len)
-        drawdown = np.max(drawdown_values)
-        drawdown_len = drawdown_lens[np.argmax(drawdown_values)]
+        if drawdown_flag:
+            drawdown_len = i - 1 - drawdown_start_pos
+            drawdown = \
+                    drawdown_price_array[0] - np.min(drawdown_price_array)
+            drawdown_price_array = np.array([])
+            drawdown_values = np.append(drawdown_values, drawdown)
+            drawdown_lens = np.append(drawdown_lens, drawdown_len)
+            drawdown = np.max(drawdown_values)
+            drawdown_len = drawdown_lens[np.argmax(drawdown_values)]
         return (drawdown, int(drawdown_len))
 
     def calculate_AT(self):
