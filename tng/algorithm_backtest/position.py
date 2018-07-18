@@ -52,7 +52,7 @@ class Position:
         """ Calculates available volume and retuns it. """
         return MAX_AVAILABLE_VOLUME - abs(self.volume_used)
 
-    def calculate_profit(self, recent_price):
+    def calculate_recent_profit(self, recent_price):
         """ Calculates recent profit and returns it. """
         profit = 0
         if self.trades:
@@ -60,10 +60,18 @@ class Position:
                 profit += trade.volume * (recent_price - trade.open_price)
         return profit
 
-    def close_trades(self, close_time_):
+    def calculate_final_profit(self):
+        profit = 0
+        if self.trades:
+            for trade in self.trades:
+                profit += trade.volume * (trade.close_price - trade.open_price)
+        return profit
+
+    def close_trades(self, close_time_, close_price_):
         """ Stores time of close of the position, returns None. """
         for trade in self.trades:
             trade.close_time = close_time_
+            trade.close_price = close_price_
 
     @staticmethod
     def check_sltp(obj):
@@ -85,15 +93,25 @@ class Position:
                 return None
             else:
                 last_pos = obj.positions[-1]
-                pos_profit = last_pos.calculate_profit(obj.recent_price)
+                pos_profit = last_pos.calculate_recent_profit(obj.recent_price)
                 last_pos.profit = pos_profit
                 if last_pos.stop_loss is not None:
                     if pos_profit < -last_pos.stop_loss:
-                        last_pos.profit = -last_pos.stop_loss
+                        #last_pos.profit = -last_pos.stop_loss
+                        side = obj.getPositionSide(last_pos.id)
+                        if side == 1:
+                            obj.recent_price = ((-last_pos.stop_loss + last_pos.volume_used * last_pos.trades[0].open_price)/last_pos.volume_used - obj.spread, 0)
+                        elif side == -1:
+                            pass
                         obj.closePosition()
                 if last_pos.take_profit is not None:
                     if pos_profit >= last_pos.take_profit:
-                        last_pos.profit = last_pos.take_profit
+                        #last_pos.profit = last_pos.take_profit
+                        side = obj.getPositionSide(last_pos.id)
+                        if side == 1:
+                            obj.recent_price = ((last_pos.take_profit + last_pos.volume_used * last_pos.trades[0].open_price)/last_pos.volume_used - obj.spread,0)
+                        elif side == -1:
+                            pass
                         obj.closePosition()
         except AssertionError:
             return None

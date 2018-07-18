@@ -603,7 +603,14 @@ class TradeActivity(Backtest):
             if is_closed is not None and not is_closed:
                 last_pos = self.positions[-1]
                 last_pos.close_time = self.now
-                last_pos.close_trades(self.now)
+                side = self.getPositionSide(last_pos.id)
+                if side == 1:
+                    close_price = self.recent_price - self.spread
+                elif side == -1:
+                    close_price = self.recent_price + self.spread
+                else:
+                    raise ValueError("Position side in neither 1, nor -1!")
+                last_pos.close_trades(self.now, close_price)
                 last_pos.closed = True
                 closed = True
                 if last_pos.on_close is not None:
@@ -618,7 +625,13 @@ class TradeActivity(Backtest):
                              " because it is closed already!")
                     else:
                         pos.close_time = self.now
-                        pos.close_trades(self.now)
+                        if side == 1:
+                            close_price = self.recent_price - self.spread
+                        elif side == -1:
+                            close_price = self.recent_price + self.spread
+                        else:
+                            raise ValueError("Position side in neither 1, nor -1!")
+                        pos.close_trades(self.now, close_price)
                         pos.closed = True
                         closed = True
                         if pos.on_close is not None:
@@ -630,7 +643,8 @@ class TradeActivity(Backtest):
             volume_traded = 0
             for trade in self.positions[-1].trades:
                 volume_traded += abs(trade.volume)
-            self.positions[-1].profit -= (2 * volume_traded * self.spread)
+            self.positions[-1].profit = self.positions[-1].calculate_final_profit()
+            #self.positions[-1].profit -= (2 * volume_traded * self.spread)
 
     def onPositionClose(self, pos_id, handler):
         """ Call handler right after position close.
@@ -985,9 +999,9 @@ class TradeActivity(Backtest):
         else:
             trade_id = randint(2**1, 2**32 - 1)
         if side == 1:
-            open_price = self.recent_price# + self.spread
+            open_price = self.recent_price + self.spread
         elif side == -1:
-            open_price = self.recent_price# - self.spread
+            open_price = self.recent_price - self.spread
         new_trade = Trade(trade_id, open_price, volume, self.now)
         self.positions[-1].trades.append(new_trade)
         self.positions[-1].volume_used += volume
