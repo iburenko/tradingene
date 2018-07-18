@@ -625,6 +625,7 @@ class TradeActivity(Backtest):
                              " because it is closed already!")
                     else:
                         pos.close_time = self.now
+                        side = self.getPositionSide(pos.id)
                         if side == 1:
                             close_price = self.recent_price - self.spread
                         elif side == -1:
