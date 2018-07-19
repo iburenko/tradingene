@@ -1,10 +1,5 @@
-# UNCOMMENT!!!!
 import tng.ind.ti as ti
-# UNCOMMENT!!!!
 from tng.algorithm_backtest.limits import LOOKBACK_PERIOD
-
-# COMMENT !!!!
-#import ti
 
 
 class Indicators:
