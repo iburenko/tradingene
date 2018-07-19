@@ -15,6 +15,7 @@ alg.addTimeframe("btcusd", 30)
 
 # df = pd.DataFrame(columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
 
+
 def onBar(instrument):
     # global df
     # to_append = pd.DataFrame([[int(instrument.rates['time'][1]*1000),

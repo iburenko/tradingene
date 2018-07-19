@@ -631,7 +631,8 @@ class TradeActivity(Backtest):
                         elif side == -1:
                             close_price = self.recent_price + self.spread
                         else:
-                            raise ValueError("Position side in neither 1, nor -1!")
+                            raise ValueError(
+                                "Position side in neither 1, nor -1!")
                         pos.close_trades(self.now, close_price)
                         pos.closed = True
                         closed = True
@@ -644,7 +645,8 @@ class TradeActivity(Backtest):
             volume_traded = 0
             for trade in self.positions[-1].trades:
                 volume_traded += abs(trade.volume)
-            self.positions[-1].profit = self.positions[-1].calculate_final_profit()
+            self.positions[-1].profit = self.positions[
+                -1].calculate_final_profit()
             #self.positions[-1].profit -= (2 * volume_traded * self.spread)
 
     def onPositionClose(self, pos_id, handler):
@@ -815,16 +817,13 @@ class TradeActivity(Backtest):
         pos = [pos for pos in self.positions if pos.id == pos_id]
         if not pos:
             raise ValueError(
-                "Position with id {} was not found!".format(pos_id)
-            )
+                "Position with id {} was not found!".format(pos_id))
         try:
             assert len(pos) == 1
         except:
             raise ValueError(
-                "Two or more position with the same id was foung!"
-            )
+                "Two or more position with the same id was foung!")
         return sign(pos[0].volume_used)
-        
 
     def on(self, type_=None, params=None, arguments=None, handler=None):
         """ Wait for specified event and call handler.
