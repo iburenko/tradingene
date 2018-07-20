@@ -5,8 +5,8 @@ import pandas as pd
 
 name = "Cornucopia"
 regime = "SP"
-start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 2, 1)
+start_date = datetime(2018, 4, 1)
+end_date = datetime(2018, 5, 1)
 
 alg = tng.TNG(name, regime, start_date, end_date)
 
@@ -27,18 +27,20 @@ def onBar(instrument):
     #print(to_append)
     # df = df.append(to_append, ignore_index = True)
     print(instrument.time)
-    print(instrument.adx().adx[1])
-    print(instrument.aroon().up[1])
-    print(instrument.atr()[1])
-    print(instrument.bollinger().top[1])
-    print(instrument.cci()[1])
+    # print(instrument.sma(7)[1])
+    print(instrument.ema(3)[1])
+    # print(instrument.adx(4,4).adx[1])
+    # print(instrument.aroon().up[1])
+    # print(instrument.atr()[1])
+    # print(instrument.bollinger(8).top[1])
+    # print(instrument.cci()[1])
     # print(instrument.chande()[1])
-    print(instrument.keltner().basis[1])
+    # print(instrument.keltner().basis[1])
     # print(instrument.macd().macd[1])
-    print(instrument.momentum()[1])
-    print(instrument.ppo()[1])
+    # print(instrument.momentum()[1])
+    # print(instrument.ppo()[1])
     # print(instrument.stochastic().k[1])
-    print(instrument.williams()[1])
+    # print(instrument.williams()[1])
     print("======================================")
     # if instrument.open[1] > instrument.close[1]:
     #     # If price goes down during the day then sell;

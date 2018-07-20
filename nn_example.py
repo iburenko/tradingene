@@ -14,9 +14,12 @@ def main():
     test_end_date = datetime(2018, 5, 1)
     ticker = "ethbtc"
     timeframe = 60
-    train_data = import_data(ticker, timeframe, train_start_date,
-                             train_end_date)
-    test_data = import_data(ticker, timeframe, test_start_date, test_end_date)
+    train_data = import_data(
+        ticker, timeframe, train_start_date, train_end_date
+    )
+    test_data = import_data(
+        ticker, timeframe, test_start_date, test_end_date
+    )
     train_dataset_len = len(train_data['time'])
     test_dataset_len = len(test_data['time'])
     lookback = 5
