@@ -15,13 +15,23 @@ dt = np.dtype({
 where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
 
 
-def import_data(ticker, timeframe, start_date, end_date, reverse=True):
+def import_data(
+    ticker, 
+    timeframe, 
+    start_date, 
+    end_date, 
+    reverse=True,
+    split = (50, 25, 25)
+    ):
     if not isinstance(ticker, str) or \
         not isinstance(timeframe, int) or \
         not isinstance(start_date, datetime) or \
-        not isinstance(end_date, datetime):
+        not isinstance(end_date, datetime) or \
+        not isinstance(split, tuple) \
+        or len(split) > 3 or len(split) < 2:
         raise TypeError("Check types of arguments!")
-    
+
+    check_home_folder()
     delete_old_files()
     start_date_str = start_date.strftime("%Y%m%d%H%M%S")
     end_date_str = end_date.strftime("%Y%m%d%H%M%S")
@@ -54,7 +64,8 @@ def _load_data_from_pack(ticker, timeframe, start_date, end_date):
 
 
 def _is_cached(filename):
-    where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
+    home_folder = os.path.abspath('.') + '/tng/ml/'
+    where_to_cache = home_folder+'__cached_history__/'
     cached_files = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
             os.path.join(where_to_cache, file_))) and file_.startswith('__')
@@ -70,6 +81,11 @@ def _cache_data(data, filename):
         '.') + '/tng/ml/__cached_history__/' + filename
     df = pd.DataFrame(data)
     df.to_csv(where_to_cache, index=False)
+
+def check_home_folder():
+    home_folder = os.path.abspath('.') + '/tng/ml/'
+    if '__cached_history__' not in os.listdir(home_folder):
+        os.mkdir(home_folder+'__cached_history__/')
 
 def delete_old_files():
     where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
