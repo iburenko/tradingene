@@ -5,42 +5,37 @@ import pandas as pd
 
 name = "Cornucopia"
 regime = "SP"
-start_date = datetime(2018, 4, 1)
+start_date = datetime(2018, 3, 1)
 end_date = datetime(2018, 5, 1)
 
 alg = tng.TNG(name, regime, start_date, end_date)
-
 alg.addInstrument("btcusd")
-alg.addTimeframe("btcusd", 30)
+alg.addTimeframe("btcusd", 1440)
 
 # df = pd.DataFrame(columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
 
 
 def onBar(instrument):
-    # global df
-    # to_append = pd.DataFrame([[int(instrument.rates['time'][1]*1000),
-    #         instrument.rates['open'][1],
-    #         instrument.rates['high'][1],
-    #         instrument.rates['low'][1],
-    #         instrument.rates['close'][1],
-    #         instrument.rates['vol'][1]]], columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
-    #print(to_append)
-    # df = df.append(to_append, ignore_index = True)
     print(instrument.time)
-    # print(instrument.sma(7)[1])
-    print(instrument.ema(3)[1])
-    # print(instrument.adx(4,4).adx[1])
-    # print(instrument.aroon().up[1])
-    # print(instrument.atr()[1])
-    # print(instrument.bollinger(8).top[1])
-    # print(instrument.cci()[1])
-    # print(instrument.chande()[1])
-    # print(instrument.keltner().basis[1])
-    # print(instrument.macd().macd[1])
-    # print(instrument.momentum()[1])
-    # print(instrument.ppo()[1])
-    # print(instrument.stochastic().k[1])
-    # print(instrument.williams()[1])
+    print("ad = ", instrument.ad()[1])
+    print("adx = ", instrument.adx().adx[1])
+    print("apo = ", instrument.apo()[1])
+    print("aroon = ", instrument.aroon().up[1])
+    print("atr = ", instrument.atr()[1])
+    print("bollinger = ", instrument.bollinger().top[1])
+    print("cci = ", instrument.cci()[1])
+    print("chande = ", instrument.chande()[1])
+    print("ema = ", instrument.ema()[1])
+    print("keltner = ", instrument.keltner().basis[1])
+    print("macd = ", instrument.macd().macd[1])
+    print("momentum = ", instrument.momentum()[1])
+    print("ppo = ", instrument.ppo()[1])
+    print("roc = ", instrument.roc()[1])
+    print("sma = ", instrument.sma()[1])
+    print("rsi = ", instrument.rsi()[1])
+    print("stochastic = ", instrument.stochastic().k[1])
+    print("trima = ", instrument.trima()[1])
+    print("williams = ",instrument.williams()[1])
     print("======================================")
     # if instrument.open[1] > instrument.close[1]:
     #     # If price goes down during the day then sell;

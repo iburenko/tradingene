@@ -1,6 +1,5 @@
 import numpy as np
 
-
 # AD-indicator
 def ad(period=1, shift=0, hi=None, lo=None, cl=None, vol=None, prev=None):
     if hi is None or lo is None or cl is None or vol is None:
@@ -102,11 +101,15 @@ def apo(periodFast=12, periodSlow=26, shift=0, rates=None, prev=None):
     if rates is None:
         return None
 
+    prevFast = None
+    prevSlow = None
     if prev is not None:
-        emaFast = ema(
-            period=periodFast, rates=rates, shift=shift, prev=prev['fast'])
-        emaSlow = ema(
-            period=periodSlow, rates=rates, shift=shift, prev=prev['slow'])
+        prevFast = prev['fast']
+        prevSlow = prev['slow']
+
+    if prevFast is not None and prevSlow is not None:
+        emaFast = ema(period=periodFast, rates=rates, shift=shift, prev=prevFast)
+        emaSlow = ema(period=periodSlow, rates=rates, shift=shift, prev=prevSlow)
         if emaFast is None or emaSlow is None:
             apo = None
         else:
@@ -254,7 +257,7 @@ def chande(period=10, shift=0, rates=None):
     if rates is None:
         return None
 
-    if shift + period >= len(cl):
+    if shift + period >= len(rates):
         return None
 
     up = 0.0
@@ -539,13 +542,7 @@ def rma(period, shift=0, rates=None, prev=None):
 
 
 # Stochastic (FSI) - Stochastic Oscillator
-def stochastic(period=14,
-               periodD=3,
-               smoothing=1,
-               shift=0,
-               hi=None,
-               lo=None,
-               cl=None):
+def stochastic(period=14, periodD=3, smoothing=1, shift=0, hi=None, lo=None, cl=None):
     if hi is None or lo is None or cl is None:
         return None
 
@@ -585,6 +582,30 @@ def stochasticK(hi, lo, cl, st, en):
 
     return (cl[st] - minLow) * 100.0 / difference
 # end of stochasticK
+
+
+# TRIMA
+def trima(period=10, shift=0, rates=None):
+    if rates is None :
+        return None
+
+    ratesLen = len(rates)
+
+    interval = period / 2.0 + 0.5;
+    interval = int(interval)
+    
+    arrayOfSma = []
+    for i in range(interval):
+        valueOfSma = sma( period=interval, rates=rates, shift=shift+i )
+        if valueOfSma is None:
+            break
+        arrayOfSma.append( valueOfSma )
+
+    valueOfTrima = None
+    if len(arrayOfSma) > 0:
+        valueOfTrima = sma( period=interval, rates=arrayOfSma )
+    return valueOfTrima
+# end of stochastic
 
 
 def williams(period=14, shift=0, hi=None, lo=None, cl=None):

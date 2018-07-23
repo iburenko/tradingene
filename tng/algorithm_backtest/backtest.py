@@ -73,12 +73,16 @@ class Backtest(Environment):
         
         Raises:
             TypeError: if on_bar_function is not callable.
+            RuntimeError: if ticker_timeframe is empty, i.e.
+                no instrument was added.
         
         """
         if not callable(on_bar_function):
             err_str = "on_bar_function must be callable, not of "+\
                       "{} type!".format(type(on_bar_function).__name__)
             raise TypeError(err_str)
+        if not self.ticker_timeframes:
+            raise RuntimeError("No instrument was added!")
         self._load_data(self.start_date, self.end_date)
         self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,

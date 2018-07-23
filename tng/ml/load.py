@@ -4,7 +4,6 @@ from datetime import datetime
 import time
 import numpy as np
 import pandas as pd
-#sys.path.append('./../../')
 from tng.algorithm_backtest.tng import TNG
 
 dt = np.dtype({
