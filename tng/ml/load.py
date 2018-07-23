@@ -30,6 +30,8 @@ def import_data(
         not isinstance(split, tuple) \
         or len(split) > 3 or len(split) < 2:
         raise TypeError("Check types of arguments!")
+    if sum(split) != 100:
+        raise ValueError("Sum of values in split must be 100!")
 
     check_home_folder()
     delete_old_files()
@@ -38,17 +40,28 @@ def import_data(
     filename = "__" + ticker + str(
         timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
     if _is_cached(filename):
-        data = pd.read_csv(where_to_cache + filename, index_col=None, dtype=dt)
-        data = data.to_records(index=False)
+        read_data = pd.read_csv(where_to_cache + filename, index_col=None, header = None)
+        array_lens = [int(lens) for lens in read_data.iloc[0] if lens != 0.0]
+        if len(array_lens) == 2:
+            data = {'train': None, 'test': None}
+            data['train'] = read_data.iloc[1:array_lens[0]+1]
+            data['test'] = read_data.iloc[array_lens[0]+1:sum(array_lens)+1]
+        elif len(array_lens) == 3:
+            data = {'train': None, 'validation': None, 'test': None}
+            data['train'] = read_data.iloc[1:array_lens[0]+1]
+            data['validation'] = read_data.iloc[array_lens[0]+1:sum(array_lens[:2])+1]
+            data['test'] = read_data.iloc[sum(array_lens[:2])+1:sum(array_lens)+1]
+        #data = data.to_records(index=False)
     else:
-        data = _load_data_from_pack(ticker, timeframe, start_date, end_date)
+        data = _load_data(ticker, timeframe, start_date, end_date)
+        data = separate_data(data, split)
         if not reverse:
             data = data[::-1]
         _cache_data(data, filename)
     return data
 
 
-def _load_data_from_pack(ticker, timeframe, start_date, end_date):
+def _load_data(ticker, timeframe, start_date, end_date):
     def on_bar(instrument):
         pass
 
@@ -61,6 +74,23 @@ def _load_data_from_pack(ticker, timeframe, start_date, end_date):
     hist = list(alg.instruments)[0].rates[1:-50]
     del alg
     return hist
+
+
+def separate_data(data, split):
+    split_data = dict()
+    if len(split) == 2:
+        train_len = data.shape[0]*split[0]//100
+        test_len = data.shape[0]*split[1]//100
+        split_data['train'] = data[0:train_len]
+        split_data['test'] = data[train_len:train_len+test_len]
+    elif len(split) == 3:
+        train_len = data.shape[0]*split[0]//100
+        validation_len = data.shape[0]*split[1]//100
+        test_len = data.shape[0]*split[2]//100
+        split_data['train'] = data[0:train_len]
+        split_data['validation'] = data[train_len:train_len+test_len]
+        split_data['test'] = data[train_len+test_len:train_len+test_len+validation_len]
+    return split_data
 
 
 def _is_cached(filename):
@@ -79,8 +109,16 @@ def _is_cached(filename):
 def _cache_data(data, filename):
     where_to_cache = os.path.abspath(
         '.') + '/tng/ml/__cached_history__/' + filename
-    df = pd.DataFrame(data)
-    df.to_csv(where_to_cache, index=False)
+    array_lens = [0] * 6
+    i = 0
+    for value in data.values():
+        array_lens[i] = value.shape[0]
+        i += 1
+    df = pd.DataFrame(array_lens).T
+    df.to_csv(where_to_cache, index = False, header = False)
+    for value in data.values():
+        df = pd.DataFrame(value)
+        df.to_csv(where_to_cache, index=False, mode = "a", header = False)
 
 def check_home_folder():
     home_folder = os.path.abspath('.') + '/tng/ml/'

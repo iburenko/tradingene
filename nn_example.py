@@ -9,34 +9,31 @@ import numpy as np
 
 def main():
     train_start_date = datetime(2018, 1, 1)
-    train_end_date = datetime(2018, 4, 1)
-    test_start_date = datetime(2018, 4, 1)
-    test_end_date = datetime(2018, 5, 1)
+    train_end_date = datetime(2018, 2, 1)
     ticker = "ethbtc"
     timeframe = 60
-    train_data = import_data(
-        ticker, timeframe, train_start_date, train_end_date
+    data = import_data(
+        ticker, timeframe, train_start_date, train_end_date, split = (80,20)
     )
-    test_data = import_data(
-        ticker, timeframe, test_start_date, test_end_date
-    )
-    train_dataset_len = len(train_data['time'])
-    test_dataset_len = len(test_data['time'])
+    train_dataset_len = len(data['train'])
+    test_dataset_len = len(data['test'])
     lookback = 5
-    X_train = np.zeros((train_dataset_len - 1, 10))
-    Y_train = np.zeros((train_dataset_len - 1, 1))
-    for i in range(train_dataset_len - lookback - 1):
-        X_train[i] = calculate_input(train_data[i + 1:])
-        Y_train[i] = calculate_output(train_data[i:])
-    nn_model = create_model()
-    nn_model.fit(X_train, Y_train, epochs=20, batch_size=128)
-    X_test = np.zeros((test_dataset_len, 10))
-    Y_test = np.zeros((test_dataset_len, 1))
-    for i in range(test_dataset_len - lookback - 1):
-        X_test[i] = calculate_input(train_data[i + 1:])
-        Y_test[i] = calculate_output(train_data[i:])
-    score = nn_model.evaluate(X_test, Y_test, batch_size=128)
-    print(score)
+    print(data['train'])
+    print(data['test'])
+    # X_train = np.zeros((train_dataset_len - 1, 10))
+    # Y_train = np.zeros((train_dataset_len - 1, 1))
+    # for i in range(train_dataset_len - lookback - 1):
+    #     X_train[i] = calculate_input(train_data[i + 1:])
+    #     Y_train[i] = calculate_output(train_data[i:])
+    # nn_model = create_model()
+    # nn_model.fit(X_train, Y_train, epochs=20, batch_size=128)
+    # X_test = np.zeros((test_dataset_len, 10))
+    # Y_test = np.zeros((test_dataset_len, 1))
+    # for i in range(test_dataset_len - lookback - 1):
+    #     X_test[i] = calculate_input(train_data[i + 1:])
+    #     Y_test[i] = calculate_output(train_data[i:])
+    # score = nn_model.evaluate(X_test, Y_test, batch_size=128)
+    # print(score)
 
 
 def create_model():
