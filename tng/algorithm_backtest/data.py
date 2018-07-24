@@ -63,12 +63,9 @@ class Data:
 
         start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        #current_path = os.getcwd()
-        current_path = os.path.abspath('.')
-        print(current_path)
-        input("")
+        current_path = os.path.abspath(__file__)
         append_path = os.path.abspath(
-            os.path.join(current_path, 'tng/history_data/')) + "/"
+            os.path.join(current_path, '../../history_data/')) + "/"
         extension = ".csv"
         all_data = pd.read_csv(append_path + filename + extension)
         start, end = find_start_end(all_data, start_date, end_date)
