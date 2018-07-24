@@ -63,7 +63,8 @@ class Data:
 
         start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        current_path = os.getcwd()
+        #current_path = os.getcwd()
+        current_path = os.path.abspath('.')
         append_path = os.path.abspath(
             os.path.join(current_path, 'tng/history_data/')) + "/"
         extension = ".csv"
