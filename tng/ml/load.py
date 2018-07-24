@@ -12,8 +12,8 @@ dt = np.dtype({
     ['uint64', 'float64', 'float64', 'float64', 'float64', 'float64']
 })
 
-where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
-
+#where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
+where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
 
 def import_data(
     ticker, 
@@ -94,8 +94,9 @@ def separate_data(data, split):
 
 
 def _is_cached(filename):
-    home_folder = os.path.abspath('.') + '/tng/ml/'
-    where_to_cache = home_folder+'__cached_history__/'
+    # home_folder = os.path.abspath('.') + '/tng/ml/'
+    # where_to_cache = home_folder+'__cached_history__/'
+    # where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
     cached_files = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
             os.path.join(where_to_cache, file_))) and file_.startswith('__')
@@ -107,26 +108,28 @@ def _is_cached(filename):
 
 
 def _cache_data(data, filename):
-    where_to_cache = os.path.abspath(
-        '.') + '/tng/ml/__cached_history__/' + filename
+    # where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
+    #where_to_cache = os.path.abspath(
+    #    '.') + '/tng/ml/__cached_history__/' + filename
     array_lens = [0] * 6
     i = 0
     for value in data.values():
         array_lens[i] = value.shape[0]
         i += 1
     df = pd.DataFrame(array_lens).T
-    df.to_csv(where_to_cache, index = False, header = False)
+    df.to_csv(where_to_cache+filename, index = False, header = False)
     for value in data.values():
         df = pd.DataFrame(value)
-        df.to_csv(where_to_cache, index=False, mode = "a", header = False)
+        df.to_csv(where_to_cache+filename, index=False, mode = "a", header = False)
 
 def check_home_folder():
-    home_folder = os.path.abspath('.') + '/tng/ml/'
+    home_folder = os.path.dirname(os.path.abspath(__file__))
     if '__cached_history__' not in os.listdir(home_folder):
-        os.mkdir(home_folder+'__cached_history__/')
+        os.mkdir(home_folder+'/__cached_history__/')
 
 def delete_old_files():
-    where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
+    # where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
+    #where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
     cached_files = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
             os.path.join(where_to_cache, file_))) and file_.startswith('__')
@@ -134,5 +137,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache+file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days > 0:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
             os.remove(where_to_cache+file_)   
