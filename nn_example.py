@@ -12,8 +12,9 @@ def main():
     train_end_date = datetime(2018, 2, 1)
     ticker = "ethbtc"
     timeframe = 60
+    inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':()}
     data = import_data(
-        ticker, timeframe, train_start_date, train_end_date, split = (80,20)
+        ticker, timeframe, train_start_date, train_end_date, split = (80,20), indicators = inds
     )
     train_dataset_len = len(data['train'])
     test_dataset_len = len(data['test'])

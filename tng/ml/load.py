@@ -21,7 +21,8 @@ def import_data(
     start_date, 
     end_date, 
     reverse=True,
-    split = (50, 25, 25)
+    split = (50, 25, 25),
+    indicators = None
     ):
     if not isinstance(ticker, str) or \
         not isinstance(timeframe, int) or \
