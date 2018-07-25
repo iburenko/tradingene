@@ -14,27 +14,12 @@ def main():
     timeframe = 60
     inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':()}
     data = import_data(
-        ticker, timeframe, train_start_date, train_end_date, split = (80,20), indicators = inds
+        ticker, timeframe, train_start_date, train_end_date, split = (50, 25, 25), indicators = inds
     )
-    train_dataset_len = len(data['train'])
-    test_dataset_len = len(data['test'])
-    lookback = 5
-    print(data['train'])
-    print(data['test'])
-    # X_train = np.zeros((train_dataset_len - 1, 10))
-    # Y_train = np.zeros((train_dataset_len - 1, 1))
-    # for i in range(train_dataset_len - lookback - 1):
-    #     X_train[i] = calculate_input(train_data[i + 1:])
-    #     Y_train[i] = calculate_output(train_data[i:])
-    # nn_model = create_model()
-    # nn_model.fit(X_train, Y_train, epochs=20, batch_size=128)
-    # X_test = np.zeros((test_dataset_len, 10))
-    # Y_test = np.zeros((test_dataset_len, 1))
-    # for i in range(test_dataset_len - lookback - 1):
-    #     X_test[i] = calculate_input(train_data[i + 1:])
-    #     Y_test[i] = calculate_output(train_data[i:])
-    # score = nn_model.evaluate(X_test, Y_test, batch_size=128)
-    # print(score)
+    print(len(data['train']))
+    if 'validation' in data.keys():
+        print(len(data['validation']))
+    print(len(data['test']))
 
 
 def create_model():

@@ -42,17 +42,7 @@ def import_data(
         timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
     if _is_cached(filename):
         read_data = pd.read_csv(where_to_cache + filename, index_col=None, header = None)
-        array_lens = [int(lens) for lens in read_data.iloc[0] if lens != 0.0]
-        if len(array_lens) == 2:
-            data = {'train': None, 'test': None}
-            data['train'] = read_data.iloc[1:array_lens[0]+1]
-            data['test'] = read_data.iloc[array_lens[0]+1:sum(array_lens)+1]
-        elif len(array_lens) == 3:
-            data = {'train': None, 'validation': None, 'test': None}
-            data['train'] = read_data.iloc[1:array_lens[0]+1]
-            data['validation'] = read_data.iloc[array_lens[0]+1:sum(array_lens[:2])+1]
-            data['test'] = read_data.iloc[sum(array_lens[:2])+1:sum(array_lens)+1]
-        #data = data.to_records(index=False)
+        data = separate_data(read_data, split)
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators)
         data = separate_data(data, split)
@@ -95,9 +85,6 @@ def separate_data(data, split):
 
 
 def _is_cached(filename):
-    # home_folder = os.path.abspath('.') + '/tng/ml/'
-    # where_to_cache = home_folder+'__cached_history__/'
-    # where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
     cached_files = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
             os.path.join(where_to_cache, file_))) and file_.startswith('__')
@@ -109,16 +96,6 @@ def _is_cached(filename):
 
 
 def _cache_data(data, filename):
-    # where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
-    #where_to_cache = os.path.abspath(
-    #    '.') + '/tng/ml/__cached_history__/' + filename
-    array_lens = [0] * 6
-    i = 0
-    for value in data.values():
-        array_lens[i] = value.shape[0]
-        i += 1
-    df = pd.DataFrame(array_lens).T
-    df.to_csv(where_to_cache+filename, index = False, header = False)
     for value in data.values():
         df = pd.DataFrame(value)
         df.to_csv(where_to_cache+filename, index=False, mode = "a", header = False)
@@ -138,5 +115,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache+file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days >= 0:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days >= 30:
             os.remove(where_to_cache+file_)   
