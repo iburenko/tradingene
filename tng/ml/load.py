@@ -54,7 +54,7 @@ def import_data(
             data['test'] = read_data.iloc[sum(array_lens[:2])+1:sum(array_lens)+1]
         #data = data.to_records(index=False)
     else:
-        data = _load_data(ticker, timeframe, start_date, end_date)
+        data = _load_data(ticker, timeframe, start_date, end_date, indicators)
         data = separate_data(data, split)
         if not reverse:
             data = data[::-1]
@@ -62,10 +62,10 @@ def import_data(
     return data
 
 
-def _load_data(ticker, timeframe, start_date, end_date):
+def _load_data(ticker, timeframe, start_date, end_date, indicators):
     def on_bar(instrument):
         pass
-
+        
     name = "import_data"
     regime = "SP"
     alg = TNG(name, regime, start_date, end_date)
@@ -138,5 +138,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache+file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days >= 0:
             os.remove(where_to_cache+file_)   
