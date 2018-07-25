@@ -12,8 +12,8 @@ dt = np.dtype({
     ['uint64', 'float64', 'float64', 'float64', 'float64', 'float64']
 })
 
-#where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
 where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
+
 
 def import_data(
     ticker, 
@@ -53,8 +53,26 @@ def import_data(
 
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators):
+    data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']+list(indicators.keys())
+    sample = np.empty(len(data_columns))
+    data = np.array([])
     def on_bar(instrument):
         pass
+        nonlocal data
+        sample[0:6] = instrument.time,\
+                    instrument.open[1], \
+                    instrument.high[1],\
+                    instrument.low[1],\
+                    instrument.close[1],\
+                    instrument.vol[1]
+        i = 6
+        for key, params in indicators.items():
+            if not isinstance(params, tuple):
+                params = (params, )
+            ind = eval("instrument."+str(key))
+            sample[i] = ind(*params)[1]
+            i+=1
+        data = np.append(data, sample)
         
     name = "import_data"
     regime = "SP"
@@ -62,9 +80,10 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators):
     alg.addInstrument(ticker)
     alg.addTimeframe(ticker, timeframe)
     alg.run_backtest(on_bar)
-    hist = list(alg.instruments)[0].rates[1:-50]
     del alg
-    return hist
+    data = np.reshape(data, (len(data)//len(data_columns), len(data_columns)))
+    data = pd.DataFrame(data, columns = data_columns)
+    return data
 
 
 def separate_data(data, split):
@@ -106,8 +125,6 @@ def check_home_folder():
         os.mkdir(home_folder+'/__cached_history__/')
 
 def delete_old_files():
-    # where_to_cache = os.path.dirname(os.path.abspath(__file__))+'/__cached_history__/'
-    #where_to_cache = os.path.abspath('.') + '/tng/ml/__cached_history__/'
     cached_files = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
             os.path.join(where_to_cache, file_))) and file_.startswith('__')
@@ -115,5 +132,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache+file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days >= 30:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days > -1:
             os.remove(where_to_cache+file_)   

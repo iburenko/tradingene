@@ -5,19 +5,19 @@ import pandas as pd
 
 name = "Cornucopia"
 regime = "SP"
-start_date = datetime(2018, 4, 1)
-end_date = datetime(2018, 5, 1)
+start_date = datetime(2018, 1, 1)
+end_date = datetime(2018, 2, 1)
 
 alg = tng.TNG(name, regime, start_date, end_date)
-alg.addInstrument("btcusd")
-alg.addTimeframe("btcusd", 1440)
+alg.addInstrument("ethbtc")
+alg.addTimeframe("ethbtc", 60)
 
 # df = pd.DataFrame(columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
 
 
 def onBar(instrument):
     print(instrument.time)
-    print(instrument.close[1])
+    print(instrument.ema(3))
     input("")
     # print("ad = ", instrument.ad()[1])
     # print("adx = ", instrument.adx().adx[1])
@@ -51,10 +51,9 @@ def onBar(instrument):
 
 
 alg.run_backtest(onBar)
-# df.to_csv("btcusd30.csv", index = False, header = False)
 # new_stat = bs.BacktestStatistics(alg.positions)
 # new_stat.backtest_results()
-#new_stat.calculate_ATT()
+# new_stat.calculate_ATT()
 # new_stat.print_statistics()
 # print(new_stat.calculate_drawdown())
 # print(new_stat.calculate_PnL())
