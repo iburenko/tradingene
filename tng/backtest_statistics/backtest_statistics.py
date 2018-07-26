@@ -47,15 +47,21 @@ class BacktestStatistics:
         return float(pnl)
 
     def calculate_number_of_trades(self):
-        return len(self.all_positions_)
+        return self.number_of_positions
 
     def calculate_reliability(self):
-        return len(self.winning_trades_) / len(self.all_positions_)
+        if self.number_of_positions == 0:
+            return 0
+        else:
+            return len(self.winning_trades_) / len(self.all_positions_)
 
     def calculate_RRR(self):
         average_win = self.calculate_AWT()
         average_loss = self.calculate_ALT()
-        return average_loss / average_win
+        if average_win == 0:
+            return 0
+        else:
+            return average_loss / average_win
 
     def calculate_drawdown(self):
         cumulative_profit = np.zeros((len(self.all_positions_) + 1))
@@ -105,7 +111,10 @@ class BacktestStatistics:
 
     def calculate_AT(self):
         pnl = self.calculate_PnL()
-        return pnl / self.number_of_positions
+        if self.number_of_positions == 0:
+            return 0
+        else:
+            return pnl / self.number_of_positions
 
     def calculate_ATT(self):
         overall_time = 0
@@ -117,7 +126,10 @@ class BacktestStatistics:
             diff = close_time - open_time
             trade_time = 1440 * diff.days + diff.seconds / 60
             overall_time += trade_time
-        return overall_time / self.number_of_positions
+        if self.number_of_positions == 0:
+            return 0
+        else:
+            return overall_time / self.number_of_positions
 
     def calculate_ADPD(self):
         first_pos = self.all_positions_[0]
@@ -144,11 +156,17 @@ class BacktestStatistics:
 
     def calculate_AWT(self):
         profit = self.calculate_profit()
-        return profit / self.winning_trades
+        if self.winning_trades == 0:
+            return 0
+        else:
+            return profit / self.winning_trades
 
     def calculate_ALT(self):
         loss = self.calculate_loss()
-        return loss / self.losing_trades
+        if self.losing_trades == 0:
+            return 0
+        else:
+            return loss / self.losing_trades
 
     def calculate_WT(self):
         return self.winning_trades
@@ -174,7 +192,10 @@ class BacktestStatistics:
             diff = close_time - open_time
             trade_time = 1440 * diff.days + diff.seconds / 60
             overall_time += trade_time
-        return overall_time / self.winning_trades
+        if self.winning_trades == 0:
+            return 0
+        else:
+            return overall_time / self.winning_trades
 
     def calculate_ATLT(self):
         overall_time = 0
@@ -186,7 +207,10 @@ class BacktestStatistics:
             diff = close_time - open_time
             trade_time = 1440 * diff.days + diff.seconds / 60
             overall_time += trade_time
-        return overall_time / self.losing_trades
+        if self.losing_trades == 0:
+            return 0
+        else:
+            return overall_time / self.losing_trades
 
     def calculate_MCW(self):
         cons_winners = list()
