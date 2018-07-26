@@ -9,24 +9,20 @@ import numpy as np
 
 def main():
     train_start_date = datetime(2018, 1, 1)
-    train_end_date = datetime(2018, 2, 1)
+    train_end_date = datetime(2018, 5, 1)
     ticker = "ethbtc"
-    timeframes = [1,2,3,5,10,15,30,60,120,240,720,1440]
-    for timeframe in timeframes:
-        inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
-                'atr':(), 'cci':(), 'chande':(), \
-                'momentum': (), 'ppo':(), 'roc':(), \
-                'trima':(), 'williams':()}
-        #inds = {'sma': 10}
-        t = time()
-        data = import_data(
-            ticker, timeframe, train_start_date, train_end_date, split = (50, 25, 25), indicators = inds
-        )
-        print(timeframe, time() - t)
-        # print(len(data['train']))
-        # if 'validation' in data.keys():
-        #     print(len(data['validation']))
-        # print(len(data['test']))
+    timeframe = 1440
+    inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
+            'atr':(), 'cci':(), 'chande':(), \
+            'momentum': (), 'ppo':(), 'roc':(), \
+            'trima':(), 'williams':()}
+    data = import_data(
+        ticker, timeframe, train_start_date, train_end_date, split = (50, 25, 25), indicators = inds
+    )
+    print(len(data['train']))
+    if 'validation' in data.keys():
+        print(len(data['validation']))
+    print(len(data['test']))
 
 
 def create_model():

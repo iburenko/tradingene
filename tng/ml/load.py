@@ -22,7 +22,8 @@ def import_data(
     end_date, 
     reverse=True,
     split = (50, 25, 25),
-    indicators = None
+    indicators = None,
+    cache = True
     ):
     if not isinstance(ticker, str) or \
         not isinstance(timeframe, int) or \
@@ -48,7 +49,8 @@ def import_data(
         data = separate_data(data, split)
         if not reverse:
             data = data[::-1]
-        _cache_data(data, filename)
+        if cache:
+            _cache_data(data, filename)
     return data
 
 
@@ -132,5 +134,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache+file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days > -1:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
             os.remove(where_to_cache+file_)   
