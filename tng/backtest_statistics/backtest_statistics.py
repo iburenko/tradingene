@@ -46,6 +46,9 @@ class BacktestStatistics:
             pnl += pos.profit
         return float(pnl)
 
+    def calculate_number_of_trades(self):
+        return len(self.all_positions_)
+
     def calculate_reliability(self):
         return len(self.winning_trades_) / len(self.all_positions_)
 
