@@ -6,7 +6,7 @@ import pandas as pd
 name = "Cornucopia"
 regime = "SP"
 start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 2, 1)
+end_date = datetime(2018, 1, 3)
 
 alg = tng.TNG(name, regime, start_date, end_date)
 alg.addInstrument("ethbtc")
@@ -17,8 +17,7 @@ alg.addTimeframe("ethbtc", 60)
 
 def onBar(instrument):
     print(instrument.time)
-    print(instrument.ema(3))
-    input("")
+    # print(instrument.ema(3))
     # print("ad = ", instrument.ad()[1])
     # print("adx = ", instrument.adx().adx[1])
     # print("apo = ", instrument.apo()[1])
@@ -51,8 +50,8 @@ def onBar(instrument):
 
 
 alg.run_backtest(onBar)
-# new_stat = bs.BacktestStatistics(alg.positions)
-# new_stat.backtest_results()
+new_stat = bs.BacktestStatistics(alg.positions)
+new_stat.backtest_results()
 # new_stat.calculate_ATT()
 # new_stat.print_statistics()
 # print(new_stat.calculate_drawdown())

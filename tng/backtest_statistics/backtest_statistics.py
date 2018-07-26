@@ -5,6 +5,12 @@ import numpy as np
 
 class BacktestStatistics:
     def __init__(self, positions):
+        self.all_positions_ = list()
+        self.winning_trades_ = list()
+        self.losing_trades_ = list()
+        self.number_of_positions = len(self.all_positions_)
+        self.winning_trades = len(self.winning_trades_)
+        self.losing_trades = len(self.losing_trades_)
         try:
             assert len(positions) > 0
             if positions[-1].close_time == 0:
@@ -66,6 +72,9 @@ class BacktestStatistics:
     def calculate_drawdown(self):
         cumulative_profit = np.zeros((len(self.all_positions_) + 1))
         profit = 0
+        drawdown = -1
+        drawdown_len = -1
+        drawdown_start_pos = 0
         i = 1
         for pos in self.all_positions_:
             profit += pos.profit
@@ -107,7 +116,10 @@ class BacktestStatistics:
             drawdown_lens = np.append(drawdown_lens, drawdown_len)
             drawdown = np.max(drawdown_values)
             drawdown_len = drawdown_lens[np.argmax(drawdown_values)]
-        return (drawdown, int(drawdown_len))
+        if drawdown == -1 and drawdown_len == -1:
+            return (0,0)
+        else:
+            return (drawdown, int(drawdown_len))
 
     def calculate_AT(self):
         pnl = self.calculate_PnL()
@@ -132,15 +144,18 @@ class BacktestStatistics:
             return overall_time / self.number_of_positions
 
     def calculate_ADPD(self):
-        first_pos = self.all_positions_[0]
-        last_pos = self.all_positions_[-1]
-        open_time = datetime.datetime(*(time.strptime(str(first_pos.open_time), \
-                                           "%Y%m%d%H%M%S")[0:6]))
-        close_time = datetime.datetime(*(time.strptime(str(last_pos.close_time), \
-                                        "%Y%m%d%H%M%S")[0:6]))
-        diff = close_time - open_time
-        overall_days = diff.days
-        return self.number_of_positions / (overall_days + 1)
+        if len(self.all_positions_) > 0:
+            first_pos = self.all_positions_[0]
+            last_pos = self.all_positions_[-1]
+            open_time = datetime.datetime(*(time.strptime(str(first_pos.open_time), \
+                                            "%Y%m%d%H%M%S")[0:6]))
+            close_time = datetime.datetime(*(time.strptime(str(last_pos.close_time), \
+                                            "%Y%m%d%H%M%S")[0:6]))
+            diff = close_time - open_time
+            overall_days = diff.days
+            return self.number_of_positions / (overall_days + 1)
+        else:
+            return 0
 
     def calculate_profit(self):
         profit = 0
@@ -176,11 +191,17 @@ class BacktestStatistics:
 
     def calculate_LWT(self):
         profits = [pos.profit for pos in self.winning_trades_]
-        return float(max(profits))
+        if profits:
+            return float(max(profits))
+        else:
+            return 0
 
     def calculate_LLT(self):
         losses = [pos.profit for pos in self.losing_trades_]
-        return float(min(losses))
+        if losses:
+            return float(min(losses))
+        else:
+            return 0
 
     def calculate_ATWT(self):
         overall_time = 0
@@ -225,7 +246,10 @@ class BacktestStatistics:
                     cons_winners.append(current_cons_winners)
                     current_cons_winners = 0
                 flag = 0
-        return max(cons_winners)
+        if cons_winners:
+            return max(cons_winners)
+        else:
+            return 0
 
     def calculate_MCL(self):
         cons_losses = list()
@@ -240,7 +264,10 @@ class BacktestStatistics:
                     cons_losses.append(current_cons_losses)
                     current_cons_losses = 0
                 flag = 0
-        return max(cons_losses)
+        if cons_losses:
+            return max(cons_losses)
+        else:
+            return 0
 
     def _calculate_correlation(self):
         price_array = np.zeros((len(self.all_positions_)))
