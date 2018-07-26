@@ -3,6 +3,9 @@ from time import time
 import numpy as np
 import pandas as pd
 import datetime
+import urllib.request
+import json
+from tng.algorithm_backtest.limits import instrument_ids
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -63,6 +66,28 @@ class Data:
 
         start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
+        req_start_date = start_date * 1000
+        req_end_date = end_date * 1000
+        if filename in instrument_ids.keys():
+            instr_id = instrument_ids[filename]
+        else:
+            raise ValueError("Instrument {} was not found!".format(filename))
+        url = "https://candles.tradingene.com/candles?instrument_id=" + \
+              str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
+
+
+        # data = urllib.request.urlopen(url).read()
+        # obj = json.loads(data)
+        # np_data = np.empty(len(obj), dtype = dt)
+        # for i, elem in enumerate(obj):
+        #     np_data[i] = np.array([
+        #         (int(elem['time'])//1000,
+        #         float(elem['open']),
+        #         float(elem['high']),
+        #         float(elem['low']),
+        #         float(elem['close']),
+        #         float(elem['volume']))], dtype = dt)
+
         current_path = os.path.abspath(__file__)
         append_path = os.path.abspath(
             os.path.join(current_path, '../../history_data/')) + "/"
@@ -72,4 +97,7 @@ class Data:
         hist_data = all_data.iloc[start:end]
         hist_data = hist_data[::-1]
         hist_data = hist_data.to_records(index=False)
+        #np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
+        
         return hist_data
+        # return np_data
