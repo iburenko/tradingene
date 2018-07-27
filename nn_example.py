@@ -1,6 +1,5 @@
 from datetime import datetime
 from time import time
-from tng.algorithm_backtest.instrument import Instrument
 from tng.ml.load import import_data
 from keras.models import Sequential
 from keras.layers import Dense
@@ -17,13 +16,16 @@ def main():
             'momentum': (), 'ppo':(), 'roc':(), \
             'trima':(), 'williams':()}
     data = import_data(
-        ticker, timeframe, train_start_date, train_end_date, split = (50, 25, 25), indicators = inds
+        ticker, timeframe, train_start_date, train_end_date, split = (50, 25, 25), indicators = inds,
+        calculate_input, calculate_output
     )
     print(len(data['train']))
     if 'validation' in data.keys():
         print(len(data['validation']))
     print(len(data['test']))
 
+def onBar(instrument):
+    pass
 
 def create_model():
     model = Sequential()

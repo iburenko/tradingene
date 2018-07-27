@@ -16,7 +16,8 @@ alg.addTimeframe("ethbtc", 60)
 
 
 def onBar(instrument):
-    print(instrument.time)
+    pass
+    #print(instrument.time)
     # print(instrument.ema(3))
     # print("ad = ", instrument.ad()[1])
     # print("adx = ", instrument.adx().adx[1])
@@ -37,7 +38,7 @@ def onBar(instrument):
     # print("stochastic = ", instrument.stochastic().k[1])
     # print("trima = ", instrument.trima()[1])
     # print("williams = ",instrument.williams()[1])
-    print("======================================")
+    # print("======================================")
     # if instrument.open[1] > instrument.close[1]:
     #     # If price goes down during the day then sell;
     #     alg.sell()
