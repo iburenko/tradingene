@@ -7,7 +7,7 @@ from tng.algorithm_backtest.position import Position
 from tng.algorithm_backtest.time_event import TimeEvent
 from tng.algorithm_backtest.price_event import PriceEvent
 import tng.algorithm_backtest.limits as limits
-from tng.algorithm_backtest.data import Data, dt
+from tng.data.data import Data, dt
 
 #from tng.ind.spread_estimation_corwin_schultz import corwin_schultz
 

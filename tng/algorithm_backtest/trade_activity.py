@@ -98,7 +98,7 @@ class TradeActivity(Backtest):
         is_closed = self._is_last_pos_closed()
         pos_ticker = list(self.ticker_timeframes)[0]
         if is_closed == None:
-            pos_id = randint(2**1, 2**32 - 1)
+            pos_id = randint(2**1, 2**31 - 1)
             new_pos = Position(pos_id, pos_ticker, self.now)
         elif is_closed:
             pos_id = is_closed + 1
@@ -880,14 +880,14 @@ class TradeActivity(Backtest):
                     trigger = -1
                 new_price_event = PriceEvent(ticker, params, trigger,
                                              arguments, handler)
-                new_price_event.id = randint(2**1, 2**32 - 1)
+                new_price_event.id = randint(2**1, 2**31 - 1)
                 self.price_events.append(new_price_event)
                 return new_price_event.id
         elif type_ == "Time":
             time = self._check_time_params(params, handler)
             if time is not None:
                 new_time_event = TimeEvent(ticker, time, arguments, handler)
-                new_time_event.id = randint(2**1, 2**32 - 1)
+                new_time_event.id = randint(2**1, 2**31 - 1)
                 self.time_events.append(new_time_event)
                 return new_time_event.id
         else:
@@ -997,7 +997,7 @@ class TradeActivity(Backtest):
         if self.positions[-1].trades:
             trade_id = self.positions[-1].trades[-1].id + 1
         else:
-            trade_id = randint(2**1, 2**32 - 1)
+            trade_id = randint(2**1, 2**31 - 1)
         if side == 1:
             open_price = self.recent_price + self.spread
         elif side == -1:

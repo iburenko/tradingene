@@ -1,28 +1,29 @@
 from datetime import datetime
 from time import time
-from tng.ml.load import import_data
+from tng.data.load import import_data
 from keras.models import Sequential
 from keras.layers import Dense
 import numpy as np
+import cProfile
+import pstats
 
 
 def main():
     train_start_date = datetime(2018, 1, 1)
-    train_end_date = datetime(2018, 5, 1)
+    train_end_date = datetime(2018, 2, 1)
     ticker = "ethbtc"
-    timeframe = 1440
-    inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
-            'atr':(), 'cci':(), 'chande':(), \
-            'momentum': (), 'ppo':(), 'roc':(), \
-            'trima':(), 'williams':()}
+    timeframe = 10
+    # inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
+    #         'atr':(), 'cci':(), 'chande':(), \
+    #         'momentum': (), 'ppo':(), 'roc':(), \
+    #         'trima':(), 'williams':(),\
+    #         'bollinger':(), 'macd':(), 'keltner':()}
+    inds = {'sma':(), 'macd':()}
     data = import_data(
-        ticker, timeframe, train_start_date, train_end_date, split = (50, 25, 25), indicators = inds,
-        calculate_input, calculate_output
+        ticker, timeframe, train_start_date, train_end_date, 
+        calculate_input, calculate_output,
+        split = (50, 25, 25), indicators = inds
     )
-    print(len(data['train']))
-    if 'validation' in data.keys():
-        print(len(data['validation']))
-    print(len(data['test']))
 
 def onBar(instrument):
     pass
@@ -54,5 +55,7 @@ def calculate_output(data):
     else:
         return -1
 
-
+# cProfile.run('main()', 'profiler.prof')
+# stat = pstats.Stats('profiler')
+# stat.sort_stats('time').print_stats(10)
 main()

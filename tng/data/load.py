@@ -20,12 +20,12 @@ def import_data(
     timeframe, 
     start_date, 
     end_date, 
+    calculate_input,
+    calculate_output,
     reverse=True,
     split = (50, 25, 25),
     indicators = None,
-    cache = True,
-    calculate_input = None,
-    calculate_output = None
+    cache = True
     ):
     if not isinstance(ticker, str) or \
         not isinstance(timeframe, int) or \
@@ -36,6 +36,10 @@ def import_data(
         raise TypeError("Check types of arguments!")
     if sum(split) != 100:
         raise ValueError("Sum of values in split must be 100!")
+    if not callable(calculate_input):
+        raise TypeError("calculate_input must be callable!")
+    if not callable(calculate_output):
+        raise TypeError("calculate_output must be callable!")
 
     check_home_folder()
     delete_old_files()
@@ -44,7 +48,7 @@ def import_data(
     filename = "__" + ticker + str(
         timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
     if _is_cached(filename):
-        read_data = pd.read_csv(where_to_cache + filename, index_col=None, header = None)
+        read_data = pd.read_csv(where_to_cache + filename)
         data = separate_data(read_data, split)
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators)
@@ -57,27 +61,33 @@ def import_data(
 
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators):
-    data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']+list(indicators.keys())
+    data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
     sample = np.empty(len(data_columns))
     data = np.array([])
+    ind_dict = dict()
     def on_bar(instrument):
         pass
-        nonlocal data
+        nonlocal data, ind_dict
         sample[0:6] = instrument.time,\
                     instrument.open[1], \
                     instrument.high[1],\
                     instrument.low[1],\
                     instrument.close[1],\
                     instrument.vol[1]
-        i = 6
-        for key, params in indicators.items():
-            if not isinstance(params, tuple):
-                params = (params, )
-            ind = eval("instrument."+str(key))
-            sample[i] = ind(*params)[1]
-            i+=1
+        i = 6     
+        if indicators:   
+            for key, params in indicators.items():
+                if not isinstance(params, tuple):
+                    params = (params, )
+                ind = eval("instrument."+str(key))
+                parsed = _parse_indicator(key, ind(*params))
+                for key, value in parsed.items():
+                    if key in ind_dict.keys():
+                        ind_dict[key].append(value)
+                    else:
+                        ind_dict[key] = [value]
         data = np.append(data, sample)
-        
+    
     name = "import_data"
     regime = "SP"
     alg = TNG(name, regime, start_date, end_date)
@@ -87,10 +97,12 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators):
     del alg
     data = np.reshape(data, (len(data)//len(data_columns), len(data_columns)))
     data = pd.DataFrame(data, columns = data_columns)
+    data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis = 1)
     return data
 
 
 def separate_data(data, split):
+    data = data.to_records()
     split_data = dict()
     if len(split) == 2:
         train_len = data.shape[0]*split[0]//100
@@ -107,6 +119,18 @@ def separate_data(data, split):
     return split_data
 
 
+def _parse_indicator(ind_name, ind_value):
+    if isinstance(ind_value, list):
+        ret_dict = dict.fromkeys([ind_name])
+        ret_dict[ind_name] = ind_value[1]
+    else:
+        keys = [ind_name+"."+str(elem) for elem in ind_value.__dict__.keys()]
+        ret_dict = dict.fromkeys(keys)
+        for key, value in (ind_value.__dict__.items()):
+            ret_dict[ind_name+"."+key] = value[1]
+    return ret_dict
+
+
 def _is_cached(filename):
     cached_files = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
@@ -121,12 +145,14 @@ def _is_cached(filename):
 def _cache_data(data, filename):
     for value in data.values():
         df = pd.DataFrame(value)
-        df.to_csv(where_to_cache+filename, index=False, mode = "a", header = False)
+        df.to_csv(where_to_cache+filename, index=False, mode = "a")
+
 
 def check_home_folder():
     home_folder = os.path.dirname(os.path.abspath(__file__))
     if '__cached_history__' not in os.listdir(home_folder):
         os.mkdir(home_folder+'/__cached_history__/')
+
 
 def delete_old_files():
     cached_files = [

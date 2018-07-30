@@ -6,7 +6,7 @@ import pandas as pd
 name = "Cornucopia"
 regime = "SP"
 start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 1, 3)
+end_date = datetime(2018, 2, 1)
 
 alg = tng.TNG(name, regime, start_date, end_date)
 alg.addInstrument("ethbtc")
@@ -16,7 +16,7 @@ alg.addTimeframe("ethbtc", 60)
 
 
 def onBar(instrument):
-    pass
+    print(instrument.time)
     #print(instrument.time)
     # print(instrument.ema(3))
     # print("ad = ", instrument.ad()[1])

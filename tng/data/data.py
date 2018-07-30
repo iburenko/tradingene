@@ -75,7 +75,6 @@ class Data:
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
               str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
 
-
         # data = urllib.request.urlopen(url).read()
         # obj = json.loads(data)
         # np_data = np.empty(len(obj), dtype = dt)
@@ -87,7 +86,6 @@ class Data:
         #         float(elem['low']),
         #         float(elem['close']),
         #         float(elem['volume']))], dtype = dt)
-
         current_path = os.path.abspath(__file__)
         append_path = os.path.abspath(
             os.path.join(current_path, '../../history_data/')) + "/"
@@ -97,7 +95,7 @@ class Data:
         hist_data = all_data.iloc[start:end]
         hist_data = hist_data[::-1]
         hist_data = hist_data.to_records(index=False)
-        # np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
+        #np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
         
         # КОСТЫЛЬ!
         # for i in range(len(hist_data)):
