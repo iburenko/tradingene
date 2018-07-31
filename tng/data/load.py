@@ -21,7 +21,9 @@ def import_data(
     start_date, 
     end_date, 
     calculate_input,
+    lookback,
     calculate_output,
+    lookforward,
     reverse=True,
     split = (50, 25, 25),
     indicators = None,
@@ -40,6 +42,14 @@ def import_data(
         raise TypeError("calculate_input must be callable!")
     if not callable(calculate_output):
         raise TypeError("calculate_output must be callable!")
+    if not isinstance(lookback, int):
+        raise TypeError("lookback must be int!")
+    elif lookback < 1:
+        raise ValueError("lookback must be positive!")
+    if not isinstance(lookforward, int):
+        raise TypeError("lookforward must be int!")
+    elif lookforward < 1:
+        raise ValueError("lookforward must be positive!")
 
     check_home_folder()
     delete_old_files()
@@ -48,15 +58,16 @@ def import_data(
     filename = "__" + ticker + str(
         timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
     if _is_cached(filename):
-        read_data = pd.read_csv(where_to_cache + filename)
-        data = separate_data(read_data, split)
+        data = pd.read_csv(where_to_cache + filename, index_col=False)
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators)
-        data = separate_data(data, split)
         if not reverse:
             data = data[::-1]
         if cache:
             _cache_data(data, filename)
+    data = separate_data(
+        data, split, calculate_input, calculate_output, lookback, lookforward
+    )
     return data
 
 
@@ -101,21 +112,37 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators):
     return data
 
 
-def separate_data(data, split):
+def separate_data(data, split, calculate_input, calculate_output, lookback, lookforward):
     data = data.to_records()
     split_data = dict()
+    input_parameters = np.empty([])
+    output_parameters = np.empty([])
+    for i in range(lookback, len(data) - lookforward-1):
+        inp = np.array([calculate_input(data[i-lookback:i+1][::-1])])
+        out = np.array([calculate_output(data[i:i+lookforward+1])])
+        input_parameters = np.append(input_parameters, inp)
+        output_parameters = np.append(output_parameters, out)
+    input_parameters = np.delete(input_parameters, 0)
+    output_parameters = np.delete(output_parameters, 0)
+    input_len = len(input_parameters)
+    output_len = len(output_parameters)
+    input_parameters = np.reshape(input_parameters, (input_len//inp.shape[-1], inp.shape[-1]))
+    output_parameters = np.reshape(output_parameters, (output_len//out.shape[-1], out.shape[-1]))
     if len(split) == 2:
-        train_len = data.shape[0]*split[0]//100
-        test_len = data.shape[0]*split[1]//100
-        split_data['train'] = data[0:train_len]
-        split_data['test'] = data[train_len:train_len+test_len]
+        train_len = input_parameters.shape[0]*split[0]//100
+        split_data['train_input'] = input_parameters[1:train_len]
+        split_data['train_output'] = output_parameters[1:train_len]
+        split_data['test_input'] = input_parameters[train_len:]
+        split_data['test_output'] = output_parameters[train_len:]
     elif len(split) == 3:
-        train_len = data.shape[0]*split[0]//100
-        validation_len = data.shape[0]*split[1]//100
-        test_len = data.shape[0]*split[2]//100
-        split_data['train'] = data[0:train_len]
-        split_data['validation'] = data[train_len:train_len+test_len]
-        split_data['test'] = data[train_len+test_len:train_len+test_len+validation_len]
+        train_len = input_parameters.shape[0]*split[0]//100
+        validation_len = input_parameters.shape[0]*split[1]//100
+        split_data['train_input'] = input_parameters[0:train_len]
+        split_data['train_output'] = output_parameters[0:train_len]
+        split_data['validation_input'] = input_parameters[train_len:train_len+validation_len]
+        split_data['validation_output'] = output_parameters[train_len:train_len+validation_len]
+        split_data['test_input'] = input_parameters[train_len+validation_len:]
+        split_data['test_output'] = output_parameters[train_len+validation_len:]
     return split_data
 
 
@@ -143,9 +170,8 @@ def _is_cached(filename):
 
 
 def _cache_data(data, filename):
-    for value in data.values():
-        df = pd.DataFrame(value)
-        df.to_csv(where_to_cache+filename, index=False, mode = "a")
+    df = pd.DataFrame(data)
+    df.to_csv(where_to_cache+filename, index=False, mode = "a")
 
 
 def check_home_folder():
@@ -162,5 +188,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache+file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days > -31:
             os.remove(where_to_cache+file_)   
