@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # AD-indicator
 def ad(period=1, shift=0, hi=None, lo=None, cl=None, vol=None, prev=None):
     if hi is None or lo is None or cl is None or vol is None:
@@ -18,6 +19,8 @@ def ad(period=1, shift=0, hi=None, lo=None, cl=None, vol=None, prev=None):
                 prevAdValue = adValue
 
     return adValue
+
+
 # end of AD
 
 
@@ -28,11 +31,19 @@ def ad1(hi, lo, cl, vol):
         highLessClose = hi - cl
         return ((vol * (closeLessLow - highLessClose)) / highLessLow)
     return 0
+
+
 # end of ad1
 
 
 # ADX-indicator
-def adx(periodADX=14, periodDI=-1, shift=0, hi=None, lo=None, cl=None, prev=None):
+def adx(periodADX=14,
+        periodDI=-1,
+        shift=0,
+        hi=None,
+        lo=None,
+        cl=None,
+        prev=None):
     if hi is None or lo is None or cl is None:
         return None
     if shift >= len(cl) - 1:
@@ -69,8 +80,10 @@ def adx(periodADX=14, periodDI=-1, shift=0, hi=None, lo=None, cl=None, prev=None
     if smoothedMinusDM is None:
         return None
 
-    tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]), abs(lo[shift] - cl[shift + 1]))
-    smoothedTr = smma(period=periodDI, shift=0, rates=[tr], prev=prevSmoothedTr)
+    tr = max(hi[shift] - lo[shift], abs(hi[shift] - cl[shift + 1]),
+             abs(lo[shift] - cl[shift + 1]))
+    smoothedTr = smma(
+        period=periodDI, shift=0, rates=[tr], prev=prevSmoothedTr)
 
     plusDI = None
     minusDI = None
@@ -94,7 +107,10 @@ def adx(periodADX=14, periodDI=-1, shift=0, hi=None, lo=None, cl=None, prev=None
         'dx': dx,
         'adx': adx,
     })
+
+
 # end of ADX
+
 
 # Absolute Price Oscillator
 def apo(periodFast=12, periodSlow=26, shift=0, rates=None, prev=None):
@@ -108,8 +124,10 @@ def apo(periodFast=12, periodSlow=26, shift=0, rates=None, prev=None):
         prevSlow = prev['slow']
 
     if prevFast is not None and prevSlow is not None:
-        emaFast = ema(period=periodFast, rates=rates, shift=shift, prev=prevFast)
-        emaSlow = ema(period=periodSlow, rates=rates, shift=shift, prev=prevSlow)
+        emaFast = ema(
+            period=periodFast, rates=rates, shift=shift, prev=prevFast)
+        emaSlow = ema(
+            period=periodSlow, rates=rates, shift=shift, prev=prevSlow)
         if emaFast is None or emaSlow is None:
             apo = None
         else:
@@ -125,6 +143,8 @@ def apo(periodFast=12, periodSlow=26, shift=0, rates=None, prev=None):
     if apo is None:
         return None
     return ({'slow': emaSlow, 'fast': emaFast, 'apo': apo})
+
+
 # end of apo
 
 
@@ -168,6 +188,8 @@ def aroon(period=14, shift=0, rates=None):
     down = (period - (lowestIndex - shift)) * 100.0 / period
 
     return ({'up': up, 'down': down})
+
+
 # end of aroon
 
 
@@ -178,14 +200,16 @@ def atr(period=14, shift=0, hi=None, lo=None, cl=None):
 
     startIndex = shift + period - 1
     if startIndex >= len(cl):
-        startIndex = len(cl)-1
-    trValues = []            
+        startIndex = len(cl) - 1
+    trValues = []
     for i in range(startIndex, shift - 1, -1):
-        trValues.append( tr(hi, lo, cl, i) )
-    if len( trValues) > 0:
+        trValues.append(tr(hi, lo, cl, i))
+    if len(trValues) > 0:
         return np.mean(trValues)
     else:
         return None
+
+
 # end of atr
 
 
@@ -198,6 +222,8 @@ def tr(hi, lo, cl, shift):
     elif shift < lenCl:
         trValue = hi[shift] - lo[shift]
     return trValue
+
+
 #end of tr
 
 
@@ -212,10 +238,12 @@ def bollinger(period=20, shift=0, nStds=2.0, rates=None):
 
     bandMiddle = np.mean(rates[shift:en])
     bandStd = np.std(rates[shift:en])
-    
+
     top = (bandMiddle + nStds * bandStd)
     bottom = (bandMiddle - nStds * bandStd)
     return ({'ma': bandMiddle, 'std': bandStd, 'top': top, 'bottom': bottom})
+
+
 # end of bollinger
 
 
@@ -249,6 +277,8 @@ def cci(period=20, shift=0, hi=None, lo=None, cl=None, cciConst=0.015):
         'meanTypicalPrice': meanTypicalPrice,
         'meanDeviation': meanDeviation
     }
+
+
 # end of CCI
 
 
@@ -276,6 +306,8 @@ def chande(period=10, shift=0, rates=None):
     if not (summed > 0.0):
         return None
     return ((up - down) * 100.0) / summed
+
+
 # end of Chande Momentum Oscillator
 
 
@@ -297,7 +329,7 @@ def ema(period=10, shift=0, alpha=None, rates=None, prev=None, history=-1):
     else:
         if history == -1:
             if shift < lenRates:
-                emaValue = rates[shift]        
+                emaValue = rates[shift]
         elif history == 0:
             end = shift + period
             if shift < lenRates:
@@ -313,11 +345,19 @@ def ema(period=10, shift=0, alpha=None, rates=None, prev=None, history=-1):
                 for i in range(shift + history - 1, shift - 1, -1):
                     emaValue = (rates[i] - emaValue) * alpha + emaValue
     return emaValue
+
+
 # end of ema
 
 
 # Keltner Channels
-def keltner(period=20, multiplier=1.0, shift=0, hi=None, lo=None, cl=None, prev=None):
+def keltner(period=20,
+            multiplier=1.0,
+            shift=0,
+            hi=None,
+            lo=None,
+            cl=None,
+            prev=None):
     if hi is None or lo is None or cl is None:
         return None
     lenRates = len(cl)
@@ -325,38 +365,41 @@ def keltner(period=20, multiplier=1.0, shift=0, hi=None, lo=None, cl=None, prev=
         return None
 
     if prev is not None:
-        hlc = (hi[shift]+lo[shift]+cl[shift])/3.0
-        priceList = [ hlc ]
-        emaBasis = ema(period=period, rates=priceList, shift=0, prev=prev['basis'])
-        if lenRates > shift+1:
-            trList = [ tr(hi,lo,cl,shift) ]
+        hlc = (hi[shift] + lo[shift] + cl[shift]) / 3.0
+        priceList = [hlc]
+        emaBasis = ema(
+            period=period, rates=priceList, shift=0, prev=prev['basis'])
+        if lenRates > shift + 1:
+            trList = [tr(hi, lo, cl, shift)]
             atr = ema(period=period, rates=trList, shift=0, prev=prev['atr'])
         else:
             atr = None
     else:
         priceList = []
         trList = []
-        firstIndex = shift+period-1
-        if firstIndex > lenRates-1:
-            firstIndex = lenRates-1
-        for i in range( firstIndex,shift-1,-1):
-            hlc = (hi[i] + lo[i] + cl[i])/3.0
-            priceList.append( hlc )
-        if firstIndex > lenRates-2:
-            firstIndex = lenRates-2
-        for i in range( firstIndex,shift-1,-1):
-            trList.append( tr(hi,lo,cl,i) )
+        firstIndex = shift + period - 1
+        if firstIndex > lenRates - 1:
+            firstIndex = lenRates - 1
+        for i in range(firstIndex, shift - 1, -1):
+            hlc = (hi[i] + lo[i] + cl[i]) / 3.0
+            priceList.append(hlc)
+        if firstIndex > lenRates - 2:
+            firstIndex = lenRates - 2
+        for i in range(firstIndex, shift - 1, -1):
+            trList.append(tr(hi, lo, cl, i))
         emaBasis = ema(period=period, rates=priceList, shift=0)
         atr = ema(period=period, rates=trList, shift=0)
-        
+
     if emaBasis is None or atr is None:
         upper = None
         lower = None
     else:
-        upper = emaBasis + atr*multiplier
-        lower = emaBasis - atr*multiplier
+        upper = emaBasis + atr * multiplier
+        lower = emaBasis - atr * multiplier
 
-    return ({'basis': emaBasis, 'upper': upper, 'lower': lower, 'atr':atr})
+    return ({'basis': emaBasis, 'upper': upper, 'lower': lower, 'atr': atr})
+
+
 # end of keltners
 
 
@@ -411,6 +454,8 @@ def macd(periodFast=12,
         'signal': emaSignal,
         'histogram': histogram
     })
+
+
 # end of macd
 
 
@@ -426,6 +471,8 @@ def momentum(period=9, shift=0, rates=None):
         return None
 
     return (rates[shift] - rates[nPeriodsAgoIndex])
+
+
 # end of momentum
 
 
@@ -446,6 +493,8 @@ def ppo(periodFast=12, periodSlow=26, shift=0, rates=None):
         return None
 
     return ((meanFast - meanSlow) * 100.0) / meanSlow
+
+
 # end of ppo
 
 
@@ -454,12 +503,12 @@ def rsi(period=14, shift=0, rates=None, prev=None):
     if rates is None:
         return None
     lenRates = len(rates)
-    
+
     if shift + 1 >= lenRates:
         return None
 
-    averagePosPrev = None # 0.00491656 # None
-    averageNegPrev = None # 0.00132679 # None
+    averagePosPrev = None  # 0.00491656 # None
+    averageNegPrev = None  # 0.00132679 # None
     if prev is not None:
         averagePosPrev = prev['averagePos']
         averageNegPrev = prev['averageNeg']
@@ -473,11 +522,13 @@ def rsi(period=14, shift=0, rates=None, prev=None):
     if difference < 0.0:
         currentNeg = -difference
 
-    averagePos = rma( period=period, rates=[currentPos], shift=0, prev=averagePosPrev )
-    averageNeg = rma( period=period, rates=[currentNeg], shift=0, prev=averageNegPrev )
-    if not( averageNeg > 0.0):
+    averagePos = rma(
+        period=period, rates=[currentPos], shift=0, prev=averagePosPrev)
+    averageNeg = rma(
+        period=period, rates=[currentNeg], shift=0, prev=averageNegPrev)
+    if not (averageNeg > 0.0):
         rsiValue = 100.0
-    elif not( averagePos > 0.0):
+    elif not (averagePos > 0.0):
         rsiValue = 0.0
     else:
         rsiValue = 100.0 - (100.0 / (1.0 + averagePos / averageNeg))
@@ -505,6 +556,8 @@ def roc(period=9, shift=0, rates=None):
 
     return (rates[shift] -
             rates[nPeriodsAgoIndex]) * 100.0 / rates[nPeriodsAgoIndex]
+
+
 # end of roc
 
 
@@ -521,28 +574,43 @@ def sma(period=10, shift=0, rates=None, source=None, newValue=None):
         return np.mean(rates[shift:endIndex])
     else:
         if newValue is not None:
-            source.insert(0,newValue)
+            source.insert(0, newValue)
         else:
-            source.insert(0,rates[shift])
+            source.insert(0, rates[shift])
         if len(source) > period:
             source.pop()
         return np.mean(source)
+
+
 # end of sma
 
 
 # SMMA - Smooothed Moving Average
 def smma(period, shift=0, rates=None, prev=None):
-    return ema(period=period, shift=shift, alpha=1.0 / period, rates=rates, prev=prev)
+    return ema(
+        period=period, shift=shift, alpha=1.0 / period, rates=rates, prev=prev)
+
+
 # end of smma
+
 
 # RMA - A EMA for RSI
 def rma(period, shift=0, rates=None, prev=None):
-    return ema(period=period, shift=shift, alpha=1.0 / period, rates=rates, prev=prev)
+    return ema(
+        period=period, shift=shift, alpha=1.0 / period, rates=rates, prev=prev)
+
+
 # end of rma
 
 
 # Stochastic (FSI) - Stochastic Oscillator
-def stochastic(period=14, periodD=3, smoothing=1, shift=0, hi=None, lo=None, cl=None):
+def stochastic(period=14,
+               periodD=3,
+               smoothing=1,
+               shift=0,
+               hi=None,
+               lo=None,
+               cl=None):
     if hi is None or lo is None or cl is None:
         return None
 
@@ -565,6 +633,8 @@ def stochastic(period=14, periodD=3, smoothing=1, shift=0, hi=None, lo=None, cl=
         valuesK[i] = valueK
 
     return ({'k': valuesK[0], 'd': np.mean(valuesK)})
+
+
 # end of stochastic
 
 
@@ -581,30 +651,34 @@ def stochasticK(hi, lo, cl, st, en):
         return None
 
     return (cl[st] - minLow) * 100.0 / difference
+
+
 # end of stochasticK
 
 
 # TRIMA
 def trima(period=10, shift=0, rates=None):
-    if rates is None :
+    if rates is None:
         return None
 
     ratesLen = len(rates)
 
-    interval = period / 2.0 + 0.5;
+    interval = period / 2.0 + 0.5
     interval = int(interval)
-    
+
     arrayOfSma = []
     for i in range(interval):
-        valueOfSma = sma( period=interval, rates=rates, shift=shift+i )
+        valueOfSma = sma(period=interval, rates=rates, shift=shift + i)
         if valueOfSma is None:
             break
-        arrayOfSma.append( valueOfSma )
+        arrayOfSma.append(valueOfSma)
 
     valueOfTrima = None
     if len(arrayOfSma) > 0:
-        valueOfTrima = sma( period=interval, rates=arrayOfSma )
+        valueOfTrima = sma(period=interval, rates=arrayOfSma)
     return valueOfTrima
+
+
 # end of stochastic
 
 
@@ -623,6 +697,8 @@ def williams(period=14, shift=0, hi=None, lo=None, cl=None):
         return None
 
     return (-100.0 * (highestHigh - cl[shift])) / diff
+
+
 # end of williams
 
 
@@ -645,6 +721,8 @@ def wma(period=10, shift=0, rates=None, prev=None):
         smoothed = (smoothed * (period - 1.0) + rates[shift]) / period
 
     return ({'wma': smoothed, 'num': numSummed, 'sum': summed})
+
+
 # end of wma
 
 
@@ -663,6 +741,8 @@ def awesome(period1=5, period2=34, shift=0, hi=None, lo=None):
     v2 = (hi[shift:endIndex] + lo[shift:endIndex]) / 2.0
 
     return (v1 - v2)
+
+
 # end of awesome
 
 

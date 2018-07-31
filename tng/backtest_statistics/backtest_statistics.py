@@ -117,7 +117,7 @@ class BacktestStatistics:
             drawdown = np.max(drawdown_values)
             drawdown_len = drawdown_lens[np.argmax(drawdown_values)]
         if drawdown == -1 and drawdown_len == -1:
-            return (0,0)
+            return (0, 0)
         else:
             return (drawdown, int(drawdown_len))
 

@@ -96,7 +96,7 @@ class Data:
         hist_data = hist_data[::-1]
         hist_data = hist_data.to_records(index=False)
         #np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
-        
+
         # КОСТЫЛЬ!
         # for i in range(len(hist_data)):
         #     if hist_data[i][0] != np_data[i][0]:
