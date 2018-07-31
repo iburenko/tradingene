@@ -34,7 +34,7 @@ def train_model():
     )
     model = create_model()
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
-    model.fit(data['train_input'], outputs, epochs=10)
+    model.fit(data['train_input'], outputs, epochs=100)
     val_outpus = keras.utils.to_categorical(data['validation_output'], num_classes = 3)
     loss, acc = model.evaluate(data['validation_input'], val_outpus)
     return model
