@@ -125,9 +125,9 @@ def separate_data(data, split, calculate_input, calculate_output, lookback, look
     input_parameters = np.delete(input_parameters, 0)
     output_parameters = np.delete(output_parameters, 0)
     input_len = len(input_parameters)
-    output_len = len(output_parameters)
+    #output_len = len(output_parameters)
     input_parameters = np.reshape(input_parameters, (input_len//inp.shape[-1], inp.shape[-1]))
-    output_parameters = np.reshape(output_parameters, (output_len//out.shape[-1], out.shape[-1]))
+    #output_parameters = np.reshape(output_parameters, (output_len//out.shape[-1], out.shape[-1]))
     if len(split) == 2:
         train_len = input_parameters.shape[0]*split[0]//100
         split_data['train_input'] = input_parameters[1:train_len]
@@ -188,5 +188,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache+file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days > -31:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
             os.remove(where_to_cache+file_)   
