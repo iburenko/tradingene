@@ -1003,6 +1003,11 @@ class TradeActivity(Backtest):
         elif side == -1:
             open_price = self.recent_price - self.spread
         new_trade = Trade(trade_id, open_price, volume, self.now)
+        if self.positions and self.positions[-1].trades:
+            last_trade = self.positions[-1].trades[-1]
+            if not last_trade.close_time:
+                last_trade.close_time = self.now
+                last_trade.close_price = self.recent_price
         self.positions[-1].trades.append(new_trade)
         self.positions[-1].volume_used += volume
         return trade_id
