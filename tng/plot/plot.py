@@ -5,7 +5,7 @@ import tng.algorithm_backtest.tng as tng
 import pandas as pd
 from bokeh.plotting import figure, show, output_file
 import datetime as dt
-from bokeh.models import ColumnDataSource, CustomJS, Div, Button, Band
+from bokeh.models import ColumnDataSource, CustomJS, Band
 from bokeh.models.tools import HoverTool
 
 def plot_cs_prof(alg, timeframe):
@@ -64,7 +64,7 @@ def plot_cs_prof(alg, timeframe):
 
     w = (timeframe / 2) * 60 * 1000
 
-    output_file("candlestick.html", title="candlestick.py example")
+    output_file("candlestick.html", title="Graphs")
     TOOLS = "pan,wheel_zoom,box_zoom,reset,save"
 
     inc = df.close > df.open
