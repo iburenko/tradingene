@@ -61,7 +61,7 @@ class Backtest(Environment):
 
 ################################################################################
 
-    def run_backtest(self, on_bar_function):
+    def run_backtest(self, on_bar_function, shift = 0):
         """ Runs backtest of an algorithm. 
         
         Args:
@@ -83,15 +83,15 @@ class Backtest(Environment):
             raise TypeError(err_str)
         if not self.ticker_timeframes:
             raise RuntimeError("No instrument was added!")
-        self._load_data(self.start_date, self.end_date)
+        self._load_data(self.start_date, self.end_date, shift)
         self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
                                               self.history_data)
-        self._run_generator(candle_generator, on_bar_function)
+        self._run_generator(candle_generator, on_bar_function, shift)
 
-    def _run_generator(self, generator, on_bar_function):
+    def _run_generator(self, generator, on_bar_function, shift=0):
         candles = next(generator)
-        minutes_left = 1
+        minutes_left = -shift + 1
         self._update_instruments(candles)
         try:
             complete_timeframes = list()
@@ -287,11 +287,14 @@ class Backtest(Environment):
                           if set(completed_timeframes) & set(timeframes)}
         return list(new_set | set(ct))
 
-    def _load_data(self, start_date, end_date):
+    def _load_data(self, start_date, end_date, shift):
         for ticker in self.ticker_timeframes.keys():
             self._load_pre_data()
             ticker_data = Data.load_data(ticker, start_date, end_date)
-            self.history_data[ticker] = ticker_data
+            if shift:
+                self.history_data[ticker] = ticker_data[:-shift]
+            else:
+                self.history_data[ticker] = ticker_data
             ticker_instrs = [
                 instr for instr in self.instruments if instr.ticker == ticker
             ]

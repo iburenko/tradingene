@@ -27,7 +27,8 @@ def import_data(ticker,
                 reverse=True,
                 split=(50, 25, 25),
                 indicators=None,
-                cache=True):
+                cache=True,
+                shift=0):
     if not isinstance(ticker, str) or \
         not isinstance(timeframe, int) or \
         not isinstance(start_date, datetime) or \
@@ -59,17 +60,17 @@ def import_data(ticker,
     if _is_cached(filename):
         data = pd.read_csv(where_to_cache + filename, index_col=False)
     else:
-        data = _load_data(ticker, timeframe, start_date, end_date, indicators)
+        data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)
         if not reverse:
             data = data[::-1]
         if cache:
-            _cache_data(data, filename)
+            _cache_data(data, filename, shift)
     data = separate_data(data, split, calculate_input, calculate_output,
                          lookback, lookforward)
     return data
 
 
-def _load_data(ticker, timeframe, start_date, end_date, indicators):
+def _load_data(ticker, timeframe, start_date, end_date, indicators, shift):
     data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
     sample = np.empty(len(data_columns))
     data = np.array([])
@@ -103,7 +104,7 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators):
     alg = TNG(name, regime, start_date, end_date)
     alg.addInstrument(ticker)
     alg.addTimeframe(ticker, timeframe)
-    alg.run_backtest(on_bar)
+    alg.run_backtest(on_bar, shift)
     del alg
     data = np.reshape(data,
                       (len(data) // len(data_columns), len(data_columns)))
@@ -126,10 +127,8 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
     input_parameters = np.delete(input_parameters, 0)
     output_parameters = np.delete(output_parameters, 0)
     input_len = len(input_parameters)
-    #output_len = len(output_parameters)
     input_parameters = np.reshape(input_parameters,
                                   (input_len // inp.shape[-1], inp.shape[-1]))
-    #output_parameters = np.reshape(output_parameters, (output_len//out.shape[-1], out.shape[-1]))
     if len(split) == 2:
         train_len = input_parameters.shape[0] * split[0] // 100
         split_data['train_input'] = input_parameters[1:train_len]
@@ -177,8 +176,11 @@ def _is_cached(filename):
         return False
 
 
-def _cache_data(data, filename):
-    df = pd.DataFrame(data)
+def _cache_data(data, filename, shift):
+    if shift:
+        df = pd.DataFrame(data[1:])
+    else:
+        df = pd.DataFrame(data)
     df.to_csv(where_to_cache + filename, index=False, mode="a")
 
 
@@ -196,5 +198,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache + file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days > -31:
             os.remove(where_to_cache + file_)

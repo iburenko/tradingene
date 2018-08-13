@@ -14,10 +14,10 @@ import pstats
 
 
 def train_model():
-    start_date = datetime(2017, 6, 1)
-    end_date = datetime(2018, 3, 1)
+    start_date = datetime(2018, 1, 1)
+    end_date = datetime(2018, 1, 10)
     ticker = "ethbtc"
-    timeframe = 60
+    timeframe = 5
     lookback = 5
     lookforward = 2
     # inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
@@ -25,12 +25,13 @@ def train_model():
     #         'momentum': (), 'ppo':(), 'roc':(), \
     #         'trima':(), 'williams':(),\
     #         'bollinger':(), 'macd':(), 'keltner':()}
-    inds = {'sma':(), 'macd':()}
+    inds = {}
     data = import_data(
         ticker, timeframe, start_date, end_date, 
         calculate_input, lookback, 
         calculate_output, lookforward,
-        split = (50, 30, 20), indicators = inds
+        split = (50, 30, 20), indicators = inds,
+        shift = 2
     )
     model = create_model()
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
