@@ -289,5 +289,5 @@ class BacktestStatistics:
             explanatory_str = method.replace("calculate_", "") + " = \t"
             html += "<tr><td>" + explanatory_str + "</td><td>" + str(eval("self."+method)()) + "</td></tr>"
         html += "</table>"
-        with open("candlestick.html", "w") as file:
+        with open("stats.html", "w") as file:
             file.write(html)

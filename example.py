@@ -2,32 +2,21 @@ import tng.algorithm_backtest.tng as tng
 from datetime import datetime
 from time import time
 import tng.backtest_statistics.backtest_statistics as bs
-<<<<<<< HEAD
+from tng.plot.plot import plot_cs_prof
 import pandas as pd
 import numpy as np
-=======
-from tng.plot.plot import plot_cs_prof
->>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
 
 name = "Cornucopia"
 regime = "MP"
 start_date = datetime(2018, 1, 1)
-<<<<<<< HEAD
-end_date = datetime(2018, 1, 4)
-=======
 end_date = datetime(2018, 2, 1)
->>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
+timeframe = 60
 
 alg = tng.TNG(name, regime, start_date, end_date)
 alg.addInstrument("btcusd")
-alg.addTimeframe("btcusd", 60)
+alg.addTimeframe("btcusd", timeframe)
 
-<<<<<<< HEAD
 # df = pd.DataFrame(columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
-=======
-timeframe = 60
-
->>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
 in_pos = 0
 pos_id = None
 
@@ -61,7 +50,6 @@ def onBar(instrument):
         else:
             if in_pos >= 0:
                 alg.closePosition(pos_id)
-<<<<<<< HEAD
     #print(instrument.time)
     # print(instrument.ema(3))
     # print("ad = ", instrument.ad()[1])
@@ -94,16 +82,14 @@ def onBar(instrument):
     #     # If price did not change then do nothing;
     #     pass
 
-=======
->>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
 
 alg.run_backtest(onBar)
 
-for pos in alg.positions:
-    for trade in pos.trades:
-        print(trade.open_time, trade.open_price, trade.close_time,
-            trade.close_price, trade.side)
-    print("------------------ end of pos -------------------")
+# for pos in alg.positions:
+#     for trade in pos.trades:
+#         print(trade.open_time, trade.open_price, trade.close_time,
+#             trade.close_price, trade.side)
+#     print("------------------ end of pos -------------------")
 
 new_stat = bs.BacktestStatistics(alg.positions)
 new_stat.backtest_results()
