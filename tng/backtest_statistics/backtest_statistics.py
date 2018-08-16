@@ -284,6 +284,10 @@ class BacktestStatistics:
         all_stats = [method for method in dir(BacktestStatistics) \
                             if callable(getattr(BacktestStatistics, method)) \
                             if method.startswith('calculate_')]
+        html = "<table>"
         for method in all_stats:
             explanatory_str = method.replace("calculate_", "") + " = \t"
-            print(explanatory_str, eval("self." + method)())
+            html += "<tr><td>" + explanatory_str + "</td><td>" + str(eval("self."+method)()) + "</td></tr>"
+        html += "</table>"
+        with open("candlestick.html", "w") as file:
+            file.write(html)

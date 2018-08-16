@@ -7,7 +7,7 @@ import numpy as np
 name = "Cornucopia"
 regime = "MP"
 start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 2, 1)
+end_date = datetime(2018, 1, 4)
 
 alg = tng.TNG(name, regime, start_date, end_date)
 alg.addInstrument("btcusd")

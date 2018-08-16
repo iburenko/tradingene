@@ -15,15 +15,15 @@ dt = np.dtype({
 where_to_cache = os.path.dirname(
     os.path.abspath(__file__)) + '/__cached_history__/'
 
-
+# calc_inp and calc_out = None by default
 def import_data(ticker,
                 timeframe,
                 start_date,
                 end_date,
-                calculate_input,
-                lookback,
-                calculate_output,
-                lookforward,
+                calculate_input = None,
+                lookback = None,
+                calculate_output = None,
+                lookforward = None,
                 reverse=True,
                 split=(50, 25, 25),
                 indicators=None,
@@ -38,10 +38,10 @@ def import_data(ticker,
         raise TypeError("Check types of arguments!")
     if sum(split) != 100:
         raise ValueError("Sum of values in split must be 100!")
-    if not callable(calculate_input):
-        raise TypeError("calculate_input must be callable!")
-    if not callable(calculate_output):
-        raise TypeError("calculate_output must be callable!")
+    if not callable(calculate_input) and calculate_input is not None:
+        raise TypeError("calculate_input must be callable or None!")
+    if not callable(calculate_output) and calculate_output is not None:
+        raise TypeError("calculate_output must be callable or None!")
     if not isinstance(lookback, int):
         raise TypeError("lookback must be int!")
     elif lookback < 1:
@@ -65,9 +65,11 @@ def import_data(ticker,
             data = data[::-1]
         if cache:
             _cache_data(data, filename, shift)
-    data = separate_data(data, split, calculate_input, calculate_output,
-                         lookback, lookforward)
-    return data
+    if calculate_input is None or calculate_output is None:
+        return data
+    else:
+        return separate_data(data, split, calculate_input, calculate_output,
+                            lookback, lookforward)
 
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators, shift):
@@ -77,7 +79,6 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift):
     ind_dict = dict()
 
     def on_bar(instrument):
-        pass
         nonlocal data, ind_dict
         sample[0:6] = instrument.time,\
                     instrument.open[1], \

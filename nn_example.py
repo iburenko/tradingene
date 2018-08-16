@@ -1,5 +1,4 @@
 from datetime import datetime
-from time import time
 from tng.data.load import import_data
 from tng.algorithm_backtest.tng import TNG
 import tng.backtest_statistics.backtest_statistics as bs
@@ -9,15 +8,14 @@ from keras.initializers import he_normal, he_uniform
 from keras.layers.normalization import BatchNormalization
 import keras
 import numpy as np
-import cProfile
-import pstats
+
 
 
 def train_model():
     start_date = datetime(2018, 1, 1)
-    end_date = datetime(2018, 1, 10)
+    end_date = datetime(2018, 2, 1)
     ticker = "ethbtc"
-    timeframe = 5
+    timeframe = 60
     lookback = 5
     lookforward = 2
     # inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
@@ -28,14 +26,16 @@ def train_model():
     inds = {}
     data = import_data(
         ticker, timeframe, start_date, end_date, 
-        calculate_input, lookback, 
-        calculate_output, lookforward,
+        lookback=lookback, 
+        calculate_output=calculate_output, 
+        lookforward=lookforward,
         split = (50, 30, 20), indicators = inds,
         shift = 2
     )
+
     model = create_model()
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
-    model.fit(data['train_input'], outputs, epochs=100)
+    model.fit(data['train_input'], outputs, epochs=10)
     val_outpus = keras.utils.to_categorical(data['validation_output'], num_classes = 3)
     loss, acc = model.evaluate(data['validation_input'], val_outpus)
     return model
@@ -51,8 +51,6 @@ def create_model():
 
 
 def calculate_input(data):
-    # print(list(map(int,(data.time))))
-    # input("")
     input_vec = np.zeros(10)
     open_prices = data['open']
     volumes = data['vol']
@@ -63,8 +61,6 @@ def calculate_input(data):
 
 
 def calculate_output(data):
-    # print(list(map(int,(data.time))))
-    # input("")
     open_prices = data['open']
     if np.log(open_prices[1]/open_prices[0]) > 0.01:
         return 1
@@ -74,8 +70,8 @@ def calculate_output(data):
         return 0
 
 model = train_model()
-start_date = datetime(2018, 3, 1)
-end_date = datetime(2018, 5, 1)
+start_date = datetime(2018, 2, 1)
+end_date = datetime(2018, 2, 12)
 alg = TNG(start_date, end_date)
 alg.addInstrument("ethbtc")
 alg.addTimeframe("ethbtc", 60)
@@ -84,8 +80,8 @@ i = 0
 def onBar(instrument):
     global model, i
     i += 1
-    if i < 6:
-        return
+    # if i < 6:
+    #     return
     pred = model.predict_classes(calculate_input(instrument.rates[1:7]))
     if pred == 1:
         alg.buy()
