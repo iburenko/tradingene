@@ -1,19 +1,33 @@
 import tng.algorithm_backtest.tng as tng
 from datetime import datetime
+from time import time
 import tng.backtest_statistics.backtest_statistics as bs
+<<<<<<< HEAD
 import pandas as pd
 import numpy as np
+=======
+from tng.plot.plot import plot_cs_prof
+>>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
 
 name = "Cornucopia"
 regime = "MP"
 start_date = datetime(2018, 1, 1)
+<<<<<<< HEAD
 end_date = datetime(2018, 1, 4)
+=======
+end_date = datetime(2018, 2, 1)
+>>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
 
 alg = tng.TNG(name, regime, start_date, end_date)
 alg.addInstrument("btcusd")
 alg.addTimeframe("btcusd", 60)
 
+<<<<<<< HEAD
 # df = pd.DataFrame(columns = ['time', 'open', 'high', 'low', 'close', 'vol'])
+=======
+timeframe = 60
+
+>>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
 in_pos = 0
 pos_id = None
 
@@ -47,6 +61,7 @@ def onBar(instrument):
         else:
             if in_pos >= 0:
                 alg.closePosition(pos_id)
+<<<<<<< HEAD
     #print(instrument.time)
     # print(instrument.ema(3))
     # print("ad = ", instrument.ad()[1])
@@ -79,6 +94,8 @@ def onBar(instrument):
     #     # If price did not change then do nothing;
     #     pass
 
+=======
+>>>>>>> 6a2a0fb7c1d0699ff93ea95289437a47b74777d3
 
 alg.run_backtest(onBar)
 
@@ -90,16 +107,5 @@ for pos in alg.positions:
 
 new_stat = bs.BacktestStatistics(alg.positions)
 new_stat.backtest_results()
-# new_stat.calculate_ATT()
-# new_stat.print_statistics()
-# print(new_stat.calculate_drawdown())
-# print(new_stat.calculate_PnL())
-# print(new_stat.calculate_AT())
-# print(new_stat.calculate_profit())
-# print(new_stat.calculate_loss())
-# print(new_stat.calculate_AWT())
-# print(new_stat.calculate_ALT())
-# print(new_stat.calculate_LWT())
-# print(new_stat.calculate_LLT())
-# print(new_stat.calculate_MCW())
-# print(new_stat.calculate_MCL())
+
+plot_cs_prof(alg, timeframe)
