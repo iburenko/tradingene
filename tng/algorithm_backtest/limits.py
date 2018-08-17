@@ -32,5 +32,6 @@ instrument_ids = {
     'ethbtc': 22,
     'ltcbtc': 23,
     'dshbtc': 24,
-    'xprbtc': 25
+    'xprbtc': 25,
+    'rts': 100
 }

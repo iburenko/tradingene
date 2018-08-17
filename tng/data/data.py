@@ -68,12 +68,12 @@ class Data:
         end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
         req_start_date = start_date * 1000
         req_end_date = end_date * 1000
-        if filename in instrument_ids.keys():
-            instr_id = instrument_ids[filename]
-        else:
-            raise ValueError("Instrument {} was not found!".format(filename))
-        url = "https://candles.tradingene.com/candles?instrument_id=" + \
-              str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
+        # if filename in instrument_ids.keys():
+        #     instr_id = instrument_ids[filename]
+        # else:
+        #     raise ValueError("Instrument {} was not found!".format(filename))
+        # url = "https://candles.tradingene.com/candles?instrument_id=" + \
+        #       str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
 
         # data = urllib.request.urlopen(url).read()
         # obj = json.loads(data)

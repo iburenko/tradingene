@@ -14,23 +14,24 @@ import numpy as np
 def train_model():
     start_date = datetime(2018, 1, 1)
     end_date = datetime(2018, 2, 1)
-    ticker = "ethbtc"
+    ticker = "rts"
     timeframe = 60
     lookback = 5
     lookforward = 2
-    # inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
-    #         'atr':(), 'cci':(), 'chande':(), \
-    #         'momentum': (), 'ppo':(), 'roc':(), \
-    #         'trima':(), 'williams':(),\
-    #         'bollinger':(), 'macd':(), 'keltner':()}
-    inds = {}
+    inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
+            'atr':(), 'cci':(), 'chande':(), \
+            'momentum': (), 'ppo':(), 'roc':(), \
+            'trima':(), 'williams':(),\
+            'bollinger':(), 'macd':(), 'keltner':(),
+            'stochastic':()}
+    # inds = {}
     data = import_data(
         ticker, timeframe, start_date, end_date, 
+        calculate_input=calculate_input,
         lookback=lookback, 
         calculate_output=calculate_output, 
         lookforward=lookforward,
         split = (50, 30, 20), indicators = inds,
-        shift = 2
     )
 
     model = create_model()
@@ -46,7 +47,7 @@ def create_model():
     model.add(Dense(100, activation='tanh'))
     model.add(Dense(3, activation='softmax'))
     model.compile(
-        loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     return model
 
 
@@ -59,19 +60,20 @@ def calculate_input(data):
         input_vec[i + 5] = volumes[i]
     return np.array([input_vec])
 
-
 def calculate_output(data):
+    global b0, b1, b2
     open_prices = data['open']
     if np.log(open_prices[1]/open_prices[0]) > 0.01:
         return 1
     if np.log(open_prices[1]/open_prices[0]) < -0.01:
-        return 2
+        return -1
     else:
         return 0
+        
 
 model = train_model()
 start_date = datetime(2018, 2, 1)
-end_date = datetime(2018, 2, 12)
+end_date = datetime(2018, 1, 14)
 alg = TNG(start_date, end_date)
 alg.addInstrument("ethbtc")
 alg.addTimeframe("ethbtc", 60)
@@ -79,9 +81,6 @@ alg.addTimeframe("ethbtc", 60)
 i = 0
 def onBar(instrument):
     global model, i
-    i += 1
-    # if i < 6:
-    #     return
     pred = model.predict_classes(calculate_input(instrument.rates[1:7]))
     if pred == 1:
         alg.buy()

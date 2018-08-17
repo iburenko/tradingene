@@ -199,5 +199,5 @@ def delete_old_files():
     for file_ in cached_files:
         timestamp = os.path.getmtime(where_to_cache + file_)
         this_moment = datetime.now()
-        if (this_moment - datetime.fromtimestamp(timestamp)).days > -31:
+        if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
             os.remove(where_to_cache + file_)
