@@ -9,7 +9,7 @@ import numpy as np
 name = "Cornucopia"
 regime = "MP"
 start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 2, 1)
+end_date = datetime(2018, 1, 5)
 timeframe = 60
 
 alg = tng.TNG(name, regime, start_date, end_date)
@@ -85,11 +85,11 @@ def onBar(instrument):
 
 alg.run_backtest(onBar)
 
-# for pos in alg.positions:
-#     for trade in pos.trades:
-#         print(trade.open_time, trade.open_price, trade.close_time,
-#             trade.close_price, trade.side)
-#     print("------------------ end of pos -------------------")
+for pos in alg.positions:
+    for trade in pos.trades:
+        print(trade.open_time, trade.open_price, trade.close_time,
+            trade.close_price, trade.side)
+    print("------------------ end of pos -------------------")
 
 new_stat = bs.BacktestStatistics(alg.positions)
 new_stat.backtest_results()
