@@ -51,26 +51,20 @@ def import_data(ticker,
     elif lookforward < 1:
         raise ValueError("lookforward must be positive!")
 
-    check_home_folder()
-    delete_old_files()
-    start_date_str = start_date.strftime("%Y%m%d%H%M%S")
-    end_date_str = end_date.strftime("%Y%m%d%H%M%S")
-    filename = "__" + ticker + str(
-        timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
-    if _is_cached(filename):
-        data = pd.read_csv(where_to_cache + filename, index_col=False)
-    else:
-        data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)
-        if not reverse:
-            data = data[::-1]
-        if cache:
-            _cache_data(data, filename, shift)
-    if calculate_input is None or calculate_output is None:
-        return data
-    else:
-        return separate_data(data, split, calculate_input, calculate_output,
-                            lookback, lookforward)
+    data = _check_data(ticker, timeframe, start_date, end_date, reverse, shift)
+    return separate_data(data, split, calculate_input, calculate_output,
+                        lookback, lookforward)
 
+def import_candles(ticker,
+                timeframe,
+                start_date,
+                end_date,
+                reverse=True,
+                indicators=None,
+                cache=True,
+                shift=0):
+    data = _check_data(ticker, timeframe, start_date, end_date, reverse, shift)
+    return data
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators, shift):
     data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
@@ -111,6 +105,24 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift):
                       (len(data) // len(data_columns), len(data_columns)))
     data = pd.DataFrame(data, columns=data_columns)
     data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
+    return data
+
+
+def _check_data(ticker, timeframe, start_date, end_date, reverse, shift):
+    check_home_folder()
+    delete_old_files()
+    start_date_str = start_date.strftime("%Y%m%d%H%M%S")
+    end_date_str = end_date.strftime("%Y%m%d%H%M%S")
+    filename = "__" + ticker + str(
+        timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
+    if _is_cached(filename):
+        data = pd.read_csv(where_to_cache + filename, index_col=False)
+    else:
+        data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)
+        if not reverse:
+            data = data[::-1]
+        if cache:
+            _cache_data(data, filename, shift)
     return data
 
 

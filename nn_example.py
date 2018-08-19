@@ -1,5 +1,5 @@
 from datetime import datetime
-from tng.data.load import import_data
+from tng.data.load import import_data, import_candles
 from tng.algorithm_backtest.tng import TNG
 import tng.backtest_statistics.backtest_statistics as bs
 from keras.models import Sequential
@@ -14,7 +14,7 @@ import numpy as np
 def train_model():
     start_date = datetime(2018, 1, 1)
     end_date = datetime(2018, 2, 1)
-    ticker = "rts"
+    ticker = "btcusd"
     timeframe = 60
     lookback = 5
     lookforward = 2
@@ -25,14 +25,20 @@ def train_model():
             'bollinger':(), 'macd':(), 'keltner':(),
             'stochastic':()}
     # inds = {}
-    data = import_data(
-        ticker, timeframe, start_date, end_date, 
-        calculate_input=calculate_input,
-        lookback=lookback, 
-        calculate_output=calculate_output, 
-        lookforward=lookforward,
-        split = (50, 30, 20), indicators = inds,
+    # data = import_data(
+    #     ticker, timeframe, start_date, end_date, 
+    #     calculate_input=calculate_input,
+    #     lookback=lookback, 
+    #     calculate_output=calculate_output, 
+    #     lookforward=lookforward,
+    #     split = (50, 30, 20), indicators = inds,
+    # )
+
+    data = import_candles(
+        ticker, timeframe, start_date, end_date, indicators = inds
     )
+    print(data)
+    input("")
 
     model = create_model()
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
@@ -75,8 +81,8 @@ model = train_model()
 start_date = datetime(2018, 2, 1)
 end_date = datetime(2018, 1, 14)
 alg = TNG(start_date, end_date)
-alg.addInstrument("ethbtc")
-alg.addTimeframe("ethbtc", 60)
+alg.addInstrument("btcusd")
+alg.addTimeframe("btcusd", 60)
 
 i = 0
 def onBar(instrument):
