@@ -12,8 +12,8 @@ import numpy as np
 
 
 def train_model():
-    start_date = datetime(2018, 1, 1)
-    end_date = datetime(2018, 4, 1)
+    start_date = datetime(2017, 11, 2)
+    end_date = datetime(2018, 4, 2)
     ticker = "btcusd"
     timeframe = 60
     lookback = 5
@@ -71,7 +71,7 @@ def calculate_output(data):
     else:
         return 0
         
-for i in range(10):
+for i in range(1):
     model = train_model()
     start_date = datetime(2018, 4, 1)
     end_date = datetime(2018, 5, 14)
