@@ -64,9 +64,9 @@ def calculate_input(data):
 def calculate_output(data):
     global b0, b1, b2
     open_prices = data['open']
-    if np.log(open_prices[1]/open_prices[0]) > 0.01:
+    if np.log(open_prices[1]/open_prices[0]) > 0.02:
         return 1
-    if np.log(open_prices[1]/open_prices[0]) < -0.01:
+    if np.log(open_prices[1]/open_prices[0]) < -0.02:
         return -1
     else:
         return 0

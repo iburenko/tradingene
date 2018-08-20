@@ -301,5 +301,5 @@ class BacktestStatistics:
         filedata.replace("</html>", "")
         with open("stats.html", "a") as file:
             file.write(html)
-        opener ="open" if sys.platform == "darwin" else "xdg-open"
-        subprocess.call([opener, "stats.html"])
+        # opener ="open" if sys.platform == "darwin" else "xdg-open"
+        # subprocess.call([opener, "stats.html"])
