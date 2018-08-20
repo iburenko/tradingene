@@ -87,8 +87,7 @@ def plot_cs_prof(alg):
 
     max_high_range = df['high'][(len(df)-31):(len(df)-1)].max()
 
-    title_legend = "Candlestick chart.\tTimeframe = "+str(timeframe)
-    p = figure(title=title_legend, x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
+    p = figure(title="Candlestick chart with timeframe = " + str(timeframe) + " munutes", x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
     x_range=(df["date"].min() - dt.timedelta(minutes=timeframe), df["date"].min() + dt.timedelta(minutes=timeframe*30)),
     y_range = (min_low_range - max_range / 2, max_high_range + max_range / 2))
 
@@ -170,18 +169,22 @@ def plot_cs_prof(alg):
         prof = open_df['profit'].iloc[-1]
 
     last_el = df.iloc[0]
+    last_el = last_el.to_frame().T
     last_el['profit'] = prof
     last_el['date'] = last_el['date'] + dt.timedelta(minutes=timeframe)
-    close_df = close_df.append(last_el)
+
+    close_df = close_df.append(last_el, sort=True)
+
     close_df = close_df.reset_index()
+
     close_df['cumsum'] = close_df['profit'].cumsum(skipna=True)
     close_df['pos'] = 0.0
 
-    close_df['pos'] = close_df['cumsum'][close_df['cumsum'] > 0]
-    close_df['pos'][np.isnan(close_df['pos'])] = 0
+    close_df['pos'] = close_df.loc[close_df['cumsum'] > 0, 'cumsum']
+    close_df.loc[np.isnan(close_df['pos']), 'pos'] = 0
     close_df['neg'] = 0.0
-    close_df['neg'] = close_df['cumsum'][close_df['cumsum'] < 0]
-    close_df['neg'][np.isnan(close_df['neg'])] = 0
+    close_df['neg'] = close_df.loc[close_df['cumsum'] < 0, 'cumsum']
+    close_df.loc[np.isnan(close_df['neg']), 'neg'] = 0.0
     close_df['zeros'] = 0.0
 
     plot_prof = figure(title="Profit plot", x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
@@ -192,7 +195,7 @@ def plot_cs_prof(alg):
     date_mid = pd.DataFrame()
     date_mid['date'] = close_df['date'].shift() + close_df['cumsum'].shift() * (close_df['date'] - close_df['date'].shift()) / (-close_df['cumsum'] + close_df['cumsum'].shift())
 
-    date_mid['diff'] = np.sign(close_df['cumsum'].shift() * close_df['cumsum'])
+    date_mid['diff'] = np.sign(close_df['cumsum'].shift().fillna(0) * close_df['cumsum'])
     date_mid = date_mid[1:]
     date_mid = date_mid[date_mid['diff'] < 0]
 
@@ -202,7 +205,7 @@ def plot_cs_prof(alg):
     date_mid['zeros'] = 0.0
 
     close_d_no_mids = close_df
-    close_df = pd.concat([close_df, date_mid])
+    close_df = pd.concat([close_df, date_mid], sort=True)
     close_df = close_df.reset_index()
     close_df = close_df.sort_values(by=['date'])
     source_no_mids= ColumnDataSource(close_d_no_mids)
