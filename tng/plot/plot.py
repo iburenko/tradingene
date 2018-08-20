@@ -30,24 +30,24 @@ def plot_cs_prof(alg):
     close_df = pd.DataFrame()   
     open_df = pd.DataFrame()
 
-    for i in range(len(alg.positions)):
-        if (alg.positions[i].closed):
-            pos_trades = alg.positions[i].trades
-            for j in range(len(pos_trades)):
+    for pos in alg.positions:
+        pos_trades = pos.trades
+        for j in range(len(pos_trades)):
+            if pos.closed:
                 if  j < len(pos_trades) - 1:
                     close_df = close_df.append([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price, pos_trades[j].side, 0, 0]])
                 elif pos_trades[j].close_time > 0:
-                    close_df = close_df.append([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price,pos_trades[j].side, 1, alg.positions[i].profit]])
-                if  j > 0:
-                    open_df = open_df.append([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 0]])
-                else:
-                    open_df = open_df.append([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 1]])
+                    close_df = close_df.append([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price,pos_trades[j].side, 1, pos.profit]])
+            if  j > 0:
+                open_df = open_df.append([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 0, pos.profit]])
+            else:
+                open_df = open_df.append([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 1, pos.profit]])
 
     df = list(alg.instruments)[0].rates
     df = pd.DataFrame(df[1:(len(df) - 50)])
 
     close_df.columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']
-    open_df.columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic']
+    open_df.columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']
 
     df['size'] = 12.0
     close_df['size'] = 12.0
@@ -64,8 +64,6 @@ def plot_cs_prof(alg):
 
     close_df.index = range(len(close_df))
     open_df.index = range(len(open_df))
-
-  #  df = pd.merge(df, open_df, how = 'left', on ='date')
 
     w = (timeframe / 2) * 60 * 1000
 
@@ -88,8 +86,8 @@ def plot_cs_prof(alg):
     min_low_range = df['low'][(len(df)-31):(len(df)-1)].min()
 
     max_high_range = df['high'][(len(df)-31):(len(df)-1)].max()
-    title_legend = "Candlestick chart. \tTimeframe = "+str(timeframe)
-    p = figure(title=title_legend, x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
+
+    p = figure(title="Candlestick chart", x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
     x_range=(df["date"].min() - dt.timedelta(minutes=timeframe), df["date"].min() + dt.timedelta(minutes=timeframe*30)),
     y_range = (min_low_range - max_range / 2, max_high_range + max_range / 2))
 
@@ -102,8 +100,6 @@ def plot_cs_prof(alg):
 
     open_df['time'] = open_df['date'].dt.floor(str(timeframe) + 'T')
     close_df['time'] = close_df['date'].dt.floor(str(timeframe) + 'T') 
-    #open_df['time'] = open_df['time'] - dt.timedelta(minutes=(timeframe / 2))
-    #close_df['time'] = close_df['time'] - dt.timedelta(minutes=(timeframe / 2))
 
     source1 = ColumnDataSource(open_df[ind_open & (open_df['open_side'] == 1)])
     source2 = ColumnDataSource(open_df[ind_open & (open_df['open_side'] == -1)])
@@ -114,7 +110,6 @@ def plot_cs_prof(alg):
     source6 = ColumnDataSource(open_df[ind_open_subseq & (open_df['open_side'] == -1)])
     source7  = ColumnDataSource(close_df[ind_close_subseq & (close_df['close_side'] == 1)])
     source8  = ColumnDataSource(close_df[ind_close_subseq & (close_df['close_side'] == -1)])
-
 
     p.segment(df.date, df.high, df.date, df.low, color="black")
 
@@ -141,7 +136,6 @@ def plot_cs_prof(alg):
 
     tr_4 = p.inverted_triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source7, fill_color="brown")
     inv_tr_4 = p.triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source8, fill_color="brown") 
-     
 
     p.x_range.js_on_change('start', update_triangle(source1))
     p.x_range.js_on_change('start', update_triangle(source2))
@@ -169,6 +163,16 @@ def plot_cs_prof(alg):
 
     close_df = close_df[close_df['last_indic'] == 1]
     close_df['profit'][np.isnan(close_df['profit'])] = 0.0
+
+    prof = close_df['profit'].iloc[-1]
+    if (open_df['date'].iloc[-1] > close_df['date'].iloc[-1]):
+        prof = open_df['profit'].iloc[-1]
+
+    last_el = df.iloc[0]
+    last_el['profit'] = prof
+    last_el['date'] = last_el['date'] + dt.timedelta(minutes=timeframe)
+    close_df = close_df.append(last_el)
+    close_df = close_df.reset_index()
     close_df['cumsum'] = close_df['profit'].cumsum(skipna=True)
     close_df['pos'] = 0.0
 
@@ -180,13 +184,13 @@ def plot_cs_prof(alg):
     close_df['zeros'] = 0.0
 
     plot_prof = figure(title="Profit plot", x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
-    x_range = (df["date"].min(), df["date"].max()),
+    x_range = (df["date"].min(), close_df["date"].max()),
     y_range = (close_df['cumsum'].min() - (close_df['cumsum'].max() - close_df['cumsum'].min()) * 0.1,
                 close_df['cumsum'].max() + (close_df['cumsum'].max() - close_df['cumsum'].min()) * 0.1))
 
-
     date_mid = pd.DataFrame()
-    date_mid['date'] = close_df['date'].shift() + close_df['cumsum'] * (close_df['date'] - close_df['date'].shift()) / (close_df['cumsum'] - close_df['cumsum'].shift())
+    date_mid['date'] = close_df['date'].shift() + close_df['cumsum'].shift() * (close_df['date'] - close_df['date'].shift()) / (-close_df['cumsum'] + close_df['cumsum'].shift())
+
     date_mid['diff'] = np.sign(close_df['cumsum'].shift() * close_df['cumsum'])
     date_mid = date_mid[1:]
     date_mid = date_mid[date_mid['diff'] < 0]
@@ -196,17 +200,21 @@ def plot_cs_prof(alg):
     date_mid['neg'] = 0.0
     date_mid['zeros'] = 0.0
 
-
+    close_d_no_mids = close_df
     close_df = pd.concat([close_df, date_mid])
     close_df = close_df.reset_index()
     close_df = close_df.sort_values(by=['date'])
+    source_no_mids= ColumnDataSource(close_d_no_mids)
     source = ColumnDataSource(close_df)
 
-    band = Band(base='date', lower='zeros', upper='pos', source = source, fill_alpha=0.7, fill_color="green")
+    band = Band(base='date', lower='zeros', upper='pos', source = source, fill_alpha=0.75, fill_color="green")
     plot_prof.add_layout(band)
     plot_prof.yaxis.axis_label = 'Profit'
-    band = Band(base='date', lower='zeros', upper='neg', source = source, fill_alpha=0.7, fill_color="red")
+    band = Band(base='date', lower='zeros', upper='neg', source = source, fill_alpha=0.75, fill_color="red")
     plot_prof.add_layout(band)
-
-    #fig = vplot(p, plot_prof)
+    profit_line = plot_prof.line(x='date', y='cumsum', source = source_no_mids, line_width=2)
+    hover3 = HoverTool(renderers=[profit_line],
+                        tooltips = [('date', '@date{%Y-%m-%d %H:%M:%S}'), ('profit', '@cumsum{0.0}')],
+                        formatters={"date":"datetime"})
+    plot_prof.add_tools(hover3)
     save(column(p, plot_prof), "stats.html")
