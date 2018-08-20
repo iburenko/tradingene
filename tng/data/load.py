@@ -51,7 +51,7 @@ def import_data(ticker,
     elif lookforward < 1:
         raise ValueError("lookforward must be positive!")
 
-    data = _check_data(ticker, timeframe, start_date, end_date, reverse, shift)
+    data = _check_data(ticker, timeframe, start_date, end_date, indicators, cache, reverse, shift)
     return separate_data(data, split, calculate_input, calculate_output,
                         lookback, lookforward)
 
@@ -63,7 +63,7 @@ def import_candles(ticker,
                 indicators=None,
                 cache=True,
                 shift=0):
-    data = _check_data(ticker, timeframe, start_date, end_date, reverse, shift)
+    data = _check_data(ticker, timeframe, start_date, end_date, indicators, cache, reverse, shift)
     return data
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators, shift):
@@ -108,7 +108,7 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift):
     return data
 
 
-def _check_data(ticker, timeframe, start_date, end_date, reverse, shift):
+def _check_data(ticker, timeframe, start_date, end_date, indicators, cache, reverse, shift):
     check_home_folder()
     delete_old_files()
     start_date_str = start_date.strftime("%Y%m%d%H%M%S")

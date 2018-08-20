@@ -9,7 +9,7 @@ import numpy as np
 name = "Cornucopia"
 regime = "MP"
 start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 1, 5)
+end_date = datetime(2018, 1, 15)
 timeframe = 60
 
 alg = tng.TNG(name, regime, start_date, end_date)
@@ -91,7 +91,5 @@ for pos in alg.positions:
             trade.close_price, trade.side)
     print("------------------ end of pos -------------------")
 
-new_stat = bs.BacktestStatistics(alg.positions)
+new_stat = bs.BacktestStatistics(alg)
 new_stat.backtest_results()
-
-plot_cs_prof(alg, timeframe)

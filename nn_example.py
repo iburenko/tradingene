@@ -13,7 +13,7 @@ import numpy as np
 
 def train_model():
     start_date = datetime(2018, 1, 1)
-    end_date = datetime(2018, 2, 1)
+    end_date = datetime(2018, 4, 1)
     ticker = "btcusd"
     timeframe = 60
     lookback = 5
@@ -25,24 +25,18 @@ def train_model():
             'bollinger':(), 'macd':(), 'keltner':(),
             'stochastic':()}
     # inds = {}
-    # data = import_data(
-    #     ticker, timeframe, start_date, end_date, 
-    #     calculate_input=calculate_input,
-    #     lookback=lookback, 
-    #     calculate_output=calculate_output, 
-    #     lookforward=lookforward,
-    #     split = (50, 30, 20), indicators = inds,
-    # )
-
-    data = import_candles(
-        ticker, timeframe, start_date, end_date, indicators = inds
+    data = import_data(
+        ticker, timeframe, start_date, end_date, 
+        calculate_input=calculate_input,
+        lookback=lookback, 
+        calculate_output=calculate_output, 
+        lookforward=lookforward,
+        split = (50, 30, 20), indicators = inds,
     )
-    print(data)
-    input("")
 
     model = create_model()
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
-    model.fit(data['train_input'], outputs, epochs=10)
+    model.fit(data['train_input'], outputs, epochs=50)
     val_outpus = keras.utils.to_categorical(data['validation_output'], num_classes = 3)
     loss, acc = model.evaluate(data['validation_input'], val_outpus)
     return model
@@ -78,8 +72,8 @@ def calculate_output(data):
         
 
 model = train_model()
-start_date = datetime(2018, 2, 1)
-end_date = datetime(2018, 1, 14)
+start_date = datetime(2018, 4, 1)
+end_date = datetime(2018, 5, 14)
 alg = TNG(start_date, end_date)
 alg.addInstrument("btcusd")
 alg.addTimeframe("btcusd", 60)
@@ -94,5 +88,5 @@ def onBar(instrument):
         alg.sell()
     
 alg.run_backtest(onBar)
-new_stat = bs.BacktestStatistics(alg.positions)
+new_stat = bs.BacktestStatistics(alg)
 new_stat.backtest_results()

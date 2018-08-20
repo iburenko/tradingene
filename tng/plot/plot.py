@@ -1,15 +1,14 @@
 import numpy as np
 from bokeh import events
 from bokeh.core import properties
-import tng.algorithm_backtest.tng as tng
 import pandas as pd
-from bokeh.plotting import figure, show, output_file
+from bokeh.plotting import figure, save, output_file
 from bokeh.layouts import column
 import datetime as dt
 from bokeh.models import ColumnDataSource, CustomJS, Band
 from bokeh.models.tools import HoverTool
 
-def plot_cs_prof(alg, timeframe):
+def plot_cs_prof(alg):
     def update_triangle(source):
         return CustomJS(args=dict(source=source, xr=p.x_range), code="""
         console.log(xr.start, xr.end)
@@ -27,7 +26,7 @@ def plot_cs_prof(alg, timeframe):
         console.log(cond)
         source.change.emit();
         """)
-
+    timeframe = list(alg.instruments)[0].timeframe
     close_df = pd.DataFrame()   
     open_df = pd.DataFrame()
 
@@ -35,7 +34,6 @@ def plot_cs_prof(alg, timeframe):
         if (alg.positions[i].closed):
             pos_trades = alg.positions[i].trades
             for j in range(len(pos_trades)):
-                print([pos_trades[j].close_time, pos_trades[j].open_time, pos_trades[j].close_price, pos_trades[j].open_price, pos_trades[j].side, len(pos_trades)])
                 if  j < len(pos_trades) - 1:
                     close_df = close_df.append([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price, pos_trades[j].side, 0, 0]])
                 elif pos_trades[j].close_time > 0:
@@ -71,7 +69,7 @@ def plot_cs_prof(alg, timeframe):
 
     w = (timeframe / 2) * 60 * 1000
 
-    output_file("candlestick.html", title="Graphs")
+    output_file("stats.html", title="Graphs")
     TOOLS = "pan,wheel_zoom,reset,save"
 
     inc = df.close > df.open
@@ -211,4 +209,4 @@ def plot_cs_prof(alg, timeframe):
     plot_prof.add_layout(band)
 
     #fig = vplot(p, plot_prof)
-    show(column(p, plot_prof))
+    save(column(p, plot_prof), "stats.html")

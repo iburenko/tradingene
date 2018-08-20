@@ -1,16 +1,17 @@
+import os, sys, subprocess
 import time
 import datetime
 import numpy as np
+from tng.plot.plot import plot_cs_prof
 
 
 class BacktestStatistics:
-    def __init__(self, positions):
+    def __init__(self, alg):
+        positions = alg.positions
+        self.alg = alg
         self.all_positions_ = list()
         self.winning_trades_ = list()
         self.losing_trades_ = list()
-        self.number_of_positions = len(self.all_positions_)
-        self.winning_trades = len(self.winning_trades_)
-        self.losing_trades = len(self.losing_trades_)
         try:
             assert len(positions) > 0
             if positions[-1].close_time == 0:
@@ -281,6 +282,7 @@ class BacktestStatistics:
         return corr
 
     def backtest_results(self):
+        plot_cs_prof(self.alg)
         all_stats = [method for method in dir(BacktestStatistics) \
                             if callable(getattr(BacktestStatistics, method)) \
                             if method.startswith('calculate_')]
@@ -289,5 +291,11 @@ class BacktestStatistics:
             explanatory_str = method.replace("calculate_", "") + " = \t"
             html += "<tr><td>" + explanatory_str + "</td><td>" + str(eval("self."+method)()) + "</td></tr>"
         html += "</table>"
-        with open("stats.html", "w") as file:
+        with open("stats.html", "r") as file:
+            filedata = file.read()
+        filedata.replace("</body>", "")
+        filedata.replace("</html>", "")
+        with open("stats.html", "a") as file:
             file.write(html)
+        opener ="open" if sys.platform == "darwin" else "xdg-open"
+        subprocess.call([opener, "stats.html"])
