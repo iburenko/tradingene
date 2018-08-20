@@ -85,11 +85,11 @@ def onBar(instrument):
 
 alg.run_backtest(onBar)
 
-for pos in alg.positions:
-    for trade in pos.trades:
-        print(trade.open_time, trade.open_price, trade.close_time,
-            trade.close_price, trade.side)
-    print("------------------ end of pos -------------------")
+# for pos in alg.positions:
+#     for trade in pos.trades:
+#         print(trade.open_time, trade.open_price, trade.close_time,
+#             trade.close_price, trade.side)
+#     print("------------------ end of pos -------------------")
 
 new_stat = bs.BacktestStatistics(alg)
 new_stat.backtest_results()
