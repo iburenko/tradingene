@@ -58,14 +58,14 @@ class Position:
         if self.trades:
             for trade in self.trades:
                 profit += trade.volume * (recent_price - trade.open_price)
-        return profit
+        return int(profit)
 
     def calculate_final_profit(self):
         profit = 0
         if self.trades:
             for trade in self.trades:
                 profit += trade.volume * (trade.close_price - trade.open_price)
-        return profit
+        return int(profit)
 
     def close_trades(self, close_time_, close_price_):
         """ Stores time of close of the position, returns None. """
