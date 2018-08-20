@@ -87,7 +87,8 @@ def plot_cs_prof(alg):
 
     max_high_range = df['high'][(len(df)-31):(len(df)-1)].max()
 
-    p = figure(title="Candlestick chart", x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
+    title_legend = "Candlestick chart.\tTimeframe = "+str(timeframe)
+    p = figure(title=title_legend, x_axis_type="datetime", tools=TOOLS, plot_width=1000, toolbar_location="left",
     x_range=(df["date"].min() - dt.timedelta(minutes=timeframe), df["date"].min() + dt.timedelta(minutes=timeframe*30)),
     y_range = (min_low_range - max_range / 2, max_high_range + max_range / 2))
 

@@ -141,18 +141,16 @@ def _load_cached_data(ticker, timeframe, start_date, end_date):
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
         os.path.join(where_to_cache, file_))) and file_.startswith(start_string)
     ]
+    old_cached_file = cached_file[0]
     cached_file[0] = cached_file[0].replace("0__", "0")
     dates = cached_file[0].replace(start_string, "").split("_")
     start_date_str = dates[0]
     end_date_str = dates[1]
-    prev_start_date = \
-                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
-    prev_end_date = \
-                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
+    start_date_int = int(start_date.strftime("%Y%m%d%H%M%S"))
+    end_date_int = int(end_date.strftime("%Y%m%d%H%M%S"))
     filename = _filename(ticker, timeframe, start_date, end_date)
-    data = pd.read_csv(where_to_cache + filename, index_col=False)
-    print(data.groupby(data['time'] >= int(start_date_str) and data['time'] <= int(end_date_str)))
-    input("")
+    data = pd.read_csv(where_to_cache+old_cached_file, index_col=False)
+    return data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
     
     
 
