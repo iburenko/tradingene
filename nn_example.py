@@ -34,20 +34,21 @@ def train_model():
         split = (50, 30, 20), indicators = inds,
     )
 
-    model = create_model()
+    model = create_model(data)
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
     model.fit(data['train_input'], outputs, epochs=50)
     val_outpus = keras.utils.to_categorical(data['validation_output'], num_classes = 3)
     loss, acc = model.evaluate(data['validation_input'], val_outpus)
+    print(loss, acc)
     return model
 
-def create_model():
+def create_model(data):
     model = Sequential()
     model.add(Dense(units=100, activation='tanh', input_dim=10, kernel_initializer=he_uniform(1)))
     model.add(Dense(100, activation='tanh'))
     model.add(Dense(3, activation='softmax'))
     model.compile(
-        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+        loss='categorical_crossentropy', optimizer=keras.optimizers.Nadam(), metrics=['accuracy'])
     return model
 
 
@@ -70,23 +71,23 @@ def calculate_output(data):
     else:
         return 0
         
+for i in range(10):
+    model = train_model()
+    start_date = datetime(2018, 4, 1)
+    end_date = datetime(2018, 5, 14)
+    alg = TNG(start_date, end_date)
+    alg.addInstrument("btcusd")
+    alg.addTimeframe("btcusd", 60)
 
-model = train_model()
-start_date = datetime(2018, 4, 1)
-end_date = datetime(2018, 5, 14)
-alg = TNG(start_date, end_date)
-alg.addInstrument("btcusd")
-alg.addTimeframe("btcusd", 60)
-
-i = 0
-def onBar(instrument):
-    global model, i
-    pred = model.predict_classes(calculate_input(instrument.rates[1:7]))
-    if pred == 1:
-        alg.buy()
-    elif pred == 2:
-        alg.sell()
-    
-alg.run_backtest(onBar)
-new_stat = bs.BacktestStatistics(alg)
-new_stat.backtest_results()
+    i = 0
+    def onBar(instrument):
+        global model, i
+        pred = model.predict_classes(calculate_input(instrument.rates[1:7]))
+        if pred == 1:
+            alg.buy()
+        elif pred == 2:
+            alg.sell()
+        
+    alg.run_backtest(onBar)
+    new_stat = bs.BacktestStatistics(alg)
+    new_stat.backtest_results()
