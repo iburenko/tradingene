@@ -135,25 +135,39 @@ def _filename(ticker, timeframe, start_date, end_date):
     return filename
 
 
-def _load_cached_data(ticker, timeframe, start_date, end_date):
+def _get_cached_file(ticker, timeframe):
     start_string = "__"+ticker+str(timeframe)+"_"
     cached_file = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
         os.path.join(where_to_cache, file_))) and file_.startswith(start_string)
     ]
-    old_cached_file = cached_file[0]
-    cached_file[0] = cached_file[0].replace("0__", "0")
-    dates = cached_file[0].replace(start_string, "").split("_")
+    return cached_file[0]
+
+
+def _get_cached_dates(ticker, timeframe, start_date, end_date):
+    cached_file = _get_cached_file(ticker, timeframe)
+    replaced_filename = cached_file.replace("0__", "0")
+    start_string = "__"+ticker+str(timeframe)+"_"
+    dates = replaced_filename.replace(start_string, "").split("_")
     start_date_str = dates[0]
     end_date_str = dates[1]
-    start_date_int = int(start_date.strftime("%Y%m%d%H%M%S"))
-    end_date_int = int(end_date.strftime("%Y%m%d%H%M%S"))
-    filename = _filename(ticker, timeframe, start_date, end_date)
-    data = pd.read_csv(where_to_cache+old_cached_file, index_col=False)
+    prev_start_date = \
+                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
+    prev_end_date = \
+                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
+    return prev_start_date, prev_end_date
+
+
+def _load_cached_data(ticker, timeframe, start_date, end_date):
+    start_date_, end_date_ = _get_cached_dates(ticker, timeframe, start_date, end_date)
+    start_date_int = int(start_date_.strftime("%Y%m%d%H%M%S"))
+    end_date_int = int(end_date_.strftime("%Y%m%d%H%M%S"))
+    #filename = _filename(ticker, timeframe, start_date, end_date)
+    cached_file = _get_cached_file(ticker, timeframe)
+    data = pd.read_csv(where_to_cache+cached_file, index_col=False)
     return data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
     
     
-
 def separate_data(data, split, calculate_input, calculate_output, lookback,
                   lookforward):
     data = data.to_records()
@@ -228,7 +242,6 @@ def _is_cached(ticker, timeframe, start_date, end_date):
         return False
     else:
         return True
-
 
 
 def _cache_data(data, filename, shift):

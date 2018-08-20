@@ -12,7 +12,7 @@ import numpy as np
 
 
 def train_model():
-    start_date = datetime(2017, 12, 3)
+    start_date = datetime(2017, 12, 13)
     end_date = datetime(2018, 4, 1)
     ticker = "btcusd"
     timeframe = 60
