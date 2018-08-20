@@ -282,6 +282,10 @@ class BacktestStatistics:
         return corr
 
     def backtest_results(self):
+        closed_pos = [pos for pos in self.all_positions_ if pos.closed]
+        if not closed_pos:
+            print("No backtest statistics available!")
+            return
         plot_cs_prof(self.alg)
         all_stats = [method for method in dir(BacktestStatistics) \
                             if callable(getattr(BacktestStatistics, method)) \
