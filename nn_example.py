@@ -4,16 +4,15 @@ from tng.algorithm_backtest.tng import TNG
 import tng.backtest_statistics.backtest_statistics as bs
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
-from keras.initializers import he_normal, he_uniform
+from keras.initializers import he_uniform
 from keras.layers.normalization import BatchNormalization
 import keras
 import numpy as np
 
 
-
 def train_model():
-    start_date = datetime(2017, 12, 13)
-    end_date = datetime(2018, 4, 1)
+    start_date = datetime(2018, 1, 1)
+    end_date = datetime(2018, 2, 1)
     ticker = "btcusd"
     timeframe = 60
     lookback = 5
@@ -36,7 +35,7 @@ def train_model():
 
     model = create_model(data)
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
-    model.fit(data['train_input'], outputs, epochs=50)
+    model.fit(data['train_input'], outputs, epochs=10)
     val_outpus = keras.utils.to_categorical(data['validation_output'], num_classes = 3)
     loss, acc = model.evaluate(data['validation_input'], val_outpus)
     print(loss, acc)
@@ -62,7 +61,6 @@ def calculate_input(data):
     return np.array([input_vec])
 
 def calculate_output(data):
-    global b0, b1, b2
     open_prices = data['open']
     if np.log(open_prices[1]/open_prices[0]) > 0.013:
         return 1
@@ -90,4 +88,4 @@ for i in range(1):
         
     alg.run_backtest(onBar)
     new_stat = bs.BacktestStatistics(alg)
-    new_stat.backtest_results()
+    #new_stat.backtest_results()

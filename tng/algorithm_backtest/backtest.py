@@ -61,7 +61,7 @@ class Backtest(Environment):
 
 ################################################################################
 
-    def run_backtest(self, on_bar_function, shift = 0):
+    def run_backtest(self, on_bar_function, shift = 0, modeling = 1):
         """ Runs backtest of an algorithm. 
         
         Args:
@@ -89,10 +89,10 @@ class Backtest(Environment):
         sys.stdout.write("Data loaded!\n")
         self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
-                                              self.history_data, pre_flag = 0)
-        self._run_generator(candle_generator, on_bar_function, shift)
+                                              self.history_data)
+        self._run_generator(candle_generator, on_bar_function, shift, modeling)
 
-    def _run_generator(self, generator, on_bar_function, shift=0):
+    def _run_generator(self, generator, on_bar_function, shift=0, modeling = True):
         candles = next(generator)
         minutes_left = -shift + 1
         self._update_instruments(candles)
@@ -118,7 +118,7 @@ class Backtest(Environment):
                     if instrument.ticker in on_bar_tickers
                 }
                 for instr in call:
-                    instr = self._reload_instrument(instr, candles)
+                    instr = self._reload_instrument(instr, candles, modeling)
                 instrs -= call
                 complete_tickers = list(set(complete_tickers) - on_bar_tickers)
                 list(map(on_bar_function, call))
@@ -151,7 +151,7 @@ class Backtest(Environment):
                 self.recent_price = (candle['low'], 1)
             self.recent_price = (candle['close'], 1)
 
-    def _iterate_data(self, start_date, end_date, history_data, pre_flag):
+    def _iterate_data(self, start_date, end_date, history_data):
         current_time = start_date
         backtest_time = int(current_time.strftime("%Y%m%d%H%M%S"))
         time_ticks = dict.fromkeys(self.ticker_timeframes, -1)
@@ -190,8 +190,9 @@ class Backtest(Environment):
             instrument.close[0] = candle['close']
             instrument.vol[0] += candle['vol']
 
-    def _reload_instrument(self, instrument, candles):
-        self._update_progress_bar()
+    def _reload_instrument(self, instrument, candles, show_bar = 0):
+        if show_bar:
+            self._update_progress_bar()
         def correct_candle_time(time_, timeframe):
             minutes_ = ((time_ // 100) % 100)
             hours_ = ((time_ // 10000) % 100)
@@ -337,7 +338,7 @@ class Backtest(Environment):
                 instr.candle_start_time = int(
                     pre_start_date.strftime("%Y%m%d%H%M%S"))
         pre_data_candles_generator = self._iterate_data(
-            pre_start_date, pre_end_date, pre_data, pre_flag = 1)
+            pre_start_date, pre_end_date, pre_data)
         self._run_generator(pre_data_candles_generator, self._foo)
 
     def _set_spread(self):

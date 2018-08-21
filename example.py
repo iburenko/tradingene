@@ -85,4 +85,4 @@ def onBar(instrument):
 
 alg.run_backtest(onBar)
 new_stat = bs.BacktestStatistics(alg)
-new_stat.backtest_results()
+#new_stat.backtest_results()

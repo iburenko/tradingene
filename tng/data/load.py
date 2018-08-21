@@ -90,6 +90,8 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
     sample = np.empty(len(data_columns))
     data = np.array([])
     ind_dict = dict()
+    data_to_cache = _find_uncached_data(ticker, timeframe, start_date, end_date)
+    already_cahced = _get_cached_dates(ticker, timeframe, start_date, end_date)  
 
     def on_bar(instrument):
         nonlocal data, ind_dict
@@ -118,7 +120,7 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
     alg = TNG(name, regime, start_date, end_date)
     alg.addInstrument(ticker)
     alg.addTimeframe(ticker, timeframe)
-    alg.run_backtest(on_bar, shift)
+    alg.run_backtest(on_bar, shift, modeling = False)
     del alg
     data = np.reshape(data,
                       (len(data) // len(data_columns), len(data_columns)))
@@ -141,11 +143,16 @@ def _get_cached_file(ticker, timeframe):
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
         os.path.join(where_to_cache, file_))) and file_.startswith(start_string)
     ]
-    return cached_file[0]
+    if cached_file:
+        return cached_file[0]
+    else:
+        return False
 
 
 def _get_cached_dates(ticker, timeframe, start_date, end_date):
     cached_file = _get_cached_file(ticker, timeframe)
+    if not cached_file:
+        return None
     replaced_filename = cached_file.replace("0__", "0")
     start_string = "__"+ticker+str(timeframe)+"_"
     dates = replaced_filename.replace(start_string, "").split("_")
@@ -165,6 +172,19 @@ def _load_cached_data(ticker, timeframe, start_date, end_date):
     cached_file = _get_cached_file(ticker, timeframe)
     data = pd.read_csv(where_to_cache+cached_file, index_col=False)
     return data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
+
+
+def _find_uncached_data(ticker, timeframe, start_date, end_date):
+    uncached_data = list()
+    cached_dates = _get_cached_dates(ticker, timeframe, start_date, end_date)
+    if cached_dates is not None:
+        if start_date < cached_dates[0]:
+            uncached_data.append((start_date, cached_dates[0]))
+        if end_date > cached_dates[1]:
+            uncached_data.append((cached_dates[1], end_date))
+    else:
+        uncached_data.append((start_date, end_date))
+    return uncached_data
     
     
 def separate_data(data, split, calculate_input, calculate_output, lookback,
@@ -220,16 +240,12 @@ def _parse_indicator(ind_name, ind_value):
 
 
 def _is_cached(ticker, timeframe, start_date, end_date):
-    pre_string = '__'+ticker+str(timeframe)
-    cached_files = [
-        file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
-            os.path.join(where_to_cache, file_))) and file_.startswith(pre_string)
-    ]
-    if not cached_files:
+    cached_file = _get_cached_file(ticker, timeframe)
+    if not cached_file:
         return False
-    cached_files[0] = cached_files[0].replace("__", "")
-    cached_files[0] = cached_files[0].replace(ticker+str(timeframe)+"_", "")
-    dates = cached_files[0].split("_")
+    cached_file = cached_file.replace("__", "")
+    cached_file = cached_file.replace(ticker+str(timeframe)+"_", "")
+    dates = cached_file.split("_")
     start_date_str = dates[0]
     end_date_str = dates[1]
     prev_start_date = \
