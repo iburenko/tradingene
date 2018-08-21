@@ -162,17 +162,21 @@ def plot_cs_prof(alg):
     wheel_attributes = point_attributes+['delta']
 
     close_df = close_df[close_df['last_indic'] == 1]
-    close_df['profit'][np.isnan(close_df['profit'])] = 0.0
+    close_df.loc[np.isnan(close_df['profit']), 'profit'] = 0.0
 
     prof = close_df['profit'].iloc[-1]
     if (open_df['date'].iloc[-1] > close_df['date'].iloc[-1]):
         prof = open_df['profit'].iloc[-1]
 
+    first_el = df.iloc[-1]
+    first_el = first_el.to_frame().T
+    first_el['profit'] = 0.0
     last_el = df.iloc[0]
     last_el = last_el.to_frame().T
     last_el['profit'] = prof
     last_el['date'] = last_el['date'] + dt.timedelta(minutes=timeframe)
 
+    close_df = close_df.append(first_el, sort=True)
     close_df = close_df.append(last_el, sort=True)
 
     close_df = close_df.reset_index()
@@ -193,7 +197,11 @@ def plot_cs_prof(alg):
                 close_df['cumsum'].max() + (close_df['cumsum'].max() - close_df['cumsum'].min()) * 0.1))
 
     date_mid = pd.DataFrame()
+    close_df['date'] = close_df['date'].astype(np.int64)
     date_mid['date'] = close_df['date'].shift() + close_df['cumsum'].shift() * (close_df['date'] - close_df['date'].shift()) / (-close_df['cumsum'] + close_df['cumsum'].shift())
+    date_mid = date_mid[np.isfinite(date_mid['date'])]
+    date_mid['date'] = pd.to_datetime(date_mid['date'])
+    close_df['date'] = pd.to_datetime(close_df['date'])
 
     date_mid['diff'] = np.sign(close_df['cumsum'].shift().fillna(0) * close_df['cumsum'])
     date_mid = date_mid[1:]
@@ -203,7 +211,7 @@ def plot_cs_prof(alg):
     date_mid['pos'] = 0.0
     date_mid['neg'] = 0.0
     date_mid['zeros'] = 0.0
-
+    
     close_d_no_mids = close_df
     close_df = pd.concat([close_df, date_mid], sort=True)
     close_df = close_df.reset_index()
