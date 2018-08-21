@@ -369,7 +369,7 @@ class Backtest(Environment):
             return
         progress = int(1000*(1-(end_date - current_time)/(end_date - start_date)))
         string = "\rBacktest in progress:\t"+\
-                "[{0}] {1}%".format('#'*(progress//33), progress/10)
+                "[{0}{1}] {2}%".format('#'*(progress//20),'-'*(50-(progress//20)),progress/10)
         sys.stdout.write(string)
         sys.stdout.flush()
 

@@ -9,7 +9,7 @@ import numpy as np
 name = "Cornucopia"
 regime = "MP"
 start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 1, 15)
+end_date = datetime(2018, 2, 15)
 timeframe = 60
 
 alg = tng.TNG(name, regime, start_date, end_date)
