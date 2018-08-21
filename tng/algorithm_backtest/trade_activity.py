@@ -105,7 +105,7 @@ class TradeActivity(Backtest):
             new_pos = Position(pos_id, pos_ticker, self.now)
         else:
             warn(
-                "Can't open new position because last position is not closed!")
+                "Can't open new position because last position is not closed!\n")
         if new_pos:
             self.positions.append(new_pos)
             return new_pos.id
@@ -194,7 +194,7 @@ class TradeActivity(Backtest):
         """
 
         if volume <= 0:
-            warn("Volume must be positive! Nothing will happen!")
+            warn("Volume must be positive! Nothing will happen!\n")
             return None
         elif volume > MAX_AVAILABLE_VOLUME:
             raise ValueError("Can't buy! Volume exceeds upper limit!")
@@ -206,7 +206,7 @@ class TradeActivity(Backtest):
                     self.openPosition()
                 if self.positions[-1].trades:
                     if self.positions[-1].trades[-1].side == 1:
-                        warn("Can't buy since there is an open buy!")
+                        warn("Can't buy since there is an open buy!\n")
                     else:
                         self.closePosition()
                         self.openPosition()
@@ -316,7 +316,7 @@ class TradeActivity(Backtest):
         """
 
         if volume <= 0:
-            warn("Volume must be positive! Nothing will happen!")
+            warn("Volume must be positive! Nothing will happen!\n")
             return None
         elif volume > MAX_AVAILABLE_VOLUME:
             raise ValueError("Can't buy! Volume exceeds upper limit!")
@@ -328,7 +328,7 @@ class TradeActivity(Backtest):
                     self.openPosition()
                 if self.positions[-1].trades:
                     if self.positions[-1].trades[-1].side == -1:
-                        warn("Can't sell since there is an open sell!")
+                        warn("Can't sell since there is an open sell!\n")
                     else:
                         self.closePosition()
                         self.openPosition()
@@ -405,7 +405,7 @@ class TradeActivity(Backtest):
 
         is_closed = self._is_last_pos_closed()
         if is_closed is not None and not is_closed:
-            warn("Can't open long since there is an open position")
+            warn("Can't open long since there is an open position!\n")
             pos_id = None
         else:
             pos_id = self.openPosition()
@@ -459,7 +459,7 @@ class TradeActivity(Backtest):
         """
         is_closed = self._is_last_pos_closed()
         if is_closed is not None and not is_closed:
-            warn("Can't open short since there is an open position")
+            warn("Can't open short since there is an open position!\n")
             pos_id = None
         else:
             pos_id = self.openPosition()
@@ -616,13 +616,13 @@ class TradeActivity(Backtest):
                 if last_pos.on_close is not None:
                     last_pos.on_close()
             else:
-                warn("Can't close position! There is no opened position!")
+                warn("Can't close position! There is no opened position!\n")
         else:
             for pos in self.positions:
                 if pos.id == id:
                     if pos.closed:
                         warn("Can't close position with id {}".format(id)+\
-                             " because it is closed already!")
+                             " because it is closed already!\n")
                     else:
                         pos.close_time = self.now
                         side = self.getPositionSide(pos.id)
@@ -733,7 +733,7 @@ class TradeActivity(Backtest):
             return self.positions[-1].available_volume()
         else:
             warn(
-                "Can't get available volume since there is no opened position!"
+                "Can't get available volume since there is no opened position!\n"
             )
             return None
 
@@ -943,14 +943,14 @@ class TradeActivity(Backtest):
             if time_event.id == id:
                 self.time_events.remove(time_event)
                 return
-        warn("Event with id {} was not found!".format(id))
+        warn("Event with id {} was not found!\n".format(id))
 
     def _check_price_params(self, params, handler):
         if isinstance(params, int) or isinstance(params, float):
             if callable(handler):
                 for event in self.price_events:
                     if event.threshold == params and event.handler == handler:
-                        warn("This Price event already exists!")
+                        warn("This Price event already exists!\n")
                         return None
                 return True
             else:
@@ -964,11 +964,11 @@ class TradeActivity(Backtest):
                 time = int(datetime.strftime(params, "%Y%m%d%H%M%S"))
                 if time <= self.now:
                     warn(
-                        "Can't add new time event! Specified time is in past!")
+                        "Can't add new time event! Specified time is in past!\n")
                     return None
                 for event in self.time_events:
                     if event.time == time and event.handler == handler:
-                        warn("This Time event already exists!")
+                        warn("This Time event already exists!\n")
                         return None
                 return time
             else:

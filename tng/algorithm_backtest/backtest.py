@@ -1,3 +1,4 @@
+import sys
 from warnings import warn
 import time
 import numpy as np
@@ -10,7 +11,6 @@ import tng.algorithm_backtest.limits as limits
 from tng.data.data import Data, dt
 
 #from tng.ind.spread_estimation_corwin_schultz import corwin_schultz
-
 
 class Backtest(Environment):
     """ Runs the backtest.
@@ -83,10 +83,13 @@ class Backtest(Environment):
             raise TypeError(err_str)
         if not self.ticker_timeframes:
             raise RuntimeError("No instrument was added!")
+        sys.stdout.write("Loading data!\n")
+        sys.stdout.flush()
         self._load_data(self.start_date, self.end_date, shift)
+        sys.stdout.write("Data loaded!\n")
         self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
-                                              self.history_data)
+                                              self.history_data, pre_flag = 0)
         self._run_generator(candle_generator, on_bar_function, shift)
 
     def _run_generator(self, generator, on_bar_function, shift=0):
@@ -146,7 +149,7 @@ class Backtest(Environment):
                 self.recent_price = (candle['low'], 1)
             self.recent_price = (candle['close'], 1)
 
-    def _iterate_data(self, start_date, end_date, history_data):
+    def _iterate_data(self, start_date, end_date, history_data, pre_flag):
         current_time = start_date
         backtest_time = int(current_time.strftime("%Y%m%d%H%M%S"))
         time_ticks = dict.fromkeys(self.ticker_timeframes, -1)
@@ -186,6 +189,7 @@ class Backtest(Environment):
             instrument.vol[0] += candle['vol']
 
     def _reload_instrument(self, instrument, candles):
+        self._update_progress_bar()
         def correct_candle_time(time_, timeframe):
             minutes_ = ((time_ // 100) % 100)
             hours_ = ((time_ // 10000) % 100)
@@ -331,7 +335,7 @@ class Backtest(Environment):
                 instr.candle_start_time = int(
                     pre_start_date.strftime("%Y%m%d%H%M%S"))
         pre_data_candles_generator = self._iterate_data(
-            pre_start_date, pre_end_date, pre_data)
+            pre_start_date, pre_end_date, pre_data, pre_flag = 1)
         self._run_generator(pre_data_candles_generator, self._foo)
 
     def _set_spread(self):
@@ -352,6 +356,18 @@ class Backtest(Environment):
             self.spread = limits.XRPBTC_SPREAD
         else:
             raise NameError("Spread cannot be set, unknown ticker!")
+
+        
+    def _update_progress_bar(self):
+        start_date = self.start_date
+        end_date = self.end_date
+        current_time = datetime(*(time.strptime(str(self.now), \
+                                            "%Y%m%d%H%M%S")[0:6]))
+        if current_time < start_date:
+            return
+        progress = int(1000*(1-(end_date - current_time)/(end_date - start_date)))
+        sys.stdout.write('\r[{0}] {1}%'.format('#'*(progress//33), progress/10))
+        sys.stdout.flush()
 
 
 ################################################################################
