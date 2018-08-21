@@ -126,6 +126,8 @@ class Backtest(Environment):
                 self._update_instruments(candles)
                 self._minute_to_ticks(candles)
         except StopIteration:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
             self._update_last_candle()
 
     def _update_recent_price(self, candles):
@@ -366,7 +368,9 @@ class Backtest(Environment):
         if current_time < start_date:
             return
         progress = int(1000*(1-(end_date - current_time)/(end_date - start_date)))
-        sys.stdout.write('\r[{0}] {1}%'.format('#'*(progress//33), progress/10))
+        string = "\rBacktest in progress:\t"+\
+                "[{0}] {1}%".format('#'*(progress//33), progress/10)
+        sys.stdout.write(string)
         sys.stdout.flush()
 
 
