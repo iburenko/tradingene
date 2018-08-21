@@ -162,7 +162,6 @@ def _load_cached_data(ticker, timeframe, start_date, end_date):
     start_date_, end_date_ = _get_cached_dates(ticker, timeframe, start_date, end_date)
     start_date_int = int(start_date_.strftime("%Y%m%d%H%M%S"))
     end_date_int = int(end_date_.strftime("%Y%m%d%H%M%S"))
-    #filename = _filename(ticker, timeframe, start_date, end_date)
     cached_file = _get_cached_file(ticker, timeframe)
     data = pd.read_csv(where_to_cache+cached_file, index_col=False)
     return data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
@@ -221,9 +220,10 @@ def _parse_indicator(ind_name, ind_value):
 
 
 def _is_cached(ticker, timeframe, start_date, end_date):
+    pre_string = '__'+ticker+str(timeframe)
     cached_files = [
         file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
-            os.path.join(where_to_cache, file_))) and file_.startswith('__')
+            os.path.join(where_to_cache, file_))) and file_.startswith(pre_string)
     ]
     if not cached_files:
         return False
