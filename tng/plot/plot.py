@@ -179,8 +179,8 @@ def plot_cs_prof(alg):
     close_df = close_df.append(first_el, sort=True)
     close_df = close_df.append(last_el, sort=True)
 
+    close_df = close_df.sort_values(by=['date'])
     close_df = close_df.reset_index()
-
     close_df['cumsum'] = close_df['profit'].cumsum(skipna=True)
     close_df['pos'] = 0.0
 
@@ -197,14 +197,13 @@ def plot_cs_prof(alg):
                 close_df['cumsum'].max() + (close_df['cumsum'].max() - close_df['cumsum'].min()) * 0.1))
 
     date_mid = pd.DataFrame()
-    close_df['date'] = close_df['date'].astype(np.int64)
-    date_mid['date'] = close_df['date'].shift() + close_df['cumsum'].shift() * (close_df['date'] - close_df['date'].shift()) / (-close_df['cumsum'] + close_df['cumsum'].shift())
+    close_df['date'] = (pd.DatetimeIndex(close_df['date']).astype(np.int64))
+    date_mid['date'] = close_df['date'].shift() + close_df['cumsum'].shift() * (close_df['date'] - close_df['date'].shift()) / (close_df['cumsum'].shift() - close_df['cumsum'])
     date_mid = date_mid[np.isfinite(date_mid['date'])]
     date_mid['date'] = pd.to_datetime(date_mid['date'])
     close_df['date'] = pd.to_datetime(close_df['date'])
 
     date_mid['diff'] = np.sign(close_df['cumsum'].shift().fillna(0) * close_df['cumsum'])
-    date_mid = date_mid[1:]
     date_mid = date_mid[date_mid['diff'] < 0]
 
     date_mid['cumsum'] = 0.0
@@ -214,8 +213,11 @@ def plot_cs_prof(alg):
     
     close_d_no_mids = close_df
     close_df = pd.concat([close_df, date_mid], sort=True)
-    close_df = close_df.reset_index()
     close_df = close_df.sort_values(by=['date'])
+    close_df = close_df.reset_index()
+    close_d_no_mids = close_d_no_mids.sort_values(by=['date'])
+    close_d_no_mids = close_d_no_mids.reset_index()
+
     source_no_mids= ColumnDataSource(close_d_no_mids)
     source = ColumnDataSource(close_df)
 
