@@ -58,7 +58,7 @@ def import_data(ticker,
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators)
         if cache:
-            _cache_data(data, filename, shift)
+            _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
     return separate_data(data, split, calculate_input, calculate_output,
@@ -86,12 +86,97 @@ def import_candles(ticker,
     return data
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
+    data_to_cache = _find_uncached_data(ticker, timeframe, start_date, end_date)
+    already_cached = _get_cached_dates(ticker, timeframe)  
+    print(data_to_cache)
+    print(already_cached)
+    if already_cached is None:
+        start_date, end_date = data_to_cache[0][0], data_to_cache[0][1]
+        data = _load_data_given_dates(
+            ticker, timeframe, start_date, end_date, indicators, shift
+        )
+    else:
+        new_data_to_cache = list()
+        for item in data_to_cache:
+            new_data = _load_data_given_dates(
+                ticker, timeframe, item[0], item[1], indicators, shift
+            )
+            new_data_to_cache.append(new_data)
+        data = _load_cached_data(ticker, timeframe, start_date, end_date)
+        if len(data_to_cache) == 1:
+            if data_to_cache[0][1] == already_cached[0]:
+                data = new_data_to_cache[0].append(data, ignore_index = True)
+            elif data_to_cache[0][0] == already_cached[1]:
+                data = data.append(new_data_to_cache[0], ignore_index = True)
+        elif len(data_to_cache) == 2:
+            data = new_data_to_cache[0].append(data, ignore_index = True)
+            data = data.append(new_data_to_cache[1], ignore_index = True)
+    return data
+
+
+def _filename(ticker, timeframe, start_date, end_date):
+    start_date_str = start_date.strftime("%Y%m%d%H%M%S")
+    end_date_str = end_date.strftime("%Y%m%d%H%M%S")
+    filename = "__" + ticker + str(
+        timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
+    return filename
+
+
+def _get_cached_file(ticker, timeframe):
+    start_string = "__"+ticker+str(timeframe)+"_"
+    cached_file = [
+        file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
+        os.path.join(where_to_cache, file_))) and file_.startswith(start_string)
+    ]
+    if cached_file:
+        return cached_file[0]
+    else:
+        return False
+
+
+def _get_cached_dates(ticker, timeframe):
+    cached_file = _get_cached_file(ticker, timeframe)
+    if not cached_file:
+        return None
+    replaced_filename = cached_file.replace("0__", "0")
+    start_string = "__"+ticker+str(timeframe)+"_"
+    dates = replaced_filename.replace(start_string, "").split("_")
+    start_date_str = dates[0]
+    end_date_str = dates[1]
+    prev_start_date = \
+                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
+    prev_end_date = \
+                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
+    return prev_start_date, prev_end_date
+
+
+def _load_cached_data(ticker, timeframe, start_date, end_date):
+    start_date_, end_date_ = _get_cached_dates(ticker, timeframe)
+    start_date_int = int(start_date_.strftime("%Y%m%d%H%M%S"))
+    end_date_int = int(end_date_.strftime("%Y%m%d%H%M%S"))
+    cached_file = _get_cached_file(ticker, timeframe)
+    data = pd.read_csv(where_to_cache+cached_file, index_col=False)
+    return data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
+
+
+def _find_uncached_data(ticker, timeframe, start_date, end_date):
+    uncached_data = list()
+    cached_dates = _get_cached_dates(ticker, timeframe)
+    if cached_dates is not None:
+        if start_date < cached_dates[0]:
+            uncached_data.append((start_date, cached_dates[0]))
+        if end_date > cached_dates[1]:
+            uncached_data.append((cached_dates[1], end_date))
+    else:
+        uncached_data.append((start_date, end_date))
+    return uncached_data
+
+
+def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
     data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
     sample = np.empty(len(data_columns))
     data = np.array([])
     ind_dict = dict()
-    data_to_cache = _find_uncached_data(ticker, timeframe, start_date, end_date)
-    already_cahced = _get_cached_dates(ticker, timeframe, start_date, end_date)  
 
     def on_bar(instrument):
         nonlocal data, ind_dict
@@ -127,64 +212,6 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
     data = pd.DataFrame(data, columns=data_columns)
     data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
     return data
-
-
-def _filename(ticker, timeframe, start_date, end_date):
-    start_date_str = start_date.strftime("%Y%m%d%H%M%S")
-    end_date_str = end_date.strftime("%Y%m%d%H%M%S")
-    filename = "__" + ticker + str(
-        timeframe) + "_" + start_date_str + "_" + end_date_str + "__"
-    return filename
-
-
-def _get_cached_file(ticker, timeframe):
-    start_string = "__"+ticker+str(timeframe)+"_"
-    cached_file = [
-        file_ for file_ in os.listdir(where_to_cache) if os.path.isfile((
-        os.path.join(where_to_cache, file_))) and file_.startswith(start_string)
-    ]
-    if cached_file:
-        return cached_file[0]
-    else:
-        return False
-
-
-def _get_cached_dates(ticker, timeframe, start_date, end_date):
-    cached_file = _get_cached_file(ticker, timeframe)
-    if not cached_file:
-        return None
-    replaced_filename = cached_file.replace("0__", "0")
-    start_string = "__"+ticker+str(timeframe)+"_"
-    dates = replaced_filename.replace(start_string, "").split("_")
-    start_date_str = dates[0]
-    end_date_str = dates[1]
-    prev_start_date = \
-                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
-    prev_end_date = \
-                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
-    return prev_start_date, prev_end_date
-
-
-def _load_cached_data(ticker, timeframe, start_date, end_date):
-    start_date_, end_date_ = _get_cached_dates(ticker, timeframe, start_date, end_date)
-    start_date_int = int(start_date_.strftime("%Y%m%d%H%M%S"))
-    end_date_int = int(end_date_.strftime("%Y%m%d%H%M%S"))
-    cached_file = _get_cached_file(ticker, timeframe)
-    data = pd.read_csv(where_to_cache+cached_file, index_col=False)
-    return data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
-
-
-def _find_uncached_data(ticker, timeframe, start_date, end_date):
-    uncached_data = list()
-    cached_dates = _get_cached_dates(ticker, timeframe, start_date, end_date)
-    if cached_dates is not None:
-        if start_date < cached_dates[0]:
-            uncached_data.append((start_date, cached_dates[0]))
-        if end_date > cached_dates[1]:
-            uncached_data.append((cached_dates[1], end_date))
-    else:
-        uncached_data.append((start_date, end_date))
-    return uncached_data
     
     
 def separate_data(data, split, calculate_input, calculate_output, lookback,
@@ -260,12 +287,17 @@ def _is_cached(ticker, timeframe, start_date, end_date):
         return True
 
 
-def _cache_data(data, filename, shift):
+def _cache_data(data, filename, ticker, timeframe, shift):
     if shift:
         df = pd.DataFrame(data[1:])
     else:
         df = pd.DataFrame(data)
-    df.to_csv(where_to_cache + filename, index=False, mode="a")
+    already_cached = _get_cached_file(ticker, timeframe)
+    if already_cached:
+        os.remove(where_to_cache+already_cached)
+        df.to_csv(where_to_cache + filename, index=False, mode="a")
+    else:
+        df.to_csv(where_to_cache + filename, index=False, mode="a")
 
 
 def check_home_folder():

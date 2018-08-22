@@ -31,7 +31,7 @@ class Data:
         pass
 
     @classmethod
-    def load_data(cls, filename, start_date, end_date):
+    def load_data(cls, filename, start_date, end_date, pre = 0):
         """ Loads file from the drive and returns history data. 
         
             Arguments:
@@ -47,6 +47,7 @@ class Data:
         """
 
         def find_start_end(all_data, start_date, end_date):
+
             while True:
                 start = all_data[all_data['time'] == start_date].index.values
                 if len(start):
@@ -56,27 +57,35 @@ class Data:
                     #works only if the first candle is in start day -- correct
                     start_date += 100
             while True:
-                end = all_data[all_data['time'] == end_date].index.values
+                end = all_data[all_data['time'] == (end_date)].index.values
                 if len(end):
-                    end = int(end)
+                    if not pre:
+                        end = int(end) + 1
+                    else:
+                        end = int(end)
                     break
                 else:
                     end_date += 100
+            print(pre)
+            print(start_date, end_date)
+            print(start, end)
             return start, end
 
         start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        req_start_date = start_date * 1000
-        req_end_date = end_date * 1000
+        # req_start_date = start_date * 1000
+        # req_end_date = end_date * 1000
         # if filename in instrument_ids.keys():
         #     instr_id = instrument_ids[filename]
         # else:
         #     raise ValueError("Instrument {} was not found!".format(filename))
         # url = "https://candles.tradingene.com/candles?instrument_id=" + \
         #       str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
-
+        # print(url)
         # data = urllib.request.urlopen(url).read()
+        # print("data is ready!")
         # obj = json.loads(data)
+        # print("obj is ready!")
         # np_data = np.empty(len(obj), dtype = dt)
         # for i, elem in enumerate(obj):
         #     np_data[i] = np.array([
@@ -86,6 +95,7 @@ class Data:
         #         float(elem['low']),
         #         float(elem['close']),
         #         float(elem['volume']))], dtype = dt)
+        # print("for loop ended")
         current_path = os.path.abspath(__file__)
         append_path = os.path.abspath(
             os.path.join(current_path, '../../history_data/')) + "/"
@@ -95,11 +105,21 @@ class Data:
         hist_data = all_data.iloc[start:end]
         hist_data = hist_data[::-1]
         hist_data = hist_data.to_records(index=False)
-        #np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
-
+        # np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
+        print(len(hist_data))
+        #print(len(np_data))
         # КОСТЫЛЬ!
         # for i in range(len(hist_data)):
         #     if hist_data[i][0] != np_data[i][0]:
         #         np_data = np.delete(np_data, i)
+        #return hist_data
+        # i = 0
+        # upper_bound = len(np_data) - 1
+        # while i < upper_bound:
+        #     if np_data[i][0] == np_data[i+1][0]:
+        #         np_data = np.delete(np_data, i)
+        #         upper_bound -= 1
+        #     i += 1
+                
+        # print(len(np_data))    
         return hist_data
-        #return np_data
