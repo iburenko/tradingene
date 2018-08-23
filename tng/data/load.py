@@ -53,7 +53,7 @@ def import_data(ticker,
     check_home_folder()
     delete_old_files()
     filename = _filename(ticker, timeframe, start_date, end_date)
-    if _is_cached(ticker, timeframe, start_date, end_date):
+    if _is_cached(ticker, timeframe, start_date, end_date, indicators):
         data = _load_cached_data(ticker, timeframe, start_date, end_date)
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators)
@@ -88,8 +88,6 @@ def import_candles(ticker,
 def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
     data_to_cache = _find_uncached_data(ticker, timeframe, start_date, end_date)
     already_cached = _get_cached_dates(ticker, timeframe)  
-    print(data_to_cache)
-    print(already_cached)
     if already_cached is None:
         start_date, end_date = data_to_cache[0][0], data_to_cache[0][1]
         data = _load_data_given_dates(
@@ -191,13 +189,21 @@ def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, 
             for key, params in indicators.items():
                 if not isinstance(params, tuple):
                     params = (params, )
+                column_param = ""
+                for signle_param in params:
+                    column_param += (str(signle_param)+"_")
+                column_param = column_param[:-1]
                 ind = eval("instrument." + str(key))
                 parsed = _parse_indicator(key, ind(*params))
                 for key, value in parsed.items():
-                    if key in ind_dict.keys():
-                        ind_dict[key].append(value)
+                    if column_param:
+                        new_key = key+"_"+column_param
                     else:
-                        ind_dict[key] = [value]
+                        new_key = key
+                    if new_key in ind_dict.keys():
+                        ind_dict[new_key].append(value)
+                    else:
+                        ind_dict[new_key] = [value]
         data = np.append(data, sample)
 
     name = "import_data"
@@ -212,8 +218,89 @@ def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, 
     data = pd.DataFrame(data, columns=data_columns)
     data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
     return data
-    
-    
+
+
+def _parse_indicator(ind_name, ind_value):
+    if isinstance(ind_value, list):
+        ret_dict = dict.fromkeys([ind_name])
+        ret_dict[ind_name] = ind_value[1]
+    else:
+        keys = [
+            ind_name + "." + str(elem) for elem in ind_value.__dict__.keys()
+        ]
+        ret_dict = dict.fromkeys(keys)
+        for key, value in (ind_value.__dict__.items()):
+            ret_dict[ind_name + "." + key] = value[1]
+    return ret_dict
+
+
+def _is_cached(ticker, timeframe, start_date, end_date, indicators):
+    cached_file = _get_cached_file(ticker, timeframe)
+    if not cached_file:
+        return False
+    _find_uncached_indicators(cached_file, indicators)
+    cached_file = cached_file.replace("__", "")
+    cached_file = cached_file.replace(ticker+str(timeframe)+"_", "")
+    dates = cached_file.split("_")
+    start_date_str = dates[0]
+    end_date_str = dates[1]
+    prev_start_date = \
+                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
+    prev_end_date = \
+                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
+    if prev_start_date > start_date:
+        return False
+    elif prev_end_date < end_date:
+        return False
+    else:
+        return True
+
+
+def _cache_data(data, filename, ticker, timeframe, shift):
+    if shift:
+        df = pd.DataFrame(data[1:])
+    else:
+        df = pd.DataFrame(data)
+    already_cached = _get_cached_file(ticker, timeframe)
+    if already_cached:
+        os.remove(where_to_cache+already_cached)
+        df.to_csv(where_to_cache + filename, index=False, mode="a")
+    else:
+        df.to_csv(where_to_cache + filename, index=False, mode="a")
+
+
+def _find_uncached_indicators(cached_file, indicators):
+    found = False
+    data_file = pd.read_csv(where_to_cache+cached_file)
+    ind_dict = _indicators_to_dict(list(data_file)[6:])
+    print(indicators, ind_dict)
+    for ind, params in indicators.items():
+        if ind not in ind_dict.keys():
+            print("not found\t", ind)
+        else:
+            if ind_dict[ind] == params:
+                print("for ", ind, " coincides")
+            else:
+                print("for ", ind, " not coincides")
+    input("")
+    return found
+
+
+
+def _indicators_to_dict(indicators):
+    ind_dict = dict()
+    for ind in indicators:
+        splitted_ind = ind.split("_")
+        ind_name = splitted_ind[0].split(".")[0]
+        ind_params = (splitted_ind[1:])
+        if ind_name not in ind_dict.keys():
+            if len(ind_params) != 1:
+                ind_dict[ind_name] = tuple(ind_params)
+            else:
+                ind_dict[ind_name] = int(ind_params[0])
+    return ind_dict
+
+
 def separate_data(data, split, calculate_input, calculate_output, lookback,
                   lookforward):
     data = data.to_records()
@@ -250,54 +337,6 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
         split_data['test_output'] = output_parameters[train_len +
                                                       validation_len:]
     return split_data
-
-
-def _parse_indicator(ind_name, ind_value):
-    if isinstance(ind_value, list):
-        ret_dict = dict.fromkeys([ind_name])
-        ret_dict[ind_name] = ind_value[1]
-    else:
-        keys = [
-            ind_name + "." + str(elem) for elem in ind_value.__dict__.keys()
-        ]
-        ret_dict = dict.fromkeys(keys)
-        for key, value in (ind_value.__dict__.items()):
-            ret_dict[ind_name + "." + key] = value[1]
-    return ret_dict
-
-
-def _is_cached(ticker, timeframe, start_date, end_date):
-    cached_file = _get_cached_file(ticker, timeframe)
-    if not cached_file:
-        return False
-    cached_file = cached_file.replace("__", "")
-    cached_file = cached_file.replace(ticker+str(timeframe)+"_", "")
-    dates = cached_file.split("_")
-    start_date_str = dates[0]
-    end_date_str = dates[1]
-    prev_start_date = \
-                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
-    prev_end_date = \
-                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
-    if prev_start_date > start_date:
-        return False
-    elif prev_end_date < end_date:
-        return False
-    else:
-        return True
-
-
-def _cache_data(data, filename, ticker, timeframe, shift):
-    if shift:
-        df = pd.DataFrame(data[1:])
-    else:
-        df = pd.DataFrame(data)
-    already_cached = _get_cached_file(ticker, timeframe)
-    if already_cached:
-        os.remove(where_to_cache+already_cached)
-        df.to_csv(where_to_cache + filename, index=False, mode="a")
-    else:
-        df.to_csv(where_to_cache + filename, index=False, mode="a")
 
 
 def check_home_folder():

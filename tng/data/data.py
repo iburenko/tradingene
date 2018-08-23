@@ -1,4 +1,4 @@
-import os
+import os, sys
 from time import time
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ class Data:
     """ Class for loading instrument history. """
 
     def __init__(self):
-        pass
+        self.my_path = os.path.dirname(os.path.abspath(__file__))+"../history_data/"
 
     @classmethod
     def load_data(cls, filename, start_date, end_date, pre = 0):
@@ -66,9 +66,6 @@ class Data:
                     break
                 else:
                     end_date += 100
-            print(pre)
-            print(start_date, end_date)
-            print(start, end)
             return start, end
 
         start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
@@ -81,11 +78,8 @@ class Data:
         #     raise ValueError("Instrument {} was not found!".format(filename))
         # url = "https://candles.tradingene.com/candles?instrument_id=" + \
         #       str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
-        # print(url)
         # data = urllib.request.urlopen(url).read()
-        # print("data is ready!")
         # obj = json.loads(data)
-        # print("obj is ready!")
         # np_data = np.empty(len(obj), dtype = dt)
         # for i, elem in enumerate(obj):
         #     np_data[i] = np.array([
@@ -95,7 +89,6 @@ class Data:
         #         float(elem['low']),
         #         float(elem['close']),
         #         float(elem['volume']))], dtype = dt)
-        # print("for loop ended")
         current_path = os.path.abspath(__file__)
         append_path = os.path.abspath(
             os.path.join(current_path, '../../history_data/')) + "/"
@@ -105,14 +98,13 @@ class Data:
         hist_data = all_data.iloc[start:end]
         hist_data = hist_data[::-1]
         hist_data = hist_data.to_records(index=False)
-        # np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
-        print(len(hist_data))
-        #print(len(np_data))
+        #np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
+        #print(len(hist_data))
         # КОСТЫЛЬ!
         # for i in range(len(hist_data)):
         #     if hist_data[i][0] != np_data[i][0]:
         #         np_data = np.delete(np_data, i)
-        #return hist_data
+        return hist_data
         # i = 0
         # upper_bound = len(np_data) - 1
         # while i < upper_bound:
@@ -122,4 +114,8 @@ class Data:
         #     i += 1
                 
         # print(len(np_data))    
-        return hist_data
+        return np_data
+        # return hist_data
+
+    def _find_history(self, instr_id):
+        pass

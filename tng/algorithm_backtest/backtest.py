@@ -95,7 +95,7 @@ class Backtest(Environment):
         self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
                                               self.history_data)
-        self._run_generator(candle_generator, on_bar_function)
+        self._run_generator(candle_generator, on_bar_function, shift, modeling)
 
 
     def _run_generator(self, generator, on_bar_function, shift=0, modeling = True):
@@ -124,7 +124,7 @@ class Backtest(Environment):
                     if instrument.ticker in on_bar_tickers
                 }
                 for instr in call:
-                    instr = self._reload_instrument(instr, candles)
+                    instr = self._reload_instrument(instr, candles, show_bar=modeling)
                 instrs -= call
                 complete_tickers = list(set(complete_tickers) - on_bar_tickers)
                 list(map(on_bar_function, call))
@@ -197,7 +197,7 @@ class Backtest(Environment):
             instrument.close[0] = candle['close']
             instrument.vol[0] += candle['vol']
 
-    def _reload_instrument(self, instrument, candles, show_bar = False):
+    def _reload_instrument(self, instrument, candles, show_bar = True):
         if show_bar:
             self._update_progress_bar()
         def correct_candle_time(time_, timeframe):
