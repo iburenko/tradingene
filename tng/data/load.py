@@ -54,7 +54,7 @@ def import_data(ticker,
     delete_old_files()
     filename = _filename(ticker, timeframe, start_date, end_date)
     if _is_cached(ticker, timeframe, start_date, end_date, indicators):
-        data = _load_cached_data(ticker, timeframe, start_date, end_date)
+        data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators)
         if cache:
@@ -76,7 +76,7 @@ def import_candles(ticker,
     delete_old_files()
     filename = _filename(ticker, timeframe, start_date, end_date)
     if _is_cached(ticker, timeframe, start_date, end_date):
-        data = _load_cached_data(ticker, timeframe, start_date, end_date)
+        data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)
         if cache:
@@ -100,7 +100,7 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
                 ticker, timeframe, item[0], item[1], indicators, shift
             )
             new_data_to_cache.append(new_data)
-        data = _load_cached_data(ticker, timeframe, start_date, end_date)
+        data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
         if len(data_to_cache) == 1:
             if data_to_cache[0][1] == already_cached[0]:
                 data = new_data_to_cache[0].append(data, ignore_index = True)
@@ -148,13 +148,23 @@ def _get_cached_dates(ticker, timeframe):
     return prev_start_date, prev_end_date
 
 
-def _load_cached_data(ticker, timeframe, start_date, end_date):
+def _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift):
     start_date_, end_date_ = _get_cached_dates(ticker, timeframe)
     start_date_int = int(start_date_.strftime("%Y%m%d%H%M%S"))
     end_date_int = int(end_date_.strftime("%Y%m%d%H%M%S"))
     cached_file = _get_cached_file(ticker, timeframe)
     data = pd.read_csv(where_to_cache+cached_file, index_col=False)
-    return data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
+    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators)
+    for ind_name in replace_ind.keys():
+        inds_to_delete = [elem for elem in list(data) if elem.startswith(ind_name)]
+        data = data.drop(inds_to_delete, axis = 1)
+    for ind in indicators.keys():
+        if ind in replace_ind.keys():
+            add_ind.update({ind:indicators[ind]})
+    add_data = _load_data_given_dates(ticker, timeframe, start_date_, end_date_, add_ind, shift)
+    add_data = add_data.drop(['time', 'open', 'high', 'low', 'close', 'vol'], axis = 1)
+    ret_data = data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
+    return pd.concat([ret_data, add_data], axis = 1)
 
 
 def _find_uncached_data(ticker, timeframe, start_date, end_date):
@@ -238,7 +248,9 @@ def _is_cached(ticker, timeframe, start_date, end_date, indicators):
     cached_file = _get_cached_file(ticker, timeframe)
     if not cached_file:
         return False
-    _find_uncached_indicators(cached_file, indicators)
+    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators)
+    if replace_ind or add_ind:
+        return False
     cached_file = cached_file.replace("__", "")
     cached_file = cached_file.replace(ticker+str(timeframe)+"_", "")
     dates = cached_file.split("_")
@@ -270,20 +282,17 @@ def _cache_data(data, filename, ticker, timeframe, shift):
 
 
 def _find_uncached_indicators(cached_file, indicators):
-    found = False
     data_file = pd.read_csv(where_to_cache+cached_file)
     ind_dict = _indicators_to_dict(list(data_file)[6:])
-    print(indicators, ind_dict)
+    replace_ind = dict()
+    add_ind = dict()
     for ind, params in indicators.items():
         if ind not in ind_dict.keys():
-            print("not found\t", ind)
+            add_ind[ind] = params
         else:
-            if ind_dict[ind] == params:
-                print("for ", ind, " coincides")
-            else:
-                print("for ", ind, " not coincides")
-    input("")
-    return found
+            if ind_dict[ind] != params:
+                replace_ind[ind] = ind_dict[ind]
+    return replace_ind, add_ind
 
 
 
@@ -294,10 +303,13 @@ def _indicators_to_dict(indicators):
         ind_name = splitted_ind[0].split(".")[0]
         ind_params = (splitted_ind[1:])
         if ind_name not in ind_dict.keys():
-            if len(ind_params) != 1:
+            if len(ind_params) > 1:
+                ind_params[0] = int(ind_params[0])
                 ind_dict[ind_name] = tuple(ind_params)
-            else:
+            elif len(ind_params) == 1:
                 ind_dict[ind_name] = int(ind_params[0])
+            else:
+                ind_dict[ind_name] = ()
     return ind_dict
 
 

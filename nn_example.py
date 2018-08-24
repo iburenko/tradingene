@@ -12,7 +12,7 @@ import numpy as np
 
 def train_model():
     start_date = datetime(2018, 1, 1)
-    end_date = datetime(2018, 1, 4)
+    end_date = datetime(2018, 1, 5)
     ticker = "btcusd"
     timeframe = 60
     lookback = 5
@@ -23,7 +23,7 @@ def train_model():
             'trima':(), 'williams':(),\
             'bollinger':(), 'macd':(), 'keltner':(),
             'stochastic':()}
-    inds = {'sma':(10, 'open'), 'rsi':(), 'stochastic':(5), 'ema': (3, 'low'), 'roc':()}
+    inds = {'sma':(19, 'open'), 'rsi':(), 'stochastic':(5), 'ema': (3, 'low'), 'roc':(), 'atr':()}
     data = import_data(
         ticker, timeframe, start_date, end_date, 
         calculate_input=calculate_input,
