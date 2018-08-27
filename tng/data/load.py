@@ -93,8 +93,7 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
         data = _load_data_given_dates(
             ticker, timeframe, start_date, end_date, indicators, shift
         )
-        #data = data.sort_values(by=list(data)[6:])
-        data[list(data)[6:]] = data[sorted(list(data)[6:])]
+        data = data[list(data)[:6]+sorted(list(data)[6:])]
     else:
         cached_file = _get_cached_file(ticker, timeframe)
         if not data_to_cache:
@@ -106,8 +105,10 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
             new_data = _load_data_given_dates(
                 ticker, timeframe, item[0], item[1], inds, shift
             )
+            new_data = new_data[list(new_data)[:6]+sorted(list(new_data)[6:])]
             new_data_to_cache.append(new_data)
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
+        data = data[list(data)[:6]+sorted(list(data)[6:])]
         if len(data_to_cache) == 1:
             if data_to_cache[0][1] == already_cached[0]:
                 data = new_data_to_cache[0].append(data, ignore_index = True)
@@ -162,7 +163,7 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift
     cached_file = _get_cached_file(ticker, timeframe)
     data = pd.read_csv(where_to_cache+cached_file, index_col=False)
     data = data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
-    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators, 1)
+    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators, 0)
     for ind_name in replace_ind.keys():
         inds_to_delete = [elem for elem in list(data) if elem.startswith(ind_name)]
         data = data.drop(inds_to_delete, axis = 1)
@@ -172,9 +173,8 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift
     if add_ind:
         add_data = _load_data_given_dates(ticker, timeframe, start_date_, end_date_, add_ind, shift)
         add_data = add_data.drop(['time', 'open', 'high', 'low', 'close', 'vol'], axis = 1)
-        #add_data = add_data[sorted(list(add_data))]
         data = pd.concat([data, add_data], axis = 1)
-        data[list(data)[6:]] = data[sorted(list(data)[6:])]
+        data = data[list(data)[:6]+sorted(list(data)[6:])]
     return data
 
 
