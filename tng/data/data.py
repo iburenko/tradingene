@@ -31,6 +31,41 @@ class Data:
         self.my_path = os.path.dirname(os.path.abspath(__file__))+"../history_data/"
 
     @classmethod
+    def _download_minute_data(cls, start_date, end_date, filename):
+        start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
+        end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
+        req_start_date = start_date * 1000
+        req_end_date = end_date * 1000
+        if filename in instrument_ids.keys():
+            instr_id = instrument_ids[filename]
+        else:
+            raise ValueError("Instrument {} was not found!".format(filename))
+        url = "https://candles.tradingene.com/candles?instrument_id=" + \
+              str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
+        t = time()
+        data = urllib.request.urlopen(url).read()
+        obj = json.loads(data)
+        np_data = np.empty(len(obj), dtype = dt)
+        for i, elem in enumerate(obj):
+            np_data[i] = np.array([
+                (int(elem['time'])//1000,
+                float(elem['open']),
+                float(elem['high']),
+                float(elem['low']),
+                float(elem['close']),
+                float(elem['volume']))], dtype = dt)
+        np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
+        i = 0
+        upper_bound = len(np_data) - 1
+        while i < upper_bound:
+            if np_data[i][0] == np_data[i+1][0]:
+                np_data = np.delete(np_data, i)
+                upper_bound -= 1
+            i += 1
+        return np_data
+
+
+    @classmethod
     def load_data(cls, filename, start_date, end_date, pre = 0):
         """ Loads file from the drive and returns history data. 
         
@@ -67,55 +102,28 @@ class Data:
                 else:
                     end_date += 100
             return start, end
-
-        start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
-        end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        # req_start_date = start_date * 1000
-        # req_end_date = end_date * 1000
-        # if filename in instrument_ids.keys():
-        #     instr_id = instrument_ids[filename]
-        # else:
-        #     raise ValueError("Instrument {} was not found!".format(filename))
-        # url = "https://candles.tradingene.com/candles?instrument_id=" + \
-        #       str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
-        # data = urllib.request.urlopen(url).read()
-        # obj = json.loads(data)
-        # np_data = np.empty(len(obj), dtype = dt)
-        # for i, elem in enumerate(obj):
-        #     np_data[i] = np.array([
-        #         (int(elem['time'])//1000,
-        #         float(elem['open']),
-        #         float(elem['high']),
-        #         float(elem['low']),
-        #         float(elem['close']),
-        #         float(elem['volume']))], dtype = dt)
+        t = time()
+        data = cls._download_minute_data(start_date, end_date, filename)
         current_path = os.path.abspath(__file__)
         append_path = os.path.abspath(
             os.path.join(current_path, '../../history_data/')) + "/"
         extension = ".csv"
-        all_data = pd.read_csv(append_path + filename + extension)
-        start, end = find_start_end(all_data, start_date, end_date)
-        hist_data = all_data.iloc[start:end]
-        hist_data = hist_data[::-1]
-        hist_data = hist_data.to_records(index=False)
-        #np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
+        print(time()- t)
+        input("this is time")
+        return data
+        # all_data = pd.read_csv(append_path + filename + extension)
+        # start, end = find_start_end(all_data, start_date, end_date)
+        # hist_data = all_data.iloc[start:end]
+        # hist_data = hist_data[::-1]
+        # hist_data = hist_data.to_records(index=False)
+        
         #print(len(hist_data))
         # КОСТЫЛЬ!
         # for i in range(len(hist_data)):
         #     if hist_data[i][0] != np_data[i][0]:
         #         np_data = np.delete(np_data, i)
-        return hist_data
-        # i = 0
-        # upper_bound = len(np_data) - 1
-        # while i < upper_bound:
-        #     if np_data[i][0] == np_data[i+1][0]:
-        #         np_data = np.delete(np_data, i)
-        #         upper_bound -= 1
-        #     i += 1
+        # return hist_data
+        
                 
         # print(len(np_data))    
-        return np_data
         # return hist_data
-
-    def _find_history(self, instr_id):
-        pass
