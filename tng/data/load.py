@@ -93,11 +93,18 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
         data = _load_data_given_dates(
             ticker, timeframe, start_date, end_date, indicators, shift
         )
+        #data = data.sort_values(by=list(data)[6:])
+        data[list(data)[6:]] = data[sorted(list(data)[6:])]
     else:
+        cached_file = _get_cached_file(ticker, timeframe)
+        if not data_to_cache:
+            replace, add = _find_uncached_indicators(cached_file, indicators, 0)
+            return _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
         new_data_to_cache = list()
         for item in data_to_cache:
+            inds = _get_inds_for_aux_dates(cached_file, indicators)
             new_data = _load_data_given_dates(
-                ticker, timeframe, item[0], item[1], indicators, shift
+                ticker, timeframe, item[0], item[1], inds, shift
             )
             new_data_to_cache.append(new_data)
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
@@ -154,17 +161,21 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift
     end_date_int = int(end_date_.strftime("%Y%m%d%H%M%S"))
     cached_file = _get_cached_file(ticker, timeframe)
     data = pd.read_csv(where_to_cache+cached_file, index_col=False)
-    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators)
+    data = data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
+    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators, 1)
     for ind_name in replace_ind.keys():
         inds_to_delete = [elem for elem in list(data) if elem.startswith(ind_name)]
         data = data.drop(inds_to_delete, axis = 1)
     for ind in indicators.keys():
         if ind in replace_ind.keys():
             add_ind.update({ind:indicators[ind]})
-    add_data = _load_data_given_dates(ticker, timeframe, start_date_, end_date_, add_ind, shift)
-    add_data = add_data.drop(['time', 'open', 'high', 'low', 'close', 'vol'], axis = 1)
-    ret_data = data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
-    return pd.concat([ret_data, add_data], axis = 1)
+    if add_ind:
+        add_data = _load_data_given_dates(ticker, timeframe, start_date_, end_date_, add_ind, shift)
+        add_data = add_data.drop(['time', 'open', 'high', 'low', 'close', 'vol'], axis = 1)
+        #add_data = add_data[sorted(list(add_data))]
+        data = pd.concat([data, add_data], axis = 1)
+        data[list(data)[6:]] = data[sorted(list(data)[6:])]
+    return data
 
 
 def _find_uncached_data(ticker, timeframe, start_date, end_date):
@@ -248,7 +259,7 @@ def _is_cached(ticker, timeframe, start_date, end_date, indicators):
     cached_file = _get_cached_file(ticker, timeframe)
     if not cached_file:
         return False
-    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators)
+    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators, 0)
     if replace_ind or add_ind:
         return False
     cached_file = cached_file.replace("__", "")
@@ -281,7 +292,7 @@ def _cache_data(data, filename, ticker, timeframe, shift):
         df.to_csv(where_to_cache + filename, index=False, mode="a")
 
 
-def _find_uncached_indicators(cached_file, indicators):
+def _find_uncached_indicators(cached_file, indicators, check):
     data_file = pd.read_csv(where_to_cache+cached_file)
     ind_dict = _indicators_to_dict(list(data_file)[6:])
     replace_ind = dict()
@@ -292,7 +303,24 @@ def _find_uncached_indicators(cached_file, indicators):
         else:
             if ind_dict[ind] != params:
                 replace_ind[ind] = ind_dict[ind]
+    if check:
+        for ind in ind_dict.keys():
+            if ind not in indicators.keys():
+                add_ind[ind] = ind_dict[ind]
     return replace_ind, add_ind
+
+
+def _get_inds_for_aux_dates(cached_file, indicators):
+    data_file = pd.read_csv(where_to_cache+cached_file)
+    ind_dict = _indicators_to_dict(list(data_file)[6:])
+    replace, add = _find_uncached_indicators(cached_file, indicators, 0)
+    new_inds = dict()
+    for ind in replace.keys():
+        if ind in ind_dict.keys():
+            ind_dict.pop(ind)
+            ind_dict[ind] = indicators[ind]
+    ind_dict.update(add)
+    return ind_dict
 
 
 
