@@ -47,10 +47,14 @@ class BacktestStatistics:
         self.max_consecutive_winners = 0
         self.max_consecutive_losers = 0
 
+
     def calculate_PnL(self):
         pnl = 0
         for pos in self.all_positions_:
             pnl += pos.profit
+        if self.alg.positions and self.alg.positions[-1].close_time == 0:
+            pnl += self.alg.positions[-1].profit
+        self.PnL = pnl
         return float(pnl)
 
     def calculate_number_of_trades(self):
@@ -60,7 +64,8 @@ class BacktestStatistics:
         if self.number_of_positions == 0:
             return 0
         else:
-            return len(self.winning_trades_) / len(self.all_positions_)
+            self.reliability = len(self.winning_trades_) / len(self.all_positions_)
+            return self.reliability
 
     def calculate_RRR(self):
         average_win = self.calculate_AWT()
@@ -68,7 +73,8 @@ class BacktestStatistics:
         if average_win == 0:
             return 0
         else:
-            return average_loss / average_win
+            self.risk_reward_ratio = average_loss / average_win
+            return self.risk_reward_ratio
 
     def calculate_drawdown(self):
         cumulative_profit = np.zeros((len(self.all_positions_) + 1))
@@ -120,14 +126,16 @@ class BacktestStatistics:
         if drawdown == -1 and drawdown_len == -1:
             return (0, 0)
         else:
-            return (drawdown, int(drawdown_len))
+            self.max_drawdown = drawdown
+            return (self.max_drawdown, int(drawdown_len))
 
     def calculate_AT(self):
         pnl = self.calculate_PnL()
         if self.number_of_positions == 0:
             return 0
         else:
-            return pnl / self.number_of_positions
+            self.average_trade = pnl / self.number_of_positions
+            return self.average_trade
 
     def calculate_ATT(self):
         overall_time = 0
@@ -142,7 +150,8 @@ class BacktestStatistics:
         if self.number_of_positions == 0:
             return 0
         else:
-            return overall_time / self.number_of_positions
+            self.average_time_in_trade = overall_time / self.number_of_positions
+            return self.average_time_in_trade
 
     def calculate_ADPD(self):
         if len(self.all_positions_) > 0:
@@ -154,7 +163,8 @@ class BacktestStatistics:
                                             "%Y%m%d%H%M%S")[0:6]))
             diff = close_time - open_time
             overall_days = diff.days
-            return self.number_of_positions / (overall_days + 1)
+            self.average_deals_per_day = self.number_of_positions / (overall_days + 1)
+            return self.average_deals_per_day
         else:
             return 0
 
@@ -162,27 +172,39 @@ class BacktestStatistics:
         profit = 0
         for pos in self.winning_trades_:
             profit += pos.profit
-        return float(profit)
+        if self.alg.positions:
+            last_pos = self.alg.positions[-1]
+            if last_pos.close_time == 0 and last_pos.profit > 0:
+                profit += last_pos.profit
+        self.profit = float(profit)
+        return self.profit
 
     def calculate_loss(self):
         loss = 0
         for pos in self.losing_trades_:
             loss += pos.profit
-        return float(loss)
+        if self.alg.positions:
+            last_pos = self.alg.positions[-1]
+            if last_pos.close_time == 0 and last_pos.profit < 0:
+                loss += last_pos.profit
+        self.loss = float(loss)
+        return self.loss
 
     def calculate_AWT(self):
         profit = self.calculate_profit()
         if self.winning_trades == 0:
             return 0
         else:
-            return profit / self.winning_trades
+            self.average_winning_trade = profit / self.winning_trades
+            return self.average_winning_trade
 
     def calculate_ALT(self):
         loss = self.calculate_loss()
         if self.losing_trades == 0:
             return 0
         else:
-            return loss / self.losing_trades
+            self.average_losing_trade = loss / self.losing_trades
+            return self.average_losing_trade
 
     def calculate_WT(self):
         return self.winning_trades
@@ -193,14 +215,16 @@ class BacktestStatistics:
     def calculate_LWT(self):
         profits = [pos.profit for pos in self.winning_trades_]
         if profits:
-            return float(max(profits))
+            self.largest_winning_trade = float(max(profits))
+            return self.largest_winning_trade
         else:
             return 0
 
     def calculate_LLT(self):
         losses = [pos.profit for pos in self.losing_trades_]
         if losses:
-            return float(min(losses))
+            self.largest_losing_trade = float(min(losses))
+            return self.largest_losing_trade
         else:
             return 0
 
@@ -217,7 +241,8 @@ class BacktestStatistics:
         if self.winning_trades == 0:
             return 0
         else:
-            return overall_time / self.winning_trades
+            self.average_time_in_winning_trade = overall_time / self.winning_trades
+            return self.average_time_in_winning_trade
 
     def calculate_ATLT(self):
         overall_time = 0
@@ -232,7 +257,8 @@ class BacktestStatistics:
         if self.losing_trades == 0:
             return 0
         else:
-            return overall_time / self.losing_trades
+            self.average_time_in_losing_trade = overall_time / self.losing_trades
+            return self.average_time_in_losing_trade
 
     def calculate_MCW(self):
         cons_winners = list()
@@ -248,7 +274,8 @@ class BacktestStatistics:
                     current_cons_winners = 0
                 flag = 0
         if cons_winners:
-            return max(cons_winners)
+            self.max_consecutive_winners = max(cons_winners)
+            return self.max_consecutive_winners
         else:
             return 0
 
@@ -266,7 +293,8 @@ class BacktestStatistics:
                     current_cons_losses = 0
                 flag = 0
         if cons_losses:
-            return max(cons_losses)
+            self.max_consecutive_losers = max(cons_losses)
+            return self.max_consecutive_losers
         else:
             return 0
 
@@ -281,19 +309,29 @@ class BacktestStatistics:
         corr = np.corrcoef(price_array, profit_array)[0][1]
         return corr
 
-    def backtest_results(self):
+    def _do_all_caclulations(self):
         closed_pos = [pos for pos in self.all_positions_ if pos.closed]
         if not closed_pos:
             print("No backtest statistics available!")
             return
-        plot_cs_prof(self.alg)
         all_stats = [method for method in dir(BacktestStatistics) \
                             if callable(getattr(BacktestStatistics, method)) \
                             if method.startswith('calculate_')]
-        html = "<table>"
         for method in all_stats:
-            explanatory_str = method.replace("calculate_", "") + " = \t"
-            html += "<tr><td>" + explanatory_str + "</td><td>" + str(eval("self."+method)()) + "</td></tr>"
+            eval("self."+method)()
+
+
+    def backtest_results(self):
+        self._do_all_caclulations()
+        plot_cs_prof(self.alg)
+        html = "<table>"
+        for elem in self.__dict__:
+            value = eval("self."+elem)
+            if type(value) is int or type(value) is float:
+                html += "<tr><td>" + elem + "</td><td>" + str(value) + "</td></tr>"
+        # for method in all_stats:
+        #     explanatory_str = method.replace("calculate_", "") + " = \t"
+        #     html += "<tr><td>" + explanatory_str + "</td><td>" + str(eval("self."+method)()) + "</td></tr>"
         html += "</table>"
         with open("stats.html", "r") as file:
             filedata = file.read()

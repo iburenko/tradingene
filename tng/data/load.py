@@ -75,7 +75,7 @@ def import_candles(ticker,
     check_home_folder()
     delete_old_files()
     filename = _filename(ticker, timeframe, start_date, end_date)
-    if _is_cached(ticker, timeframe, start_date, end_date):
+    if _is_cached(ticker, timeframe, start_date, end_date, indicators):
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
         data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)

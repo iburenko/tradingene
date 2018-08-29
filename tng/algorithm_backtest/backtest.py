@@ -92,7 +92,7 @@ class Backtest(Environment):
         self._load_data(self.start_date, self.end_date, shift, modeling)
         if modeling:
             sys.stdout.write("Data loaded!\n")
-        self._set_spread()
+        #self._set_spread()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
                                               self.history_data)
         self._run_generator(candle_generator, on_bar_function, shift, modeling)

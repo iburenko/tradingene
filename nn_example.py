@@ -8,11 +8,12 @@ from keras.initializers import he_uniform
 from keras.layers.normalization import BatchNormalization
 import keras
 import numpy as np
+import pandas as pd
 
 
 def train_model():
-    start_date = datetime(2017, 2, 1)
-    end_date = datetime(2017, 7, 1)
+    start_date = datetime(2017, 7, 1)
+    end_date = datetime(2018, 3, 31)
     ticker = "btcusd"
     timeframe = 60
     lookback = 5
@@ -23,15 +24,22 @@ def train_model():
             'trima':(), 'williams':(),\
             'bollinger':(), 'macd':(), 'keltner':(),
             'stochastic':()}
-    inds = {'sma':(11, 'open'), 'keltner':(8),'roc':(3)}
+    #inds = {'sma':(11, 'open'), 'keltner':(8),'roc':(3)}
     data = import_data(
         ticker, timeframe, start_date, end_date, 
         calculate_input=calculate_input,
         lookback=lookback, 
         calculate_output=calculate_output, 
         lookforward=lookforward,
-        split = (50, 30, 20), indicators = inds,
+        split = (70, 30, 0), indicators = inds,
     )
+    # data = import_candles(
+    #     ticker,
+    #     timeframe,
+    #     start_date,
+    #     end_date,
+    #     indicators=inds
+    # )
 
     model = create_model(data)
     outputs = keras.utils.to_categorical(data['train_output'], num_classes=3)
@@ -69,10 +77,10 @@ def calculate_output(data):
     else:
         return 0
         
-for i in range(1):
+for i in range(3):
     model = train_model()
-    start_date = datetime(2017, 7, 1)
-    end_date = datetime(2017, 9, 1)
+    start_date = datetime(2018, 1, 1)
+    end_date = datetime(2018, 2, 1)
     alg = TNG(start_date, end_date)
     alg.addInstrument("btcusd")
     alg.addTimeframe("btcusd", 60)
@@ -88,4 +96,4 @@ for i in range(1):
         
     alg.run_backtest(onBar)
     new_stat = bs.BacktestStatistics(alg)
-    #new_stat.backtest_results()
+    new_stat.backtest_results()

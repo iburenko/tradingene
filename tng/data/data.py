@@ -27,8 +27,10 @@ dt = np.dtype({
 class Data:
     """ Class for loading instrument history. """
 
+    hist_path = os.path.dirname(os.path.abspath(__file__))+"/../history_data/"
+
     def __init__(self):
-        self.my_path = os.path.dirname(os.path.abspath(__file__))+"../history_data/"
+        pass
 
 
     @classmethod
@@ -68,29 +70,32 @@ class Data:
                 else:
                     end_date += 100
             return start, end
-            
-        data = cls._download_minute_data(start_date, end_date, filename)
-        current_path = os.path.abspath(__file__)
-        append_path = os.path.abspath(
-            os.path.join(current_path, '../../history_data/')) + "/"
-        extension = ".csv"
-        return data
-        # all_data = pd.read_csv(append_path + filename + extension)
+
+        ###############
+        # all_data = pd.read_csv(filename)
+        # start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
+        # end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
         # start, end = find_start_end(all_data, start_date, end_date)
         # hist_data = all_data.iloc[start:end]
         # hist_data = hist_data[::-1]
         # hist_data = hist_data.to_records(index=False)
+        # return hist_data  
+        ###############
+
+        # if Data._check_file(filename):
+        #     all_data = pd.read_csv(Data.hist_path + filename + ".csv")
+        #     start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
+        #     end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
+        #     start, end = find_start_end(all_data, start_date, end_date)
+        #     hist_data = all_data.iloc[start:end]
+        #     hist_data = hist_data[::-1]
+        #     hist_data = hist_data.to_records(index=False)
+        #     return hist_data
+        # else:
+        data = cls._download_minute_data(start_date, end_date, filename)
+        pd.DataFrame(data).to_csv(Data.hist_path+filename+".csv", index = False)
+        return data
         
-        #print(len(hist_data))
-        # КОСТЫЛЬ!
-        # for i in range(len(hist_data)):
-        #     if hist_data[i][0] != np_data[i][0]:
-        #         np_data = np.delete(np_data, i)
-        # return hist_data
-        
-                
-        # print(len(np_data))    
-        # return hist_data
 
 
     @classmethod
@@ -125,3 +130,12 @@ class Data:
                 upper_bound -= 1
             i += 1
         return np_data
+
+
+    @staticmethod
+    def _check_file(filename):
+        saved = [file_ for file_ in os.listdir(Data.hist_path) if file_.startswith(filename)]
+        if not saved:
+            return False
+        else:
+            return True
