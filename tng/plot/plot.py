@@ -27,33 +27,43 @@ def plot_cs_prof(alg):
         source.change.emit();
         """)
     timeframe = list(alg.instruments)[0].timeframe
-    close_df = pd.DataFrame()   
-    open_df = pd.DataFrame()
+    close_df = pd.DataFrame(columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit'])   
+    open_df = pd.DataFrame(columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit'])
 
     for pos in alg.positions:
         pos_trades = pos.trades
         for j in range(len(pos_trades)):
             if pos.closed:
                 if  j < len(pos_trades) - 1:
-                    close_df = close_df.append([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price, pos_trades[j].side, 0, 0]])
+                    close_df = close_df.append(pd.DataFrame([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price, pos_trades[j].side, 0, 0]],
+                    columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']))
                 elif pos_trades[j].close_time > 0:
-                    close_df = close_df.append([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price,pos_trades[j].side, 1, pos.profit]])
+                    close_df = close_df.append(pd.DataFrame([[pos_trades[j].close_time, pos_trades[j].close_price, pos_trades[j].open_price,pos_trades[j].side, 1, pos.profit]],
+                    columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']))
             if  j > 0:
-                open_df = open_df.append([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 0, pos.profit]])
+                open_df = open_df.append(pd.DataFrame([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 0, pos.profit]],
+                columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']))
             else:
-                open_df = open_df.append([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 1, pos.profit]])
+                open_df = open_df.append(pd.DataFrame([[pos_trades[j].open_time, pos_trades[j].open_price, pos_trades[j].close_price, pos_trades[j].side, 1, pos.profit]],
+                columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']), ignore_index=True)
 
     df = list(alg.instruments)[0].rates
     df = pd.DataFrame(df[1:(len(df) - 50)])
+    print(df)
 
-    close_df.columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']
-    open_df.columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']
+   # close_df.columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']
+   # open_df.columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']
 
+    opendf_len = len(open_df)
+    closedf_len = len(close_df)
+
+    print(open_df)
     df['size'] = 12.0
     close_df['size'] = 12.0
     open_df['size'] = 12.0
-
     df["date"] = pd.to_datetime(df["time"].astype(str), format='%Y%m%d%H%M%S%f')
+    timedelta = df['date'][len(df) - 1] - df['date'][len(df) - 1    ].floor(str(timeframe) + 'T') 
+
     df = df.drop(['time'], axis = 1)
 
     close_df["date"] = pd.to_datetime(close_df["time"].astype(str), format='%Y%m%d%H%M%S%f')
@@ -94,28 +104,14 @@ def plot_cs_prof(alg):
     df['range'] = p.x_range.end - p.x_range.start
     close_df['range'] = p.x_range.end - p.x_range.start
     open_df['range'] = p.x_range.end - p.x_range.start
-
-    mysource1 = ColumnDataSource(df[inc])
-    mysource2 = ColumnDataSource(df[dec])
-
-    open_df['time'] = open_df['date'].dt.floor(str(timeframe) + 'T')
-    close_df['time'] = close_df['date'].dt.floor(str(timeframe) + 'T') 
-
-    source1 = ColumnDataSource(open_df[ind_open & (open_df['open_side'] == 1)])
-    source2 = ColumnDataSource(open_df[ind_open & (open_df['open_side'] == -1)])
-    source3  = ColumnDataSource(close_df[ind_close & (close_df['close_side'] == 1)])
-    source4  = ColumnDataSource(close_df[ind_close & (close_df['close_side'] == -1)])
-
-    source5 = ColumnDataSource(open_df[ind_open_subseq & (open_df['open_side'] == 1)])
-    source6 = ColumnDataSource(open_df[ind_open_subseq & (open_df['open_side'] == -1)])
-    source7  = ColumnDataSource(close_df[ind_close_subseq & (close_df['close_side'] == 1)])
-    source8  = ColumnDataSource(close_df[ind_close_subseq & (close_df['close_side'] == -1)])
-
     p.segment(df.date, df.high, df.date, df.low, color="black")
 
+    print(df)
+    mysource1 = ColumnDataSource(df[inc])
+    mysource2 = ColumnDataSource(df[dec])
+    print(open_df['date'])
     bars_1 = p.vbar(source = mysource1, x="date", width=w, bottom="open", top="close", fill_color="honeydew", line_color="black")
     bars_2 = p.vbar(source = mysource2, x="date", width=w, bottom="close", top="open", fill_color="deepskyblue", line_color="black")
-
     hover = HoverTool(renderers=[bars_1, bars_2], tooltips = [('high', '@high{0.0}'),
                                   ('low', '@low{0.0}'),
                                   ('open', '@open{0.0}'),
@@ -125,36 +121,52 @@ def plot_cs_prof(alg):
                                   formatters={"date":"datetime"})
     p.add_tools(hover)
     
-    tr_1 = p.triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source1, fill_color="green")
-    inv_tr_1 = p.inverted_triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source2, fill_color="green")
+    if (opendf_len > 0):
+        open_df['time'] = open_df['date'].dt.floor(str(timeframe) + 'T') + timedelta
+        source1 = ColumnDataSource(open_df[ind_open & (open_df['open_side'] == 1)])
+        source2 = ColumnDataSource(open_df[ind_open & (open_df['open_side'] == -1)])
+        source5 = ColumnDataSource(open_df[ind_open_subseq & (open_df['open_side'] == 1)])
+        source6 = ColumnDataSource(open_df[ind_open_subseq & (open_df['open_side'] == -1)])
+        
+        tr_1 = p.triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source1, fill_color="green")
+        inv_tr_1 = p.inverted_triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source2, fill_color="green")
+        tr_3 = p.triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source5, fill_color="purple")
+        inv_tr_3 = p.inverted_triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source6, fill_color="purple")
+        
+        p.x_range.js_on_change('start', update_triangle(source1))
+        p.x_range.js_on_change('start', update_triangle(source2))
+        p.x_range.js_on_change('start', update_triangle(source5))
+        p.x_range.js_on_change('start', update_triangle(source6))
 
-    tr_2 = p.inverted_triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source3, fill_color="yellow")
-    inv_tr_2 = p.triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source4, fill_color="yellow")
+        hover1 = HoverTool(renderers=[tr_1, inv_tr_1, tr_3, inv_tr_3],
+                            tooltips = [('date', '@date{%Y-%m-%d %H:%M:%S}'), ('open_price', '@open_price{0.0}'),('close_price_onop', '@close_price_onop{0.0}')],
+                                    formatters={"date":"datetime"})
+        p.add_tools(hover1)
 
-    tr_3 = p.triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source5, fill_color="purple")
-    inv_tr_3 = p.inverted_triangle(x="time", y="open_price", size="size", fill_alpha=0.7, source = source6, fill_color="purple")
 
-    tr_4 = p.inverted_triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source7, fill_color="brown")
-    inv_tr_4 = p.triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source8, fill_color="brown") 
+    if (closedf_len > 0):
+        close_df['time'] = close_df['date'].dt.floor(str(timeframe) + 'T') + timedelta
+        source3  = ColumnDataSource(close_df[ind_close & (close_df['close_side'] == 1)])
+        source4  = ColumnDataSource(close_df[ind_close & (close_df['close_side'] == -1)])
+        source7  = ColumnDataSource(close_df[ind_close_subseq & (close_df['close_side'] == 1)])
+        source8  = ColumnDataSource(close_df[ind_close_subseq & (close_df['close_side'] == -1)])
+        
+        tr_2 = p.inverted_triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source3, fill_color="yellow")
+        inv_tr_2 = p.triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source4, fill_color="yellow")
+        tr_4 = p.inverted_triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source7, fill_color="brown")
+        inv_tr_4 = p.triangle(x="time", y="close_price", size="size", fill_alpha=0.7, source = source8, fill_color="brown") 
 
-    p.x_range.js_on_change('start', update_triangle(source1))
-    p.x_range.js_on_change('start', update_triangle(source2))
-    p.x_range.js_on_change('start', update_triangle(source3))
-    p.x_range.js_on_change('start', update_triangle(source4))
-    p.x_range.js_on_change('start', update_triangle(source5))
-    p.x_range.js_on_change('start', update_triangle(source6))
-    p.x_range.js_on_change('start', update_triangle(source7))
-    p.x_range.js_on_change('start', update_triangle(source8))
 
-    hover1 = HoverTool(renderers=[tr_1, inv_tr_1, tr_3, inv_tr_3],
-                        tooltips = [('date', '@date{%Y-%m-%d %H:%M:%S}'), ('open_price', '@open_price{0.0}'),('close_price_onop', '@close_price_onop{0.0}')],
-                                  formatters={"date":"datetime"})
-    p.add_tools(hover1)
+        p.x_range.js_on_change('start', update_triangle(source3))
+        p.x_range.js_on_change('start', update_triangle(source4))
+        p.x_range.js_on_change('start', update_triangle(source7))
+        p.x_range.js_on_change('start', update_triangle(source8))
 
-    hover2 = HoverTool(renderers=[tr_2, inv_tr_2, tr_4, inv_tr_4],
+        hover2 = HoverTool(renderers=[tr_2, inv_tr_2, tr_4, inv_tr_4],
                         tooltips = [('date', '@date{%Y-%m-%d %H:%M:%S}'), ('close_price', '@close_price{0.0}'), ('open_price_oncl', '@open_price_oncl{0.0}')],
                                   formatters={"date":"datetime"})
-    p.add_tools(hover2)
+        p.add_tools(hover2)
+
     p.yaxis.axis_label = 'Price'
     p.xaxis.major_label_orientation = 3.14/4
     p.grid.grid_line_alpha = 0.5

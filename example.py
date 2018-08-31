@@ -8,9 +8,9 @@ import numpy as np
 
 name = "Cornucopia"
 regime = "MP"
-start_date = datetime(2018, 1, 1, 0, 20)
-end_date = datetime(2018, 1, 3, 2, 10)
-timeframe = 15
+start_date = datetime(2018, 1, 1, 18, 23)
+end_date = datetime(2018, 1, 3, 6)
+timeframe = 18
 
 alg = tng.TNG(name, regime, start_date, end_date)
 alg.addInstrument("btcusd")
