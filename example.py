@@ -8,9 +8,9 @@ import numpy as np
 
 name = "Cornucopia"
 regime = "MP"
-start_date = datetime(2018, 1, 1)
-end_date = datetime(2018, 2, 1)
-timeframe = 60
+start_date = datetime(2018, 1, 1, 0, 20)
+end_date = datetime(2018, 1, 3, 2, 10)
+timeframe = 15
 
 alg = tng.TNG(name, regime, start_date, end_date)
 alg.addInstrument("btcusd")
@@ -84,5 +84,6 @@ def onBar(instrument):
 
 
 alg.run_backtest(onBar)
-new_stat = bs.BacktestStatistics(alg)
-new_stat.backtest_results()
+print(list(alg.instruments)[0].rates)
+# new_stat = bs.BacktestStatistics(alg)
+# new_stat.backtest_results()

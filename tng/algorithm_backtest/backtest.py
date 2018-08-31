@@ -197,12 +197,12 @@ class Backtest(Environment):
     def _update_instruments(self, candles):
         for instrument in self.instruments:
             ticker = instrument.ticker
+            if instrument.time[0] == 0:
+                instrument.time[0] = self.now
             if ticker in candles.keys():
                 candle = candles[ticker]
             else:
                 continue
-            if instrument.time[0] == 0:
-                instrument.time[0] = self.now
             if instrument.open[0] == 0:
                 instrument.open[0] = candle.open
             instrument.high[0] = max(instrument.high[0], candle['high'])
@@ -278,22 +278,29 @@ class Backtest(Environment):
     def _update_last_candle(self):
         for instr in self.instruments:
             open_price = np.array([0.])
-            time_ = datetime(*(time.strptime(str(self.now), \
+            # time_ = datetime(*(time.strptime(str(self.now), \
+            #                             "%Y%m%d%H%M%S")[0:6]))
+            # new_time = int(time_.strftime("%Y%m%d%H%M%S"))
+            # last_time = time_ - timedelta(minutes=instr.timeframe)
+            # instr.now = int(last_time.strftime("%Y%m%d%H%M%S"))
+            time_ = datetime(*(time.strptime(str(instr.time[0]), \
                                         "%Y%m%d%H%M%S")[0:6]))
-            new_time = int(time_.strftime("%Y%m%d%H%M%S"))
-            last_time = time_ - timedelta(minutes=instr.timeframe)
-            instr.now = int(last_time.strftime("%Y%m%d%H%M%S"))
-            instr.time = np.concatenate(([new_time], instr.time[:-1]))
+            if time_+timedelta(minutes=instr.timeframe) > self.end_date:
+                end_time = self.end_date
+            else:
+                end_time = time_+timedelta(minutes=instr.timeframe)
+            end_time = int(end_time.strftime("%Y%m%d%H%M%S"))
+            instr.time = np.concatenate(([end_time], instr.time[:-1]))
             instr.open = np.concatenate((open_price, instr.open[:-1]))
             instr.high = np.concatenate((open_price, instr.high[:-1]))
             instr.low = np.concatenate((open_price, instr.low[:-1]))
             instr.close = np.concatenate((open_price, instr.close[:-1]))
             instr.vol = np.concatenate(([0], instr.vol[:-1]))
-            last_candle = np.array([(instr.now, instr.open[1], \
+            last_candle = np.array([(instr.time[1], instr.open[1], \
                                     instr.high[1], instr.low[1], \
                                     instr.close[1], instr.vol[1])], \
                                     dtype = dt)
-            new_candle = np.array([(new_time, instr.open[0], \
+            new_candle = np.array([(end_time, instr.open[0], \
                                     instr.high[0], instr.low[0],\
                                     instr.close[0], instr.vol[0])],\
                                     dtype = dt)
