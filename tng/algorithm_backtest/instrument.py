@@ -59,7 +59,7 @@ class Instrument(Indicators):
         self.ticker = ticker
         self.timeframe = timeframe
         self.now = 0
-        self.time = zeros(lookback).astype(int)
+        self.time = zeros((lookback,), dtype=np.int64)
         self.open = zeros(lookback)
         self.high = zeros(lookback)
         self.low = zeros(lookback)
