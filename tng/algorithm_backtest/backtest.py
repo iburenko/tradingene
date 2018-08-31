@@ -215,7 +215,8 @@ class Backtest(Environment):
 
     def _reload_instrument(self, instrument, candles, show_bar = True):
         if show_bar:
-            self._update_progress_bar()
+            pass
+            #self._update_progress_bar()
         def correct_candle_time(time_, timeframe):
             minutes_ = ((time_ // 100) % 100)
             hours_ = ((time_ // 10000) % 100)

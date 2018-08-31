@@ -93,9 +93,9 @@ class Data:
         hist_data = hist_data.to_records(index=False)
         return hist_data
         # else:
-        # data = cls._download_minute_data(start_date, end_date, filename)
-        # pd.DataFrame(data).to_csv(Data.hist_path+filename+".csv", index = False)
-        # return data
+        data = cls._download_minute_data(start_date, end_date, filename)
+        pd.DataFrame(data).to_csv(Data.hist_path+filename+".csv", index = False)
+        return data
         
 
 

@@ -610,7 +610,7 @@ class TradeActivity(Backtest):
                     close_price = self.recent_price + self.spread
                 else:
                     raise ValueError("Position side in neither 1, nor -1!")
-                last_pos.close_trades(self.now, int(close_price))
+                last_pos.close_trades(self.now, close_price)
                 last_pos.closed = True
                 closed = True
                 if last_pos.on_close is not None:
@@ -1002,12 +1002,12 @@ class TradeActivity(Backtest):
             open_price = self.recent_price + self.spread
         elif side == -1:
             open_price = self.recent_price - self.spread
-        new_trade = Trade(trade_id, int(open_price), volume, self.now)
+        new_trade = Trade(trade_id, open_price, volume, self.now)
         if self.positions and self.positions[-1].trades:
             last_trade = self.positions[-1].trades[-1]
             if not last_trade.close_time:
                 last_trade.close_time = self.now
-                last_trade.close_price = int(self.recent_price)
+                last_trade.close_price = self.recent_price
         self.positions[-1].trades.append(new_trade)
         self.positions[-1].volume_used += volume
         return trade_id
