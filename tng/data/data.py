@@ -8,7 +8,8 @@ import json
 from tng.algorithm_backtest.limits import instrument_ids
 
 dt = np.dtype({
-    'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
+    'names': 
+    ['time', 'open', 'high', 'low', 'close', 'vol'],
     'formats':
     ['uint64', 'float64', 'float64', 'float64', 'float64', 'float64']
 })
@@ -83,18 +84,18 @@ class Data:
         ###############
 
         # if Data._check_file(filename):
-        #     all_data = pd.read_csv(Data.hist_path + filename + ".csv")
-        #     start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
-        #     end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        #     start, end = find_start_end(all_data, start_date, end_date)
-        #     hist_data = all_data.iloc[start:end]
-        #     hist_data = hist_data[::-1]
-        #     hist_data = hist_data.to_records(index=False)
-        #     return hist_data
+        all_data = pd.read_csv(Data.hist_path + filename + ".csv")    
+        start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
+        end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
+        start, end = find_start_end(all_data, start_date, end_date)
+        hist_data = all_data.iloc[start:end]
+        hist_data = hist_data[::-1]
+        hist_data = hist_data.to_records(index=False)
+        return hist_data
         # else:
-        data = cls._download_minute_data(start_date, end_date, filename)
-        pd.DataFrame(data).to_csv(Data.hist_path+filename+".csv", index = False)
-        return data
+        # data = cls._download_minute_data(start_date, end_date, filename)
+        # pd.DataFrame(data).to_csv(Data.hist_path+filename+".csv", index = False)
+        # return data
         
 
 

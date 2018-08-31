@@ -1,6 +1,8 @@
 from numpy import zeros
 from tng.algorithm_backtest.limits import LOOKBACK_PERIOD as lookback
 from tng.ind.ind import Indicators
+import numpy as np
+from tng.data.data import dt
 
 
 class Instrument(Indicators):
@@ -56,7 +58,8 @@ class Instrument(Indicators):
         Indicators.__init__(self, timeframe)
         self.ticker = ticker
         self.timeframe = timeframe
-        self.time = 0
+        self.now = 0
+        self.time = zeros(lookback).astype(int)
         self.open = zeros(lookback)
         self.high = zeros(lookback)
         self.low = zeros(lookback)
@@ -64,3 +67,55 @@ class Instrument(Indicators):
         self.vol = zeros(lookback)
         self.rates = None
         self.candle_start_time = None
+
+
+    def __getitem__(self, indices):
+        if isinstance(indices, int):
+            if indices <= -lookback or indices >= lookback:
+                err_str = "Index {} is out of range!".format(indices)
+                raise IndexError(err_str)
+            else:
+                # dt = np.dtype(
+                #     [('time', np.uint64),
+                #     ('open', np.float64),
+                #     ('high', np.float64),
+                #     ('low', np.float64),
+                #     ('close', np.float64),
+                #     ('vol', np.float64)]
+                # )
+                arr = np.array([(
+                    self.time[indices%lookback],
+                    self.open[indices%lookback],
+                    self.high[indices%lookback],
+                    self.low[indices%lookback],
+                    self.close[indices%lookback],
+                    self.vol[indices%lookback]
+                )], dtype = dt)
+                arr = arr.view(np.recarray)
+                return arr                
+                
+        if isinstance(indices, slice):
+            print(indices)
+            print(type(indices))
+            if indices.start <= -lookback or indices.stop >= lookback:
+                err_str = "Index {} is out of range!".format(indices)
+                raise IndexError(err_str)
+            else:
+                if indices.step is None:
+                    size = indices.stop - indices.start
+                    step = 1
+                else:
+                    size = (indices.stop - indices.start)//abs(int(indices.step))
+                    step = indices.step
+                arr = np.empty_like((1,size), dtype = dt)
+                for i in range(size):
+                    arr[i] = np.array((
+                        self.time[indices.start + i*step],
+                        self.open[indices.start + i*step],
+                        self.high[indices.start + i*step],
+                        self.low[indices.start + i*step],
+                        self.close[indices.start + i*step],
+                        self.vol[indices.start + i*step]
+                    ), dtype = dt)
+                arr = arr.view(np.recarray)
+                return arr

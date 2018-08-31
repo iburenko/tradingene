@@ -85,6 +85,6 @@ class TimeEvent:
 
     def __eq__(self, other):
         eq = False
-        if self.time == other.time and self.handler == other.handler:
+        if self.now == other.now and self.handler == other.handler:
             eq = True
         return True
