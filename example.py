@@ -84,6 +84,5 @@ def onBar(instrument):
 
 
 alg.run_backtest(onBar)
-print(list(alg.instruments)[0].rates)
-# new_stat = bs.BacktestStatistics(alg)
-# new_stat.backtest_results()
+new_stat = bs.BacktestStatistics(alg)
+new_stat.backtest_results()

@@ -49,7 +49,7 @@ def plot_cs_prof(alg):
 
     df = list(alg.instruments)[0].rates
     df = pd.DataFrame(df[1:(len(df) - 50)])
-    print(df)
+    # print(df)
 
    # close_df.columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']
    # open_df.columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']
@@ -57,7 +57,7 @@ def plot_cs_prof(alg):
     opendf_len = len(open_df)
     closedf_len = len(close_df)
 
-    print(open_df)
+    # print(open_df)
     df['size'] = 12.0
     close_df['size'] = 12.0
     open_df['size'] = 12.0
@@ -106,10 +106,10 @@ def plot_cs_prof(alg):
     open_df['range'] = p.x_range.end - p.x_range.start
     p.segment(df.date, df.high, df.date, df.low, color="black")
 
-    print(df)
+    # print(df)
     mysource1 = ColumnDataSource(df[inc])
     mysource2 = ColumnDataSource(df[dec])
-    print(open_df['date'])
+    # print(open_df['date'])
     bars_1 = p.vbar(source = mysource1, x="date", width=w, bottom="open", top="close", fill_color="honeydew", line_color="black")
     bars_2 = p.vbar(source = mysource2, x="date", width=w, bottom="close", top="open", fill_color="deepskyblue", line_color="black")
     hover = HoverTool(renderers=[bars_1, bars_2], tooltips = [('high', '@high{0.0}'),

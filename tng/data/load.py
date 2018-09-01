@@ -61,6 +61,7 @@ def import_data(ticker,
             _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
+    data = _rename_columns(data)
     return separate_data(data, split, calculate_input, calculate_output,
                         lookback, lookforward)
 
@@ -199,7 +200,7 @@ def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, 
 
     def on_bar(instrument):
         nonlocal data, ind_dict
-        sample[0:6] = instrument.time,\
+        sample[0:6] = instrument.time[1],\
                     instrument.open[1], \
                     instrument.high[1],\
                     instrument.low[1],\
@@ -254,6 +255,14 @@ def _parse_indicator(ind_name, ind_value):
             ret_dict[ind_name + "." + key] = value[1]
     return ret_dict
 
+
+def _rename_columns(data):
+    to_rename = dict.fromkeys(data.columns[6:])
+    for column_name in data.columns[6:]:
+        to_rename[column_name] = column_name.split('_')[0]
+    data.rename(columns = to_rename, inplace = True)
+    return data          
+    
 
 def _is_cached(ticker, timeframe, start_date, end_date, indicators):
     cached_file = _get_cached_file(ticker, timeframe)
