@@ -182,12 +182,12 @@ class Backtest(Environment):
             for ticker in self.ticker_timeframes:
                 ind = time_ticks[ticker]
                 try:
-                    ticker_time = history_data[ticker][ind]['time']
+                    ticker_time = history_data[ticker]['time'].iloc[ind]
                 except:
                     continue
                 if ticker_time == backtest_time:
                     time_ticks[ticker] -= 1
-                    ans[ticker] = history_data[ticker][ind]
+                    ans[ticker] = history_data[ticker].iloc[ind]
                 else:
                     pass
             current_time = current_time + timedelta(minutes=1)

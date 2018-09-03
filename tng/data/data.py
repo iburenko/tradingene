@@ -1,8 +1,8 @@
 import os, sys
-from time import time
+import time
 import numpy as np
 import pandas as pd
-import datetime
+from datetime import datetime, timedelta
 import urllib.request
 import json
 from tng.algorithm_backtest.limits import instrument_ids
@@ -93,9 +93,51 @@ class Data:
         # hist_data = hist_data.to_records(index=False)
         # return hist_data
         # else:
-        data = cls._download_minute_data(start_date, end_date, filename)
-        pd.DataFrame(data).to_csv(Data.hist_path+filename+".csv", index = False)
+        end_date -= timedelta(minutes = 1)
+        if not cls._check_file(filename):
+            data = cls._download_minute_data(start_date, end_date, filename)
+            data = pd.DataFrame(data)
+            data.to_csv(Data.hist_path+filename+".csv", index = False)
+            data = data[::-1]
+        else:
+            new_dates = cls._find_uncached_dates(start_date, end_date, filename)
+            for dates in new_dates:
+                data = cls._download_minute_data(dates[0], dates[1], filename)
+                data = pd.DataFrame(data)
+                flag = dates[2]
+                if flag == 1:
+                    cached_data = pd.read_csv(Data.hist_path+filename+".csv")
+                    data = pd.concat([data[:-1], cached_data], ignore_index=True)
+                    data['time'] = data['time'].astype('int64')
+                    data.to_csv(Data.hist_path+filename+".csv", index = False)
+                elif flag == 2:
+                    cached_data = pd.read_csv(Data.hist_path+filename+".csv")
+                    data = pd.concat([cached_data, data[1:]], ignore_index=True)
+                    data['time'] = data['time'].astype('uint64')
+                    data.to_csv(Data.hist_path+filename+".csv", index = False)
+            start_date_int = int(start_date.strftime("%Y%m%d%H%M%S"))
+            end_date_int = int(end_date.strftime("%Y%m%d%H%M%S"))
+            cached_file = Data.hist_path+filename+".csv"
+            data = pd.read_csv(cached_file, index_col=False)
+            data = data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
+            data = data[::-1]
         return data
+
+
+    @classmethod
+    def _save_data(cls, data, flag, filename):
+        data = pd.DataFrame(data)
+        if flag is None:
+            data.to_csv(Data.hist_path+filename+".csv", index = False)
+        elif flag == 1:
+            cached_data = pd.read_csv(Data.hist_path+filename+".csv")
+            data = pd.concat([data[:-1], cached_data], ignore_index=True)
+            data.to_csv(Data.hist_path+filename+".csv", index = False)
+        elif flag == 2:
+            cached_data = pd.read_csv(Data.hist_path+filename+".csv")
+            data = pd.concat([cached_data, data[1:]], ignore_index=True)
+            data['time'] = data['time'].astype('int64')
+            data.to_csv(Data.hist_path+filename+".csv", index = False)
         
 
 
@@ -122,7 +164,7 @@ class Data:
                 float(elem['low']),
                 float(elem['close']),
                 float(elem['volume']))], dtype = dt)
-        np_data = pd.DataFrame(np_data[:-1][::-1]).to_records(index = False)
+        np_data = pd.DataFrame(np_data).to_records(index = False)
         i = 0
         upper_bound = len(np_data) - 1
         while i < upper_bound:
@@ -140,3 +182,21 @@ class Data:
             return False
         else:
             return True
+
+
+    @classmethod
+    def _find_uncached_dates(cls, start_date, end_date, filename):
+        to_cache = list()
+        saved = [file_ for file_ in os.listdir(Data.hist_path) if file_.startswith(filename)][0]
+        df = pd.read_csv(Data.hist_path+saved)
+        cached_start_time = str(df['time'].iloc[0])
+        cached_end_time = str(df['time'].iloc[-1])
+        prev_start_date = \
+                datetime(*(time.strptime(cached_start_time, "%Y%m%d%H%M%S")[0:6]))
+        prev_end_date = \
+                datetime(*(time.strptime(cached_end_time, "%Y%m%d%H%M%S")[0:6]))
+        if start_date < prev_start_date:
+            to_cache.append((start_date, prev_start_date, 1))
+        if end_date > prev_end_date:
+            to_cache.append((prev_end_date, end_date, 2))
+        return to_cache
