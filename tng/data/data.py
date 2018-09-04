@@ -16,7 +16,7 @@ dt = np.dtype({
 """ np.dtype: Numpy dtype of signle minute candle stored from history data.
 
     Single element of history consists of the following fields:
-        time (uint64): Open time of a minute candle.
+        time (int64): Open time of a minute candle.
         open (float64): Open price of a minute candle.
         high (float64): The highest price of a minute candle.
         low (float64): The lowest price of a minute candle.
@@ -93,56 +93,35 @@ class Data:
         # hist_data = hist_data.to_records(index=False)
         # return hist_data
         # else:
-        end_date -= timedelta(minutes = 1)
         if not cls._check_file(filename):
             data = cls._download_minute_data(start_date, end_date, filename)
-            data = pd.DataFrame(data)
             data.to_csv(Data.hist_path+filename+".csv", index = False)
-            data = data[::-1]
         else:
             new_dates = cls._find_uncached_dates(start_date, end_date, filename)
             for dates in new_dates:
                 data = cls._download_minute_data(dates[0], dates[1], filename)
-                data = pd.DataFrame(data)
                 flag = dates[2]
                 if flag == 1:
+                    # append to the begging
                     cached_data = pd.read_csv(Data.hist_path+filename+".csv")
-                    data = pd.concat([data[:-1], cached_data], ignore_index=True)
-                    data['time'] = data['time'].astype('int64')
+                    data = pd.concat([data, cached_data], ignore_index=True)
                     data.to_csv(Data.hist_path+filename+".csv", index = False)
                 elif flag == 2:
+                    # appeng to the end
                     cached_data = pd.read_csv(Data.hist_path+filename+".csv")
                     data = pd.concat([cached_data, data[1:]], ignore_index=True)
-                    data['time'] = data['time'].astype('uint64')
-                    data.to_csv(Data.hist_path+filename+".csv", index = False)
+                    data.to_csv(Data.hist_path+filename+".csv", index=False)
+            if not new_dates:
+                data = pd.read_csv(Data.hist_path+filename+".csv")
             start_date_int = int(start_date.strftime("%Y%m%d%H%M%S"))
             end_date_int = int(end_date.strftime("%Y%m%d%H%M%S"))
-            cached_file = Data.hist_path+filename+".csv"
-            data = pd.read_csv(cached_file, index_col=False)
             data = data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
-            data = data[::-1]
-        return data
-
-
-    @classmethod
-    def _save_data(cls, data, flag, filename):
-        data = pd.DataFrame(data)
-        if flag is None:
-            data.to_csv(Data.hist_path+filename+".csv", index = False)
-        elif flag == 1:
-            cached_data = pd.read_csv(Data.hist_path+filename+".csv")
-            data = pd.concat([data[:-1], cached_data], ignore_index=True)
-            data.to_csv(Data.hist_path+filename+".csv", index = False)
-        elif flag == 2:
-            cached_data = pd.read_csv(Data.hist_path+filename+".csv")
-            data = pd.concat([cached_data, data[1:]], ignore_index=True)
-            data['time'] = data['time'].astype('int64')
-            data.to_csv(Data.hist_path+filename+".csv", index = False)
-        
+        return data[::-1]       
 
 
     @classmethod
     def _download_minute_data(cls, start_date, end_date, filename):
+        end_date -= timedelta(minutes = 1)
         start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
         req_start_date = start_date * 1000
@@ -153,26 +132,17 @@ class Data:
             raise ValueError("Instrument {} was not found!".format(filename))
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
               str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
+        print("start of loading")
+        print(url)
         data = urllib.request.urlopen(url).read()
+        print("end of loading")
         obj = json.loads(data)
-        np_data = np.empty(len(obj), dtype = dt)
-        for i, elem in enumerate(obj):
-            np_data[i] = np.array([
-                (int(elem['time'])//1000,
-                float(elem['open']),
-                float(elem['high']),
-                float(elem['low']),
-                float(elem['close']),
-                float(elem['volume']))], dtype = dt)
-        np_data = pd.DataFrame(np_data).to_records(index = False)
-        i = 0
-        upper_bound = len(np_data) - 1
-        while i < upper_bound:
-            if np_data[i][0] == np_data[i+1][0]:
-                np_data = np.delete(np_data, i)
-                upper_bound -= 1
-            i += 1
-        return np_data
+        df_data = pd.DataFrame(obj, columns = ['time', 'open', 'high', 'low', 'close', 'volume'])
+        df_data.drop_duplicates(subset=['time'], inplace=True)
+        df_data['time'] = df_data['time'].astype('int64')
+        df_data['time'] //= 1000
+        df_data.rename(columns={'volume':'vol'}, inplace=True)
+        return df_data
 
 
     @staticmethod
@@ -195,6 +165,7 @@ class Data:
                 datetime(*(time.strptime(cached_start_time, "%Y%m%d%H%M%S")[0:6]))
         prev_end_date = \
                 datetime(*(time.strptime(cached_end_time, "%Y%m%d%H%M%S")[0:6]))
+        prev_end_date += timedelta(minutes=1)
         if start_date < prev_start_date:
             to_cache.append((start_date, prev_start_date, 1))
         if end_date > prev_end_date:

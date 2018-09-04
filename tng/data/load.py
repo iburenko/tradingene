@@ -62,6 +62,7 @@ def import_data(ticker,
     if not reverse:
         data = data[::-1]
     data = _rename_columns(data)
+    data['time'] = data['time'].astype('uint64')
     return separate_data(data, split, calculate_input, calculate_output,
                         lookback, lookforward)
 
@@ -84,6 +85,8 @@ def import_candles(ticker,
             _cache_data(data, filename, shift)
     if not reverse:
         data = data[::-1]
+    data = _rename_columns(data)
+    data['time'] = data['time'].astype('uint64')
     return data
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
@@ -118,6 +121,7 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
         elif len(data_to_cache) == 2:
             data = new_data_to_cache[0].append(data, ignore_index = True)
             data = data.append(new_data_to_cache[1], ignore_index = True)
+    #data['time'] = data['time'].astype('uint64')
     return data
 
 

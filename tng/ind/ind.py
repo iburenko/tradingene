@@ -288,7 +288,7 @@ class Indicators:
 
 class IndHlp:
 
-    historySize = 50 + 3  # LOOKBACK_PERIOD # UNCOMMENT!!!!
+    historySize = LOOKBACK_PERIOD
 
     @staticmethod
     def getRatesByPriceType(rates, priceType):
