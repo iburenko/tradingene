@@ -77,7 +77,7 @@ def calculate_output(data):
     else:
         return 0
         
-for i in range(3):
+for i in range(1):
     model = train_model()
     start_date = datetime(2018, 1, 1)
     end_date = datetime(2018, 2, 1)

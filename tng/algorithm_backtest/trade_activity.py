@@ -814,16 +814,13 @@ class TradeActivity(Backtest):
     def getPositionSide(self, pos_id):
         if not isinstance(pos_id, int):
             raise TypeError("Position id must be int!")
-        pos = [pos for pos in self.positions if pos.id == pos_id]
-        if not pos:
-            raise ValueError(
-                "Position with id {} was not found!".format(pos_id))
-        try:
-            assert len(pos) == 1
-        except:
-            raise ValueError(
-                "Two or more position with the same id was foung!")
-        return sign(pos[0].volume_used)
+        #pos = [pos for pos in self.positions if pos.id == pos_id]
+        for pos in self.positions[::-1]:
+            if pos.id == pos_id:
+                return sign(pos.volume_used)
+        raise ValueError(
+            "Position with id {} was not found!".format(pos_id))
+        
 
     def on(self, type_=None, params=None, arguments=None, handler=None):
         """ Wait for specified event and call handler.

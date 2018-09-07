@@ -1,10 +1,12 @@
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import numpy as np
 import pandas as pd
 from tng.algorithm_backtest.tng import TNG
+from tng.data.data import Data
+import tng.ind.ind2 as indicators2
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -53,10 +55,13 @@ def import_data(ticker,
     check_home_folder()
     delete_old_files()
     filename = _filename(ticker, timeframe, start_date, end_date)
+    #alt_data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
     if _is_cached(ticker, timeframe, start_date, end_date, indicators):
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
+        alt_data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
         data = _load_data(ticker, timeframe, start_date, end_date, indicators)
+        data
         if cache:
             _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
@@ -197,6 +202,7 @@ def _find_uncached_data(ticker, timeframe, start_date, end_date):
 
 
 def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
+    t = time.time()
     data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
     sample = np.empty(len(data_columns))
     data = np.array([])
@@ -243,7 +249,67 @@ def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, 
                       (len(data) // len(data_columns), len(data_columns)))
     data = pd.DataFrame(data, columns=data_columns)
     data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
+    print("load data given dates took")
+    print(time.time() - t)
     return data
+
+
+def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
+    t = time.time()
+    data = Data.load_data(ticker, start_date, end_date)
+    data = data[::-1]
+    data['time'] = pd.to_datetime(data['time'], format="%Y%m%d%H%M%S")
+    td = end_date - start_date
+    days, seconds = td.days, td.seconds
+    iters = (days*1440+seconds//60)//timeframe
+    ind = 0
+    rates = np.empty(iters, dtype=dt)
+    for i in range(iters):
+        candle_data = data[data['time'].between
+        (
+            start_date + i * timedelta(minutes=timeframe),
+            start_date + (i+1) * timedelta(minutes=timeframe)
+        )]
+        try:
+            rates[ind] = (
+                int(candle_data['time'].iloc[0].strftime("%Y%m%d%H%M%S")),
+                candle_data['open'].iloc[0],
+                max(candle_data['high']),
+                min(candle_data['low']),
+                candle_data['close'].iloc[-1],
+                sum(candle_data['vol'])
+            )
+            ind += 1
+        except:
+            pass
+    if ind - iters < 0:
+        rates = rates[:ind-iters]
+    rates = pd.DataFrame(rates)
+    ind_ema = indicators2.IndEMA(6)
+    ind_momentum = indicators2.IndMomentum(6)
+    ind_stochastic = indicators2.IndStochastic(6)
+    ind_ema.calculateAll(rates)
+    ind_momentum.calculateAll(rates)
+    ind_stochastic.calculateAll(rates)
+    print("alternative data loader took")
+    print(time.time() - t)
+    print("alt finished")
+    return rates
+    
+    
+
+
+
+
+
+
+
+        
+
+    
+
+
+
 
 
 def _parse_indicator(ind_name, ind_value):

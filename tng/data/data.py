@@ -109,7 +109,7 @@ class Data:
                 elif flag == 2:
                     # appeng to the end
                     cached_data = pd.read_csv(Data.hist_path+filename+".csv")
-                    data = pd.concat([cached_data, data[1:]], ignore_index=True)
+                    data = pd.concat([cached_data, data], ignore_index=True)
                     data.to_csv(Data.hist_path+filename+".csv", index=False)
             if not new_dates:
                 data = pd.read_csv(Data.hist_path+filename+".csv")

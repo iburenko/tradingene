@@ -1,7 +1,6 @@
-from numpy import zeros
+import numpy as np
 from tng.algorithm_backtest.limits import LOOKBACK_PERIOD as lookback
 from tng.ind.ind import Indicators
-import numpy as np
 from tng.data.data import dt
 
 
@@ -59,13 +58,13 @@ class Instrument(Indicators):
         self.ticker = ticker
         self.timeframe = timeframe
         self.now = 0
-        self.time = zeros((lookback,), dtype=np.int64)
-        self.open = zeros(lookback)
-        self.high = zeros(lookback)
-        self.low = zeros(lookback)
-        self.close = zeros(lookback)
-        self.vol = zeros(lookback)
-        self.rates = None
+        self.time = np.zeros(lookback, dtype=np.int64)
+        self.open = np.zeros(lookback)
+        self.high = np.zeros(lookback)
+        self.low = np.zeros(lookback)
+        self.close = np.zeros(lookback)
+        self.vol = np.zeros(lookback)
+        self.rates = np.empty(lookback, dtype=dt)
         self.candle_start_time = None
 
 
