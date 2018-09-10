@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tng.algorithm_backtest.tng import TNG
 from tng.data.data import Data
-import tng.ind.ind2 as indicators2
+import tng.ind.ind_ as tngind
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -59,15 +59,13 @@ def import_data(ticker,
     if _is_cached(ticker, timeframe, start_date, end_date, indicators):
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
-        alt_data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
-        data = _load_data(ticker, timeframe, start_date, end_date, indicators)
-        data
+        data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
+        #data = _load_data(ticker, timeframe, start_date, end_date, indicators)
         if cache:
             _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
     data = _rename_columns(data)
-    data['time'] = data['time'].astype('uint64')
     return separate_data(data, split, calculate_input, calculate_output,
                         lookback, lookforward)
 
@@ -85,13 +83,13 @@ def import_candles(ticker,
     if _is_cached(ticker, timeframe, start_date, end_date, indicators):
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
-        data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)
+        data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
+        #data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)
         if cache:
-            _cache_data(data, filename, shift)
+            _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
     data = _rename_columns(data)
-    data['time'] = data['time'].astype('uint64')
     return data
 
 def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
@@ -284,13 +282,26 @@ def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicato
             pass
     if ind - iters < 0:
         rates = rates[:ind-iters]
+    rates = rates[::-1]
     rates = pd.DataFrame(rates)
-    ind_ema = indicators2.IndEMA(6)
-    ind_momentum = indicators2.IndMomentum(6)
-    ind_stochastic = indicators2.IndStochastic(6)
-    ind_ema.calculateAll(rates)
-    ind_momentum.calculateAll(rates)
-    ind_stochastic.calculateAll(rates)
+    for ind_name, ind_params in indicators.items():
+        for class_name in dir(tngind):
+            if ind_name == class_name[3:].lower():
+                break
+        if not isinstance(ind_params, tuple):
+            ind_params = (ind_params,)
+        new_ind = eval("tngind."+class_name+str(ind_params))
+        explanatory_str = ""
+        ind_values = new_ind.calculateRates(rates)
+        for param in ind_params:
+            explanatory_str += "_"+str(param)
+        # for key in ind_values.keys():
+        #     ind_values[key+explanatory_str] = new_ind.calculateRates(rates).pop(key)
+        dict_values = dict()
+        for key in ind_values.keys():
+            dict_values[key+explanatory_str] = ind_values[key]        
+        #dict_values = dict((key+explanatory_str, ind_values[key]) for key in ind_values.keys())
+        rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis = 1)
     print("alternative data loader took")
     print(time.time() - t)
     print("alt finished")

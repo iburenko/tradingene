@@ -288,7 +288,7 @@ class Indicators:
 
 class IndHlp:
 
-    historySize = LOOKBACK_PERIOD
+    historySize = 50 + 3  # LOOKBACK_PERIOD # UNCOMMENT!!!!
 
     @staticmethod
     def getRatesByPriceType(rates, priceType):
@@ -381,6 +381,11 @@ class Indicator:
     def getValues(self):
         return self.values
 
+    def calculateAll( self, rates ): # To calculate indicator value(s) for every candle bar in price&volume history.
+        indexStart = len(rates['close']) - 1
+        for i in range(indexStart, -1, -1):
+            self.calculate(rates, i, useHistorySize=False)  #
+
     def recalculate(self, rates):
         indexStart, indexToOverwrite0 = IndHlp.getIndexToCalculate(
             self.dtms, rates['time'])
@@ -388,8 +393,7 @@ class Indicator:
             self.calculate(rates, i, indexToOverwrite0 == i)  #
 
     def calculate(self, rates, shift=0, overwrite=False):
-        raise NotImplementedError("Must override calculate()")
-
+        raise NotImplementedError("Must override calculate()")        
 
 # end of class Indicator
 
@@ -398,8 +402,8 @@ class IndAD(Indicator):
     def __init__(self, period=1):
         Indicator.__init__(self, period)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -430,8 +434,8 @@ class IndADX(Indicator):
         self.indVals.pdi = []
         self.indVals.mdi = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.raw.pop()
             self.indVals.adx.pop()
             self.indVals.pdi.pop()
@@ -480,8 +484,8 @@ class IndAPO(Indicator):
         self.periodSlow = periodSlow
         self.raw = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.raw.pop()
             self.dtms.pop()
@@ -515,8 +519,8 @@ class IndAroon(Indicator):
         self.indVals.up = []
         self.indVals.down = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.indVals.up.pop()
             self.indVals.down.pop()
 
@@ -550,8 +554,8 @@ class IndATR(Indicator):
     def __init__(self, period=14):
         Indicator.__init__(self, period)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -579,8 +583,8 @@ class IndBollinger(Indicator):
         self.indVals.top = []
         self.indVals.bottom = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.indVals.ma.pop()
             self.indVals.top.pop()
             self.indVals.bottom.pop()
@@ -623,8 +627,8 @@ class IndCCI(Indicator):
         Indicator.__init__(self, period)
         self.cciConst = cciConst
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -651,8 +655,8 @@ class IndChande(Indicator):
     def __init__(self, period=10, priceType="close"):
         Indicator.__init__(self, period, priceType)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -674,8 +678,8 @@ class IndEMA(Indicator):
     def __init__(self, period=9, priceType="close"):
         Indicator.__init__(self, period, priceType)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -705,8 +709,8 @@ class IndKeltner(Indicator):
         self.indVals.lower = []
         self.raw = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.indVals.basis.pop()
             self.indVals.upper.pop()
             self.indVals.lower.pop()
@@ -763,8 +767,8 @@ class IndMACD(Indicator):
         self.indVals.histogram = []
         self.raw = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.indVals.macd.pop()
             self.indVals.signal.pop()
             self.indVals.histogram.pop()
@@ -810,8 +814,8 @@ class IndMomentum(Indicator):
     def __init__(self, period=9, priceType="close"):
         Indicator.__init__(self, period, priceType)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -835,8 +839,8 @@ class IndPPO(Indicator):
         self.periodFast = periodFast
         self.periodSlow = periodSlow
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -862,8 +866,8 @@ class IndROC(Indicator):
     def __init__(self, period=9, priceType="close"):
         Indicator.__init__(self, period, priceType)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -886,8 +890,8 @@ class IndRSI(Indicator):
         Indicator.__init__(self, period, priceType)
         self.raw = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -916,8 +920,8 @@ class IndSMA(Indicator):
     def __init__(self, period=9, priceType="close"):
         Indicator.__init__(self, period, priceType)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -944,8 +948,8 @@ class IndStochastic(Indicator):
         self.indVals.k = []
         self.indVals.d = []
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.indVals.k.pop()
             self.indVals.d.pop()
             self.dtms.pop()
@@ -982,8 +986,8 @@ class IndTrima(Indicator):
     def __init__(self, period=10, priceType="close"):
         Indicator.__init__(self, period, priceType)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
@@ -1005,8 +1009,8 @@ class IndWilliams(Indicator):
     def __init__(self, period=14):
         Indicator.__init__(self, period)
 
-    def calculate(self, rates, shift=0, overwrite=False):
-        if len(self.values) >= IndHlp.historySize:
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
             self.values.pop()
             self.dtms.pop()
 
