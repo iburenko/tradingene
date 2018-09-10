@@ -1,6 +1,6 @@
 import tng.ind.ti as ti
 from tng.algorithm_backtest.limits import LOOKBACK_PERIOD
-
+import numpy as np
 
 class Indicators:
     def __init__(self, _timeframeMin):
@@ -419,7 +419,17 @@ class IndAD(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        lenRates = len(rates['close'])
+        values = np.empty(lenRates)
+        prev=None
+        for i in range(lenRates-1,-1,-1):
+            new = ti.ad(period=self.period, shift=i, prev=prev,\
+                            hi=rates['high'], lo=rates['low'], \
+                            cl=rates['close'], vol=rates['vol'])
+            values[i] = new
+            prev = new
+        return {'ad':values }
 # end of IndAD
 
 
@@ -473,6 +483,21 @@ class IndADX(Indicator):
     def getValues(self):
         return self.indVals
 
+    def calculateRates(self, rates ):
+        lenRates = len(rates['close'])
+        adx = np.empty(lenRates)
+        pdi = np.empty(lenRates)
+        mdi = np.empty(lenRates)
+        prev=None
+        for i in range(lenRates-1,-1,-1):
+            new = ti.adx(periodADX=self.periodADX, periodDI=self.periodDI, shift=i, prev=prev, \
+                hi=rates['high'], lo=rates['low'], cl=rates['close'])
+            if new is not None:
+                adx[i] = new['adx']
+                pdi[i] = new['pdi']
+                mdi[i] = new['mdi']
+            prev = new
+        return {'adx.adx':adx, 'adx.pdi':pdi, 'adx.mdi':mdi }        
 
 # end of IndADX
 
@@ -508,7 +533,17 @@ class IndAPO(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        prev=None
+        for i in range(lenRates-1,-1,-1):
+            new = ti.apo(periodFast=self.periodFast, periodSlow=self.periodSlow, \
+                    shift=i, rates=rates1d, prev=prev)
+            values[i] = new['apo']
+            prev = new
+        return {'apo':values }
 # end of IndAPO
 
 
@@ -546,7 +581,20 @@ class IndAroon(Indicator):
     def getValues(self):
         return self.indVals
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        up = np.empty(lenRates)
+        down = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            new = ti.aroon(period=self.period, shift=i, rates=rates1d)
+            if new is not None:
+                up[i] = new['up']
+                down[i] = new['down']
+            else:
+                up[i] = None
+                down[i] = None
+        return {'aroon.up':up, 'aroon.down':down }
 # end of IndAroon
 
 
@@ -559,7 +607,6 @@ class IndATR(Indicator):
             self.values.pop()
             self.dtms.pop()
 
-        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
         new = ti.atr(period=self.period, shift=shift, \
                           hi=rates['high'], lo=rates['low'], cl=rates['close'])
         if overwrite:
@@ -570,6 +617,13 @@ class IndATR(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
+    def calculateRates(self, rates ):
+        lenRates = len(rates['close'])
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.atr(period=self.period, shift=i, \
+                            hi=rates['high'], lo=rates['low'], cl=rates['close'])
+        return {'atr':values }
 
 # end of IndATR
 
@@ -618,7 +672,23 @@ class IndBollinger(Indicator):
     def getValues(self):
         return self.indVals
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        ma = np.empty(lenRates)
+        top = np.empty(lenRates)
+        bottom = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            new = ti.bollinger( period=self.period, shift=i, nStds=self.nStds, rates=rates1d)
+            if new is not None:
+                ma[i] = new['ma']
+                top[i] = new['top']
+                bottom[i] = new['bottom']
+            else:
+                ma[i] = None
+                top[i] = None
+                bottom[i] = None
+        return {'ma':ma, 'top':top, 'bottom':bottom }
 # end of IndBollinger
 
 
@@ -632,7 +702,6 @@ class IndCCI(Indicator):
             self.values.pop()
             self.dtms.pop()
 
-        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
         new = ti.cci(period=self.period, cciConst=self.cciConst, shift=shift, \
                      hi=rates['high'], lo=rates['low'], cl=rates['close'])
         newCCI = None
@@ -647,7 +716,17 @@ class IndCCI(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        lenRates = len(rates['close'])
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            new = ti.cci(period=self.period, cciConst=self.cciConst, shift=i, \
+                     hi=rates['high'], lo=rates['low'], cl=rates['close'])
+            if new is not None:
+                values[i] = new['cci']
+            else:
+                values[i] = None
+        return {'cci':values }
 # end of IndCCI
 
 
@@ -670,7 +749,13 @@ class IndChande(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.chande(period=self.period, shift=i, rates=rates1d)
+        return {'chande':values }
 # end of IndChande
 
 
@@ -693,9 +778,16 @@ class IndEMA(Indicator):
             IndHlp.insertTime(
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
-        # print( str(self.dtms[0]) + ":" + str(self.values[0]) )
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        prev = None
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.ema(period=self.period, shift=i, rates=rates1d, prev=prev)
+            prev = values[i]
+        return {'ema':values }
 # end of IndEMA
 
 
@@ -747,7 +839,25 @@ class IndKeltner(Indicator):
     def getValues(self):
         return self.indVals
 
-
+    def calculateRates(self, rates ):
+        lenRates = len(rates['close'])
+        basis = np.empty(lenRates)
+        upper = np.empty(lenRates)
+        lower = np.empty(lenRates)
+        prev = None
+        for i in range(lenRates-1,-1,-1):
+            new = ti.keltner(period=self.period, multiplier=self.multiplier, shift=i, prev=prev, \
+                        hi=rates['high'], lo=rates['low'], cl=rates['close'])
+            if new is not None:
+                basis[i] = new['basis']
+                upper[i] = new['upper']
+                lower[i] = new['lower']
+            else:
+                basis[i] = None
+                upper[i] = None
+                lower[i] = None
+            prev = new
+        return {'keltner.basis':basis, 'keltner.upper':upper, 'keltner.lower':lower }
 # end of IndKeltner
 
 
@@ -806,7 +916,27 @@ class IndMACD(Indicator):
     def getValues(self):
         return self.indVals
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        macd = np.empty(lenRates)
+        signal = np.empty(lenRates)
+        histogram = np.empty(lenRates)
+        prev = None
+        for i in range(lenRates-1,-1,-1):
+            new = ti.macd(periodFast=self.periodFast, periodSlow=self.periodSlow, \
+                          periodSignal=self.periodSignal, shift=i, \
+                          rates=rates1d, prev=prev)
+            if new is not None:
+                macd[i] = new['macd']
+                signal[i] = new['signal']
+                histogram[i] = new['histogram']
+            else:
+                macd[i] = None
+                signal[i] = None
+                histogram[i] = None
+            prev = new
+        return {'macd.macd':macd, 'macd.signal':signal, 'macd.histogram':histogram }
 # end of IndMACD
 
 
@@ -829,7 +959,13 @@ class IndMomentum(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.momentum(period=self.period, shift=i, rates=rates1d)
+        return {'momentum':values }
 # end of IndMomentum
 
 
@@ -858,7 +994,14 @@ class IndPPO(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.ppo( periodFast=self.periodFast, periodSlow=self.periodSlow,\
+                shift=i, rates=rates1d)
+        return {'ppo':values }
 # end of IndPPO
 
 
@@ -881,7 +1024,13 @@ class IndROC(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.roc(period=self.period, shift=i, rates=rates1d)
+        return {'roc':values }
 # end of IndROC
 
 
@@ -912,7 +1061,20 @@ class IndRSI(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        prev = None
+        for i in range(lenRates-1,-1,-1):
+            new = ti.rsi(period=self.period, shift=i, rates=rates1d, prev=prev)
+            if new is not None:
+                values[i] = new['rsi']
+            else:
+                values[i] = None
+            prev = new
+    
+        return {'rsi':values }
 # end of IndRSI
 
 
@@ -935,7 +1097,13 @@ class IndSMA(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.sma(period=self.period, shift=i, rates=rates1d)
+        return {'sma':values }
 # end of IndSMA
 
 
@@ -954,7 +1122,6 @@ class IndStochastic(Indicator):
             self.indVals.d.pop()
             self.dtms.pop()
 
-        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
         new = ti.stochastic(period=self.period, periodD=self.periodD, \
                             smoothing=self.smoothing, shift=shift, \
                             hi=rates['high'],lo=rates['low'],cl=rates['close'])
@@ -978,7 +1145,22 @@ class IndStochastic(Indicator):
     def getValues(self):
         return self.indVals
 
-
+    def calculateRates(self, rates ):
+        lenRates = len(rates['close'])
+        k = np.empty(lenRates)
+        d = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            new = ti.stochastic(period=self.period, periodD=self.periodD, \
+                                smoothing=self.smoothing, shift=i, \
+                                hi=rates['high'],lo=rates['low'],cl=rates['close'])
+            if new is not None:
+                k[i] = new['k']
+                d[i] = new['d']
+            else:
+                k[i] = None
+                d[i] = None
+    
+        return {'stochastic.k':k, 'stochastic.d':d }
 # end of IndStochastic
 
 
@@ -1001,7 +1183,13 @@ class IndTrima(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.trima(period=self.period, shift=i, rates=rates1d)
+        return {'trima':values }
 # end of IndChande
 
 
@@ -1028,7 +1216,13 @@ class IndWilliams(Indicator):
                 0, self.dtms, shift,
                 rates['time'])  # dtmsIndex, dtms, timeIndex, time
 
-
+    def calculateRates(self, rates ):
+        lenRates = len(rates['close'])
+        values = np.empty(lenRates)
+        for i in range(lenRates-1,-1,-1):
+            values[i] = ti.williams( period=self.period, shift=i,\
+                hi=rates['high'], lo=rates['low'], cl=rates['close'])
+        return {'williams':values }
 # end of IndWilliams
 
 #######################################################################################################################################

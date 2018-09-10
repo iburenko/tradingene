@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tng.algorithm_backtest.tng import TNG
 from tng.data.data import Data
-import tng.ind.ind_ as tngind
+import tng.ind.ind as tngind
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
