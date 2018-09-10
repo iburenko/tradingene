@@ -305,7 +305,7 @@ class Backtest(Environment):
 
     def _load_data(self, start_date, end_date, shift, modeling):
         for ticker in self.ticker_timeframes.keys():
-            self._load_pre_data(shift, modeling)
+            self._load_pre_data(shift, False)
             ticker_data = Data.load_data(ticker, start_date, end_date)
             if shift:
                 self.history_data[ticker] = ticker_data[:-shift]
