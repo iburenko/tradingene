@@ -132,10 +132,7 @@ class Data:
             raise ValueError("Instrument {} was not found!".format(filename))
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
               str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
-        print("start of loading")
-        print(url)
         data = urllib.request.urlopen(url).read()
-        print("end of loading")
         obj = json.loads(data)
         df_data = pd.DataFrame(obj, columns = ['time', 'open', 'high', 'low', 'close', 'volume'])
         df_data.drop_duplicates(subset=['time'], inplace=True)

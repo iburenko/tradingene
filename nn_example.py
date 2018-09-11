@@ -12,7 +12,7 @@ import pandas as pd
 
 
 def train_model():
-    start_date = datetime(2017, 7, 1)
+    start_date = datetime(2018, 1, 1)
     end_date = datetime(2018, 3, 31)
     ticker = "btcusd"
     timeframe = 60
@@ -33,6 +33,7 @@ def train_model():
         lookforward=lookforward,
         split = (70, 30, 0), indicators = inds,
     )
+    data
     # data = import_candles(
     #     ticker,
     #     timeframe,

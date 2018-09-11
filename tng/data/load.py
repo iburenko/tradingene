@@ -56,6 +56,9 @@ def import_data(ticker,
     delete_old_files()
     filename = _filename(ticker, timeframe, start_date, end_date)
     #alt_data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
+
+    #не все индикаторы добвляются!
+
     if _is_cached(ticker, timeframe, start_date, end_date, indicators):
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
@@ -66,6 +69,7 @@ def import_data(ticker,
     if not reverse:
         data = data[::-1]
     data = _rename_columns(data)
+    data
     return separate_data(data, split, calculate_input, calculate_output,
                         lookback, lookforward)
 
@@ -166,6 +170,10 @@ def _get_cached_dates(ticker, timeframe):
 
 def _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift):
     start_date_, end_date_ = _get_cached_dates(ticker, timeframe)
+    if start_date > start_date_:
+        start_date_ = start_date
+    if end_date < end_date_:
+        end_date_ = end_date
     start_date_int = int(start_date_.strftime("%Y%m%d%H%M%S"))
     end_date_int = int(end_date_.strftime("%Y%m%d%H%M%S"))
     cached_file = _get_cached_file(ticker, timeframe)
@@ -203,59 +211,8 @@ def _find_uncached_data(ticker, timeframe, start_date, end_date):
     return uncached_data
 
 
-def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
-    t = time.time()
-    data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
-    sample = np.empty(len(data_columns))
-    data = np.array([])
-    ind_dict = dict()
-
-    def on_bar(instrument):
-        nonlocal data, ind_dict
-        sample[0:6] = instrument.time[1],\
-                    instrument.open[1], \
-                    instrument.high[1],\
-                    instrument.low[1],\
-                    instrument.close[1],\
-                    instrument.vol[1]
-        i = 6
-        if indicators:
-            for key, params in indicators.items():
-                if not isinstance(params, tuple):
-                    params = (params, )
-                column_param = ""
-                for signle_param in params:
-                    column_param += (str(signle_param)+"_")
-                column_param = column_param[:-1]
-                ind = eval("instrument." + str(key))
-                parsed = _parse_indicator(key, ind(*params))
-                for key, value in parsed.items():
-                    if column_param:
-                        new_key = key+"_"+column_param
-                    else:
-                        new_key = key
-                    if new_key in ind_dict.keys():
-                        ind_dict[new_key].append(value)
-                    else:
-                        ind_dict[new_key] = [value]
-        data = np.append(data, sample)
-
-    name = "import_data"
-    regime = "SP"
-    alg = TNG(name, regime, start_date, end_date)
-    alg.addInstrument(ticker)
-    alg.addTimeframe(ticker, timeframe)
-    alg.run_backtest(on_bar, shift, modeling = False)
-    del alg
-    data = np.reshape(data,
-                      (len(data) // len(data_columns), len(data_columns)))
-    data = pd.DataFrame(data, columns=data_columns)
-    data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
-    return data
-
-
 def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
-    t = time.time()
+    start_date -= timedelta(minutes = 50*timeframe)
     data = Data.load_data(ticker, start_date, end_date)
     data = data[::-1]
     data['time'] = pd.to_datetime(data['time'], format="%Y%m%d%H%M%S")
@@ -297,31 +254,11 @@ def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicato
         ind_values = new_ind.calculateRates(rates)
         for param in ind_params:
             explanatory_str += "_"+str(param)
-        # for key in ind_values.keys():
-        #     ind_values[key+explanatory_str] = new_ind.calculateRates(rates).pop(key)
         dict_values = dict()
         for key in ind_values.keys():
             dict_values[key+explanatory_str] = ind_values[key]        
-        #dict_values = dict((key+explanatory_str, ind_values[key]) for key in ind_values.keys())
         rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis = 1)
-    print("alternative data loader took")
-    print(time.time() - t)
-    print("alt finished")
-    return rates
-
-
-def _parse_indicator(ind_name, ind_value):
-    if isinstance(ind_value, list):
-        ret_dict = dict.fromkeys([ind_name])
-        ret_dict[ind_name] = ind_value[1]
-    else:
-        keys = [
-            ind_name + "." + str(elem) for elem in ind_value.__dict__.keys()
-        ]
-        ret_dict = dict.fromkeys(keys)
-        for key, value in (ind_value.__dict__.items()):
-            ret_dict[ind_name + "." + key] = value[1]
-    return ret_dict
+    return rates[:-50]
 
 
 def _rename_columns(data):
@@ -472,3 +409,69 @@ def delete_old_files():
         this_moment = datetime.now()
         if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
             os.remove(where_to_cache + file_)
+
+
+###############################################################################
+# def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
+#     data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
+#     sample = np.empty(len(data_columns))
+#     data = np.array([])
+#     ind_dict = dict()
+
+#     def on_bar(instrument):
+#         nonlocal data, ind_dict
+#         sample[0:6] = instrument.time[1],\
+#                     instrument.open[1], \
+#                     instrument.high[1],\
+#                     instrument.low[1],\
+#                     instrument.close[1],\
+#                     instrument.vol[1]
+#         i = 6
+#         if indicators:
+#             for key, params in indicators.items():
+#                 if not isinstance(params, tuple):
+#                     params = (params, )
+#                 column_param = ""
+#                 for signle_param in params:
+#                     column_param += (str(signle_param)+"_")
+#                 column_param = column_param[:-1]
+#                 ind = eval("instrument." + str(key))
+#                 parsed = _parse_indicator(key, ind(*params))
+#                 for key, value in parsed.items():
+#                     if column_param:
+#                         new_key = key+"_"+column_param
+#                     else:
+#                         new_key = key
+#                     if new_key in ind_dict.keys():
+#                         ind_dict[new_key].append(value)
+#                     else:
+#                         ind_dict[new_key] = [value]
+#         data = np.append(data, sample)
+
+#     name = "import_data"
+#     regime = "SP"
+#     alg = TNG(name, regime, start_date, end_date)
+#     alg.addInstrument(ticker)
+#     alg.addTimeframe(ticker, timeframe)
+#     alg.run_backtest(on_bar, shift, modeling = False)
+#     del alg
+#     data = np.reshape(data,
+#                       (len(data) // len(data_columns), len(data_columns)))
+#     data = pd.DataFrame(data, columns=data_columns)
+#     data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
+#     return data
+
+
+# def _parse_indicator(ind_name, ind_value):
+#     if isinstance(ind_value, list):
+#         ret_dict = dict.fromkeys([ind_name])
+#         ret_dict[ind_name] = ind_value[1]
+#     else:
+#         keys = [
+#             ind_name + "." + str(elem) for elem in ind_value.__dict__.keys()
+#         ]
+#         ret_dict = dict.fromkeys(keys)
+#         for key, value in (ind_value.__dict__.items()):
+#             ret_dict[ind_name + "." + key] = value[1]
+#     return ret_dict
+###############################################################################
