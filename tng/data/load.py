@@ -185,7 +185,7 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift
         data = data[list(data)[:6]+sorted(list(data)[6:])]
     for col in data.columns[6:]:
         col_ = col.split("_")[0]
-        if col_ not in indicators.keys():
+        if not any(col_.startswith(key) for key in indicators.keys()):
             data.drop(columns=[col], inplace=True)
     return data
 
@@ -251,8 +251,6 @@ def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, 
                       (len(data) // len(data_columns), len(data_columns)))
     data = pd.DataFrame(data, columns=data_columns)
     data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
-    print("load data given dates took")
-    print(time.time() - t)
     return data
 
 
@@ -310,21 +308,6 @@ def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicato
     print(time.time() - t)
     print("alt finished")
     return rates
-    
-    
-
-
-
-
-
-
-
-        
-
-    
-
-
-
 
 
 def _parse_indicator(ind_name, ind_value):
