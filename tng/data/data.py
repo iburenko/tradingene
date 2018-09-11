@@ -73,11 +73,11 @@ class Data:
             return start, end
 
         ###############
-        # all_data = pd.read_csv(filename)
+        # all_data = pd.read_csv("compressed"+filename)
         # start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         # end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        # start, end = find_start_end(all_data, start_date, end_date)
-        # hist_data = all_data.iloc[start:end]
+        # #start, end = find_start_end(all_data, start_date, end_date)
+        # hist_data = all_data[all_data['time'].between(start_date, end_date, inclusive=True)]
         # hist_data = hist_data[::-1]
         # hist_data = hist_data.to_records(index=False)
         # return hist_data  

@@ -6,7 +6,9 @@ import numpy as np
 import pandas as pd
 from tng.algorithm_backtest.tng import TNG
 from tng.data.data import Data
+from tng.data.data_separation import separate_data
 import tng.ind.ind as tngind
+
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -29,7 +31,8 @@ def import_data(ticker,
                 split=(50, 25, 25),
                 indicators=None,
                 cache=True,
-                shift=0):
+                shift=0,
+                bootstrap=0):
     if not isinstance(ticker, str) or \
         not isinstance(timeframe, int) or \
         not isinstance(start_date, datetime) or \
@@ -55,23 +58,17 @@ def import_data(ticker,
     check_home_folder()
     delete_old_files()
     filename = _filename(ticker, timeframe, start_date, end_date)
-    #alt_data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
-
-    #не все индикаторы добвляются!
-
     if _is_cached(ticker, timeframe, start_date, end_date, indicators):
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
         data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
-        #data = _load_data(ticker, timeframe, start_date, end_date, indicators)
         if cache:
             _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
     data = _rename_columns(data)
-    data
     return separate_data(data, split, calculate_input, calculate_output,
-                        lookback, lookforward)
+                        lookback, lookforward, bootstrap)
 
 def import_candles(ticker,
                 timeframe,
@@ -88,7 +85,6 @@ def import_candles(ticker,
         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
     else:
         data = _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift)
-        #data = _load_data(ticker, timeframe, start_date, end_date, indicators, shift)
         if cache:
             _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
@@ -128,7 +124,6 @@ def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
         elif len(data_to_cache) == 2:
             data = new_data_to_cache[0].append(data, ignore_index = True)
             data = data.append(new_data_to_cache[1], ignore_index = True)
-    #data['time'] = data['time'].astype('uint64')
     return data
 
 
@@ -212,9 +207,8 @@ def _find_uncached_data(ticker, timeframe, start_date, end_date):
 
 
 def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
-    start_date -= timedelta(minutes = 50*timeframe)
     data = Data.load_data(ticker, start_date, end_date)
-    data = data[::-1]
+    data = data
     data['time'] = pd.to_datetime(data['time'], format="%Y%m%d%H%M%S")
     td = end_date - start_date
     days, seconds = td.days, td.seconds
@@ -241,7 +235,7 @@ def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicato
             pass
     if ind - iters < 0:
         rates = rates[:ind-iters]
-    rates = rates[::-1]
+    rates = rates
     rates = pd.DataFrame(rates)
     for ind_name, ind_params in indicators.items():
         for class_name in dir(tngind):
@@ -258,7 +252,7 @@ def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicato
         for key in ind_values.keys():
             dict_values[key+explanatory_str] = ind_values[key]        
         rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis = 1)
-    return rates[:-50]
+    return rates
 
 
 def _rename_columns(data):
@@ -355,44 +349,6 @@ def _indicators_to_dict(indicators):
     return ind_dict
 
 
-def separate_data(data, split, calculate_input, calculate_output, lookback,
-                  lookforward):
-    data = data.to_records()
-    split_data = dict()
-    input_parameters = np.empty([])
-    output_parameters = np.empty([])
-    for i in range(lookback, len(data) - lookforward - 1):
-        inp = np.array([calculate_input(data[i - lookback:i + 1][::-1])])
-        out = np.array([calculate_output(data[i:i + lookforward + 1])])
-        input_parameters = np.append(input_parameters, inp)
-        output_parameters = np.append(output_parameters, out)
-    input_parameters = np.delete(input_parameters, 0)
-    output_parameters = np.delete(output_parameters, 0)
-    input_len = len(input_parameters)
-    input_parameters = np.reshape(input_parameters,
-                                  (input_len // inp.shape[-1], inp.shape[-1]))
-    if len(split) == 2:
-        train_len = input_parameters.shape[0] * split[0] // 100
-        split_data['train_input'] = input_parameters[1:train_len]
-        split_data['train_output'] = output_parameters[1:train_len]
-        split_data['test_input'] = input_parameters[train_len:]
-        split_data['test_output'] = output_parameters[train_len:]
-    elif len(split) == 3:
-        train_len = input_parameters.shape[0] * split[0] // 100
-        validation_len = input_parameters.shape[0] * split[1] // 100
-        split_data['train_input'] = input_parameters[0:train_len]
-        split_data['train_output'] = output_parameters[0:train_len]
-        split_data['validation_input'] = input_parameters[train_len:train_len +
-                                                          validation_len]
-        split_data['validation_output'] = output_parameters[
-            train_len:train_len + validation_len]
-        split_data['test_input'] = input_parameters[train_len +
-                                                    validation_len:]
-        split_data['test_output'] = output_parameters[train_len +
-                                                      validation_len:]
-    return split_data
-
-
 def check_home_folder():
     home_folder = os.path.dirname(os.path.abspath(__file__))
     if '__cached_history__' not in os.listdir(home_folder):
@@ -474,4 +430,42 @@ def delete_old_files():
 #         for key, value in (ind_value.__dict__.items()):
 #             ret_dict[ind_name + "." + key] = value[1]
 #     return ret_dict
+
+
+# def separate_data(data, split, calculate_input, calculate_output, lookback,
+#                   lookforward):
+#     data = data.to_records()
+#     split_data = dict()
+#     input_parameters = np.empty([])
+#     output_parameters = np.empty([])
+#     for i in range(lookback, len(data) - lookforward - 1):
+#         inp = np.array([calculate_input(data[i - lookback:i + 1][::-1])])
+#         out = np.array([calculate_output(data[i:i + lookforward + 1])])
+#         input_parameters = np.append(input_parameters, inp)
+#         output_parameters = np.append(output_parameters, out)
+#     input_parameters = np.delete(input_parameters, 0)
+#     output_parameters = np.delete(output_parameters, 0)
+#     input_len = len(input_parameters)
+#     input_parameters = np.reshape(input_parameters,
+#                                   (input_len // inp.shape[-1], inp.shape[-1]))
+#     if len(split) == 2:
+#         train_len = input_parameters.shape[0] * split[0] // 100
+#         split_data['train_input'] = input_parameters[1:train_len]
+#         split_data['train_output'] = output_parameters[1:train_len]
+#         split_data['test_input'] = input_parameters[train_len:]
+#         split_data['test_output'] = output_parameters[train_len:]
+#     elif len(split) == 3:
+#         train_len = input_parameters.shape[0] * split[0] // 100
+#         validation_len = input_parameters.shape[0] * split[1] // 100
+#         split_data['train_input'] = input_parameters[0:train_len]
+#         split_data['train_output'] = output_parameters[0:train_len]
+#         split_data['validation_input'] = input_parameters[train_len:train_len +
+#                                                           validation_len]
+#         split_data['validation_output'] = output_parameters[
+#             train_len:train_len + validation_len]
+#         split_data['test_input'] = input_parameters[train_len +
+#                                                     validation_len:]
+#         split_data['test_output'] = output_parameters[train_len +
+#                                                       validation_len:]
+#     return split_data
 ###############################################################################
