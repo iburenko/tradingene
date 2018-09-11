@@ -65,7 +65,7 @@ def separate_data(data, split, calculate_input, calculate_output, lookback, look
 				index = np.random.choice( indexes, 1, probabilities ) # Choosing a sample.
 			else:
 				index = random.randint( 0, samples_num-1 )
-			print("%d: chosen=%d"%(samples_to_draw_counter,index))
+			#print("%d: chosen=%d"%(samples_to_draw_counter,index))
 			samples_drawn[index] = True # To let us know it's chosen.
 			sample_indexes_drawn[samples_to_draw_counter] = index # Saving the index of a yet another sample drawn.
 
