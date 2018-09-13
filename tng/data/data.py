@@ -8,8 +8,7 @@ import json
 from tng.algorithm_backtest.limits import instrument_ids
 
 dt = np.dtype({
-    'names': 
-    ['time', 'open', 'high', 'low', 'close', 'vol'],
+    'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
     'formats':
     ['uint64', 'float64', 'float64', 'float64', 'float64', 'float64']
 })
@@ -28,14 +27,14 @@ dt = np.dtype({
 class Data:
     """ Class for loading instrument history. """
 
-    hist_path = os.path.dirname(os.path.abspath(__file__))+"/../history_data/"
+    hist_path = os.path.dirname(
+        os.path.abspath(__file__)) + "/../history_data/"
 
     def __init__(self):
         pass
 
-
     @classmethod
-    def load_data(cls, filename, start_date, end_date, pre = 0):
+    def load_data(cls, filename, start_date, end_date, pre=0):
         """ Loads file from the drive and returns history data. 
         
             Arguments:
@@ -84,7 +83,7 @@ class Data:
         ###############
 
         # if Data._check_file(filename):
-        # all_data = pd.read_csv(Data.hist_path + filename + ".csv")    
+        # all_data = pd.read_csv(Data.hist_path + filename + ".csv")
         # start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         # end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
         # start, end = find_start_end(all_data, start_date, end_date)
@@ -95,33 +94,38 @@ class Data:
         # else:
         if not cls._check_file(filename):
             data = cls._download_minute_data(start_date, end_date, filename)
-            data.to_csv(Data.hist_path+filename+".csv", index = False)
+            data.to_csv(Data.hist_path + filename + ".csv", index=False)
         else:
-            new_dates = cls._find_uncached_dates(start_date, end_date, filename)
+            new_dates = cls._find_uncached_dates(start_date, end_date,
+                                                 filename)
             for dates in new_dates:
                 data = cls._download_minute_data(dates[0], dates[1], filename)
                 flag = dates[2]
                 if flag == 1:
                     # append to the begging
-                    cached_data = pd.read_csv(Data.hist_path+filename+".csv")
+                    cached_data = pd.read_csv(Data.hist_path + filename +
+                                              ".csv")
                     data = pd.concat([data, cached_data], ignore_index=True)
-                    data.to_csv(Data.hist_path+filename+".csv", index = False)
+                    data.to_csv(
+                        Data.hist_path + filename + ".csv", index=False)
                 elif flag == 2:
                     # appeng to the end
-                    cached_data = pd.read_csv(Data.hist_path+filename+".csv")
+                    cached_data = pd.read_csv(Data.hist_path + filename +
+                                              ".csv")
                     data = pd.concat([cached_data, data], ignore_index=True)
-                    data.to_csv(Data.hist_path+filename+".csv", index=False)
+                    data.to_csv(
+                        Data.hist_path + filename + ".csv", index=False)
             if not new_dates:
-                data = pd.read_csv(Data.hist_path+filename+".csv")
+                data = pd.read_csv(Data.hist_path + filename + ".csv")
             start_date_int = int(start_date.strftime("%Y%m%d%H%M%S"))
             end_date_int = int(end_date.strftime("%Y%m%d%H%M%S"))
-            data = data[data['time'].between(start_date_int, end_date_int, inclusive = True)]
-        return data[::-1]       
-
+            data = data[data['time'].between(
+                start_date_int, end_date_int, inclusive=True)]
+        return data[::-1]
 
     @classmethod
     def _download_minute_data(cls, start_date, end_date, filename):
-        end_date -= timedelta(minutes = 1)
+        end_date -= timedelta(minutes=1)
         start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
         end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
         req_start_date = start_date * 1000
@@ -134,28 +138,33 @@ class Data:
               str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
         data = urllib.request.urlopen(url).read()
         obj = json.loads(data)
-        df_data = pd.DataFrame(obj, columns = ['time', 'open', 'high', 'low', 'close', 'volume'])
+        df_data = pd.DataFrame(
+            obj, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
         df_data.drop_duplicates(subset=['time'], inplace=True)
         df_data['time'] = df_data['time'].astype('int64')
         df_data['time'] //= 1000
-        df_data.rename(columns={'volume':'vol'}, inplace=True)
+        df_data.rename(columns={'volume': 'vol'}, inplace=True)
         return df_data
-
 
     @staticmethod
     def _check_file(filename):
-        saved = [file_ for file_ in os.listdir(Data.hist_path) if file_.startswith(filename)]
+        saved = [
+            file_ for file_ in os.listdir(Data.hist_path)
+            if file_.startswith(filename)
+        ]
         if not saved:
             return False
         else:
             return True
 
-
     @classmethod
     def _find_uncached_dates(cls, start_date, end_date, filename):
         to_cache = list()
-        saved = [file_ for file_ in os.listdir(Data.hist_path) if file_.startswith(filename)][0]
-        df = pd.read_csv(Data.hist_path+saved)
+        saved = [
+            file_ for file_ in os.listdir(Data.hist_path)
+            if file_.startswith(filename)
+        ][0]
+        df = pd.read_csv(Data.hist_path + saved)
         cached_start_time = str(df['time'].iloc[0])
         cached_end_time = str(df['time'].iloc[-1])
         prev_start_date = \

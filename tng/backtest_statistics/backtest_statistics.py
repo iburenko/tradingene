@@ -47,7 +47,6 @@ class BacktestStatistics:
         self.max_consecutive_winners = 0
         self.max_consecutive_losers = 0
 
-
     def calculate_PnL(self):
         pnl = 0
         for pos in self.all_positions_:
@@ -64,7 +63,8 @@ class BacktestStatistics:
         if self.number_of_positions == 0:
             return 0
         else:
-            self.reliability = len(self.winning_trades_) / len(self.all_positions_)
+            self.reliability = len(self.winning_trades_) / len(
+                self.all_positions_)
             return self.reliability
 
     def calculate_RRR(self):
@@ -163,7 +163,8 @@ class BacktestStatistics:
                                             "%Y%m%d%H%M%S")[0:6]))
             diff = close_time - open_time
             overall_days = diff.days
-            self.average_deals_per_day = self.number_of_positions / (overall_days + 1)
+            self.average_deals_per_day = self.number_of_positions / (
+                overall_days + 1)
             return self.average_deals_per_day
         else:
             return 0
@@ -318,17 +319,17 @@ class BacktestStatistics:
                             if callable(getattr(BacktestStatistics, method)) \
                             if method.startswith('calculate_')]
         for method in all_stats:
-            eval("self."+method)()
-
+            eval("self." + method)()
 
     def backtest_results(self):
         self._do_all_caclulations()
         plot_cs_prof(self.alg)
         html = "<table>"
         for elem in self.__dict__:
-            value = eval("self."+elem)
+            value = eval("self." + elem)
             if type(value) is int or type(value) is float:
-                html += "<tr><td>" + elem + "</td><td>" + str(value) + "</td></tr>"
+                html += "<tr><td>" + elem + "</td><td>" + str(
+                    value) + "</td></tr>"
         # for method in all_stats:
         #     explanatory_str = method.replace("calculate_", "") + " = \t"
         #     html += "<tr><td>" + explanatory_str + "</td><td>" + str(eval("self."+method)()) + "</td></tr>"

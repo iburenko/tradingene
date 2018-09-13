@@ -69,7 +69,6 @@ class Instrument(Indicators):
         self.candle_ind = 0
         self.candle_start_time = None
 
-
     def __getitem__(self, indices):
         if isinstance(indices, int):
             if indices <= -lookback or indices >= lookback:
@@ -84,17 +83,17 @@ class Instrument(Indicators):
                 #     ('close', np.float64),
                 #     ('vol', np.float64)]
                 # )
-                arr = np.array([(
-                    self.time[indices%lookback],
-                    self.open[indices%lookback],
-                    self.high[indices%lookback],
-                    self.low[indices%lookback],
-                    self.close[indices%lookback],
-                    self.vol[indices%lookback]
-                )], dtype = dt)
+                arr = np.array(
+                    [(self.time[indices % lookback],
+                      self.open[indices % lookback],
+                      self.high[indices % lookback],
+                      self.low[indices % lookback],
+                      self.close[indices % lookback],
+                      self.vol[indices % lookback])],
+                    dtype=dt)
                 arr = arr.view(np.recarray)
-                return arr                
-                
+                return arr
+
         if isinstance(indices, slice):
             print(indices)
             print(type(indices))
@@ -106,17 +105,18 @@ class Instrument(Indicators):
                     size = indices.stop - indices.start
                     step = 1
                 else:
-                    size = (indices.stop - indices.start)//abs(int(indices.step))
+                    size = (indices.stop - indices.start) // abs(
+                        int(indices.step))
                     step = indices.step
-                arr = np.empty_like((1,size), dtype = dt)
+                arr = np.empty_like((1, size), dtype=dt)
                 for i in range(size):
-                    arr[i] = np.array((
-                        self.time[indices.start + i*step],
-                        self.open[indices.start + i*step],
-                        self.high[indices.start + i*step],
-                        self.low[indices.start + i*step],
-                        self.close[indices.start + i*step],
-                        self.vol[indices.start + i*step]
-                    ), dtype = dt)
+                    arr[i] = np.array(
+                        (self.time[indices.start + i * step],
+                         self.open[indices.start + i * step],
+                         self.high[indices.start + i * step],
+                         self.low[indices.start + i * step],
+                         self.close[indices.start + i * step],
+                         self.vol[indices.start + i * step]),
+                        dtype=dt)
                 arr = arr.view(np.recarray)
                 return arr

@@ -105,7 +105,8 @@ class TradeActivity(Backtest):
             new_pos = Position(pos_id, pos_ticker, self.now)
         else:
             warn(
-                "Can't open new position because last position is not closed!\n")
+                "Can't open new position because last position is not closed!\n"
+            )
         if new_pos:
             self.positions.append(new_pos)
             return new_pos.id
@@ -818,9 +819,7 @@ class TradeActivity(Backtest):
         for pos in self.positions[::-1]:
             if pos.id == pos_id:
                 return sign(pos.volume_used)
-        raise ValueError(
-            "Position with id {} was not found!".format(pos_id))
-        
+        raise ValueError("Position with id {} was not found!".format(pos_id))
 
     def on(self, type_=None, params=None, arguments=None, handler=None):
         """ Wait for specified event and call handler.
@@ -961,7 +960,8 @@ class TradeActivity(Backtest):
                 time = int(datetime.strftime(params, "%Y%m%d%H%M%S"))
                 if time <= self.now:
                     warn(
-                        "Can't add new time event! Specified time is in past!\n")
+                        "Can't add new time event! Specified time is in past!\n"
+                    )
                     return None
                 for event in self.time_events:
                     if event.time == time and event.handler == handler:
