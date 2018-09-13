@@ -408,7 +408,6 @@ class Backtest(Environment):
         minutes = 1440*td.days + td.seconds//60
         return minutes
 
-
 ################################################################################
 
     @property
