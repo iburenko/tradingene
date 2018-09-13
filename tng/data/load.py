@@ -75,7 +75,7 @@ def import_candles(ticker,
                 start_date,
                 end_date,
                 reverse=True,
-                indicators=None,
+                indicators={},
                 cache=True,
                 shift=0):
     check_home_folder()
@@ -207,8 +207,9 @@ def _find_uncached_data(ticker, timeframe, start_date, end_date):
 
 
 def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
+    end_date += timedelta(minutes=1)
     data = Data.load_data(ticker, start_date, end_date)
-    data = data
+    data = data[::-1]
     data['time'] = pd.to_datetime(data['time'], format="%Y%m%d%H%M%S")
     td = end_date - start_date
     days, seconds = td.days, td.seconds
@@ -219,7 +220,7 @@ def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicato
         candle_data = data[data['time'].between
         (
             start_date + i * timedelta(minutes=timeframe),
-            start_date + (i+1) * timedelta(minutes=timeframe)
+            start_date + (i+1) * timedelta(minutes=timeframe) - timedelta(minutes=1)
         )]
         try:
             rates[ind] = (
@@ -235,8 +236,7 @@ def _alt_load_data_given_dates(ticker, timeframe, start_date, end_date, indicato
             pass
     if ind - iters < 0:
         rates = rates[:ind-iters]
-    rates = rates
-    rates = pd.DataFrame(rates)
+    rates = pd.DataFrame(rates[::-1])
     for ind_name, ind_params in indicators.items():
         for class_name in dir(tngind):
             if ind_name == class_name[3:].lower():

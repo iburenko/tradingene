@@ -94,9 +94,11 @@ class Backtest(Environment):
         if modeling:
             sys.stdout.write("Data loaded!\n")
         self._set_spread()
+        self._initialize_candles()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
                                               self.history_data)
         self._run_generator(candle_generator, on_bar_function, shift, modeling)
+        self._delete_unused_candles()
 
 
     def _run_generator(self, generator, on_bar_function, shift=0, modeling = True):
@@ -136,7 +138,6 @@ class Backtest(Environment):
             if modeling:
                 sys.stdout.write("\n")
                 sys.stdout.flush()
-            #self._update_last_candle()
 
     def _update_recent_price(self, candles):
         ticker = list(self.ticker_timeframes)[0]
@@ -248,6 +249,9 @@ class Backtest(Environment):
                 instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
                 ################### end of comment rates
                 instr.candle_start_time = new_time
+                if instr.candles is not None:    
+                    instr.candles[instr.candle_ind] = last_candle
+                    instr.candle_ind += 1
         return instrument
 
     # def _update_last_candle(self):
@@ -352,7 +356,7 @@ class Backtest(Environment):
 
     def _set_spread(self):
         ticker = list(self.ticker_timeframes)[0]
-        if ticker == "btcusd":
+        if ticker == "btcusd" or ticker == "compressedbtcusd":
             self.spread = limits.BTCUSD_SPREAD
         elif ticker == "ethusd":
             self.spread = limits.ETHUSD_SPREAD
@@ -382,7 +386,27 @@ class Backtest(Environment):
                 "[{0}{1}] {2}%".format('#'*(progress//20),'-'*(50-(progress//20)),progress/10)
         sys.stdout.write(string)
         sys.stdout.flush()
+
+
+    def _initialize_candles(self):
+        mins = self._calculate_number_of_minutes()
+        for instr in self.instruments:
+            number_of_bars = mins//instr.timeframe + 1
+            instr.candles = np.empty(number_of_bars, dtype=dt)
+            instr.candle_ind = 0
+
+
+    def _delete_unused_candles(self):
+        mins = self._calculate_number_of_minutes()
+        for instr in self.instruments:
+            number_of_bars = mins//instr.timeframe + 1
+            instr.candles = instr.candles[:instr.candle_ind]
         
+
+    def _calculate_number_of_minutes(self):
+        td = (self.end_date - self.start_date)
+        minutes = 1440*td.days + td.seconds//60
+        return minutes
 
 
 ################################################################################

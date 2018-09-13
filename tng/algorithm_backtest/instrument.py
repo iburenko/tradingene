@@ -65,6 +65,8 @@ class Instrument(Indicators):
         self.close = np.zeros(lookback)
         self.vol = np.zeros(lookback)
         self.rates = np.empty(lookback, dtype=dt)
+        self.candles = None
+        self.candle_ind = 0
         self.candle_start_time = None
 
 
