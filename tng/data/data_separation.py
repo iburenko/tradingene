@@ -196,4 +196,6 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
                                                     validation_len:]
         split_data['test_output'] = output_parameters[train_len +
                                                       validation_len:]
+    else:
+        print("Ho!")
     return split_data
