@@ -330,9 +330,6 @@ class BacktestStatistics:
             if type(value) is int or type(value) is float:
                 html += "<tr><td>" + elem + "</td><td>" + str(
                     value) + "</td></tr>"
-        # for method in all_stats:
-        #     explanatory_str = method.replace("calculate_", "") + " = \t"
-        #     html += "<tr><td>" + explanatory_str + "</td><td>" + str(eval("self."+method)()) + "</td></tr>"
         html += "</table>"
         with open("stats.html", "r") as file:
             filedata = file.read()

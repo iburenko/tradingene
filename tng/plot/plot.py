@@ -98,15 +98,12 @@ def plot_cs_prof(alg):
 
     df = list(alg.instruments)[0].candles
     df = pd.DataFrame(df[1:(len(df) - 50)])
-    # print(df)
 
     # close_df.columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']
     # open_df.columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']
 
     opendf_len = len(open_df)
     closedf_len = len(close_df)
-
-    # print(open_df)
     df['size'] = 12.0
     close_df['size'] = 12.0
     open_df['size'] = 12.0
