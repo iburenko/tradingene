@@ -406,6 +406,7 @@ class Backtest(Environment):
         for instr in self.instruments:
             number_of_bars = mins // instr.timeframe + 1
             instr.candles = instr.candles[:instr.candle_ind]
+            instr.candles = instr.candles[::-1]
 
     def _calculate_number_of_minutes(self):
         td = (self.end_date - self.start_date)
