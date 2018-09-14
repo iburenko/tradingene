@@ -96,7 +96,7 @@ def plot_cs_prof(alg):
                         ]),
                     ignore_index=True)
 
-    df = list(alg.instruments)[0].rates
+    df = list(alg.instruments)[0].candles
     df = pd.DataFrame(df[1:(len(df) - 50)])
     # print(df)
 
