@@ -274,10 +274,6 @@ def _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
 
 
 def _cache_data(data, filename, ticker, timeframe, shift):
-    # if shift:
-    #     df = pd.DataFrame(data[1:])
-    # else:
-    #     df = pd.DataFrame(data)
     already_cached = _get_cached_file(ticker, timeframe)
     if already_cached:
         os.remove(where_to_cache + already_cached)
