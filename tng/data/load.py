@@ -61,17 +61,14 @@ def import_data(ticker,
     if _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
         data = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
-        data
     else:
         data = _load_data_given_dates(ticker, timeframe, start_date, end_date,
                                       indicators, shift)
-        data
     if cache:
         _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
     data = _rename_columns(data)
-    data
     return separate_data(data, split, calculate_input, calculate_output,
                          lookback, lookforward, bootstrap)
 
@@ -84,6 +81,7 @@ def import_candles(ticker,
                    indicators={},
                    cache=True,
                    shift=0):
+
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
@@ -93,8 +91,8 @@ def import_candles(ticker,
     else:
         data = _load_data_given_dates(ticker, timeframe, start_date, end_date,
                                       indicators, shift)
-        if cache:
-            _cache_data(data, filename, ticker, timeframe, shift)
+    if cache:
+        _cache_data(data, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
     data = _rename_columns(data)

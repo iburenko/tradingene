@@ -97,10 +97,7 @@ def plot_cs_prof(alg):
                     ignore_index=True)
 
     df = list(alg.instruments)[0].candles
-    df = pd.DataFrame(df[1:(len(df) - 50)])
-
-    # close_df.columns = ['time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic', 'profit']
-    # open_df.columns = ['time', 'open_price', 'close_price_onop', 'open_side', 'first_indic', 'profit']
+    df = pd.DataFrame(df)
 
     opendf_len = len(open_df)
     closedf_len = len(close_df)
@@ -163,10 +160,8 @@ def plot_cs_prof(alg):
     open_df['range'] = p.x_range.end - p.x_range.start
     p.segment(df.date, df.high, df.date, df.low, color="black")
 
-    # print(df)
     mysource1 = ColumnDataSource(df[inc])
     mysource2 = ColumnDataSource(df[dec])
-    # print(open_df['date'])
     bars_1 = p.vbar(
         source=mysource1,
         x="date",
