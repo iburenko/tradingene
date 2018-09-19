@@ -144,7 +144,7 @@ class Backtest(Environment):
             if modeling:
                 sys.stdout.write("\n")
                 sys.stdout.flush()
-                self._update_last_candle()
+            self._update_last_candle()
 
     def _update_recent_price(self, candles):
         ticker = list(self.ticker_timeframes)[0]
@@ -233,6 +233,7 @@ class Backtest(Environment):
                                             "%Y%m%d%H%M%S")[0:6])
                 elapsed = (time_ - begin_time).seconds // 60
                 open_price = np.array([candle['open']])
+
                 last_time = instr.time[0]
                 time_ -= timedelta(minutes=elapsed % instr.timeframe)
                 new_time = int(time_.strftime("%Y%m%d%H%M%S"))
@@ -282,8 +283,14 @@ class Backtest(Environment):
                                     instr.high[0], instr.low[0],\
                                     instr.close[0], instr.vol[0])],\
                                     dtype = dt)
-            instr.candles[instr.candle_ind] = last_candle
-            #instr.candle_ind += 1
+            # instr.rates[0] = last_candle[0]
+            # instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
+            if instr.candles is not None:
+                instr.candles[instr.candle_ind] = last_candle
+                instr.candle_ind += 1
+            instr.rates[0] = last_candle[0]
+            instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
+            instr
 
     def _completed_instruments(self, tickers, timeframes):
         instr = set()

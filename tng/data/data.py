@@ -108,6 +108,8 @@ class Data:
             if not new_dates:
                 data = pd.read_csv(Data.hist_path + filename + ".csv")
             start_date_int = int(start_date.strftime("%Y%m%d%H%M%S"))
+            if pre:
+                end_date -= timedelta(minutes=1)
             end_date_int = int(end_date.strftime("%Y%m%d%H%M%S"))
             data = data[data['time'].between(
                 start_date_int, end_date_int, inclusive=True)]
