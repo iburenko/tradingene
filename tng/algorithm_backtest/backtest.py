@@ -283,7 +283,7 @@ class Backtest(Environment):
                                     instr.close[0], instr.vol[0])],\
                                     dtype = dt)
             instr.candles[instr.candle_ind] = last_candle
-            instr.candle_ind += 1
+            #instr.candle_ind += 1
 
     def _completed_instruments(self, tickers, timeframes):
         instr = set()

@@ -46,6 +46,7 @@ class BacktestStatistics:
         self.average_time_in_losing_trade = 0
         self.max_consecutive_winners = 0
         self.max_consecutive_losers = 0
+        self._calculated = 0
 
     def calculate_PnL(self):
         pnl = 0
@@ -322,7 +323,9 @@ class BacktestStatistics:
             eval("self." + method)()
 
     def backtest_results(self):
-        self._do_all_caclulations()
+        if not self._calculated:
+            self._do_all_caclulations()
+            self._calculated = 1
         plot_cs_prof(self.alg)
         html = "<table>"
         for elem in self.__dict__:
