@@ -101,6 +101,7 @@ def plot_cs_prof(alg):
 
     opendf_len = len(open_df)
     closedf_len = len(close_df)
+
     df['size'] = 12.0
     close_df['size'] = 12.0
     open_df['size'] = 12.0
@@ -127,8 +128,8 @@ def plot_cs_prof(alg):
     output_file("stats.html", title="Graphs")
     TOOLS = "pan,wheel_zoom,reset,save"
 
-    inc = df.close > df.open
-    dec = df.open > df.close
+    inc = df['close'] > df['open']
+    dec = df['open'] > df['close']
 
     ind_close = close_df["last_indic"] == 1
     ind_close_subseq = close_df["last_indic"] == 0
@@ -160,8 +161,15 @@ def plot_cs_prof(alg):
     open_df['range'] = p.x_range.end - p.x_range.start
     p.segment(df.date, df.high, df.date, df.low, color="black")
 
+    min_diff = np.fabs(df['close'] - df['open'])
+    min_diff = min_diff[min_diff > 0].min()
+    df['close_eq'] = df['close'] + min_diff
+    df.loc[df['close'] + min_diff > df['high'], 'close_eq'] = df['close'] - min_diff
+    ind_eq = df['close'] == df['open']
     mysource1 = ColumnDataSource(df[inc])
     mysource2 = ColumnDataSource(df[dec])
+    mysource3 = ColumnDataSource(df[ind_eq])
+
     bars_1 = p.vbar(
         source=mysource1,
         x="date",
@@ -169,7 +177,8 @@ def plot_cs_prof(alg):
         bottom="open",
         top="close",
         fill_color="honeydew",
-        line_color="black")
+        line_color="black",
+        line_width=1)
     bars_2 = p.vbar(
         source=mysource2,
         x="date",
@@ -177,9 +186,20 @@ def plot_cs_prof(alg):
         bottom="close",
         top="open",
         fill_color="deepskyblue",
-        line_color="black")
+        line_color="black",
+        line_width=1)
+    bars_3 = p.vbar(
+        source=mysource3,
+        x="date",
+        width=w,
+        bottom="close_eq",
+        top="open",
+        fill_color="white",
+        line_color="black",
+        line_width=1,
+        fill_alpha=0.0)
     hover = HoverTool(
-        renderers=[bars_1, bars_2],
+        renderers=[bars_1, bars_2, bars_3],
         tooltips=[('high', '@high{0.0}'), ('low', '@low{0.0}'),
                   ('open', '@open{0.0}'), ('close', '@close{0.0}'),
                   ('volume', '@vol{0.0}'), ('date',
