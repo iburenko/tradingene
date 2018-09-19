@@ -322,27 +322,28 @@ class BacktestStatistics:
         for method in all_stats:
             eval("self." + method)()
 
-    def backtest_results(self):
+    def backtest_results(self, plot = True):
         if not self._calculated:
             self._do_all_caclulations()
             self._calculated = 1
-        plot_cs_prof(self.alg)
-        html = "<table>"
-        for elem in self.__dict__:
-            value = eval("self." + elem)
-            if type(value) is int or type(value) is float:
-                html += "<tr><td>" + elem + "</td><td>" + str(
-                    value) + "</td></tr>"
-        html += "</table>"
-        with open("stats.html", "r") as file:
-            filedata = file.read()
-        filedata.replace("</body>", "")
-        filedata.replace("</html>", "")
-        with open("stats.html", "a") as file:
-            file.write(html)
-        if sys.platform.startswith('darwin'):
-            subprocess.call(('open', "stats.html"))
-        elif os.name == 'nt':
-            os.startfile("stats.html")
-        elif os.name == 'posix':
-            subprocess.call(('xdg-open', "stats.html"))
+        if plot:
+            plot_cs_prof(self.alg)
+            html = "<table>"
+            for elem in self.__dict__:
+                value = eval("self." + elem)
+                if type(value) is int or type(value) is float:
+                    html += "<tr><td>" + elem + "</td><td>" + str(
+                        value) + "</td></tr>"
+            html += "</table>"
+            with open("stats.html", "r") as file:
+                filedata = file.read()
+            filedata.replace("</body>", "")
+            filedata.replace("</html>", "")
+            with open("stats.html", "a") as file:
+                file.write(html)
+            if sys.platform.startswith('darwin'):
+                subprocess.call(('open', "stats.html"))
+            elif os.name == 'nt':
+                os.startfile("stats.html")
+            elif os.name == 'posix':
+                subprocess.call(('xdg-open', "stats.html"))
