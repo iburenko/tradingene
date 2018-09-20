@@ -347,3 +347,4 @@ class BacktestStatistics:
                 os.startfile("stats.html")
             elif os.name == 'posix':
                 subprocess.call(('xdg-open', "stats.html"))
+
