@@ -11,6 +11,7 @@ class Export:
     def export_results(self, indicators, lookback):
         if self.alg.positions and len(self.alg.positions) > 0:
             raise RuntimeError("No position was opened!")
+            
         dict_values = dict()
         for ind_name, ind_params in indicators.items():
             for class_name in dir(tngind):
