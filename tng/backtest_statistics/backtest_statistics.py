@@ -326,7 +326,7 @@ class BacktestStatistics:
         if not self._calculated:
             self._do_all_caclulations()
             self._calculated = 1
-        if plot:
+        if plot and self.all_positions_:
             plot_cs_prof(self.alg)
             html = "<table>"
             for elem in self.__dict__:
