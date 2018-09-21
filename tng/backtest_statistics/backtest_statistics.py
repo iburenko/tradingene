@@ -52,7 +52,7 @@ class BacktestStatistics:
         pnl = 0
         for pos in self.all_positions_:
             pnl += pos.profit
-        if self.alg.positions and self.alg.positions[-1].close_time == 0:
+        if self.alg.positions and self.alg.positions[-1].close_time != 0:
             pnl += self.alg.positions[-1].profit
         self.PnL = pnl
         return float(pnl)

@@ -23,7 +23,7 @@ class Export:
             for key in ind_values.keys():
                 dict_values[key + explanatory_str] = ind_values[key]
 
-        size = lookback*(len(indicators)+5)+3
+        size = lookback*(len(dict_values)+5)+3
         positions = len(self.alg.positions)
         ans = np.zeros((positions,size))
         ind = 0
