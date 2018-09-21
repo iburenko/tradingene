@@ -8,10 +8,7 @@ class Export:
     def __init__(self, alg_):
         self.alg = alg_
 
-    def export_results(self, indicators, lookback):
-        if self.alg.positions and len(self.alg.positions) > 0:
-            raise RuntimeError("No position was opened!")
-            
+    def export_results(self, indicators, lookback, filename=None):
         dict_values = dict()
         for ind_name, ind_params in indicators.items():
             for class_name in dir(tngind):
@@ -32,6 +29,18 @@ class Export:
         ind = 0
         current_index = -1
         candles = list(self.alg.instruments)[0].candles
+        df_columns = ['time', 'price', 'side']
+        for i in range(lookback):
+            df_columns += [
+                        'open'+str(i), 
+                        'high'+str(i), 
+                        'low'+str(i), 
+                        'close'+str(i), 
+                        'volume'+str(i)
+                    ]
+        for key in dict_values.keys():
+            for i in range(lookback):
+                df_columns += [key+str(i)]
         for pos in self.alg.positions:
             trade = pos.trades[0]
             while candles[current_index]['time'] < trade.open_time:
@@ -40,38 +49,21 @@ class Export:
             if top_index >= 1:
                 continue
             data = np.array([int(trade.open_time), trade.open_price, int(trade.side)])
-            df_columns = ['time', 'price', 'side']
             if trade.open_time != candles[current_index]['time']:
                 for i, candle in enumerate(candles[current_index+2:top_index+1]):
                     data = np.append(data, list(candle)[1:])
-                    df_columns += [
-                        'open'+str(i), 
-                        'high'+str(i), 
-                        'low'+str(i), 
-                        'close'+str(i), 
-                        'volume'+str(i)
-                    ]
                 for key, value in dict_values.items():
                     data = np.append(data, value[current_index+2:top_index+1])
-                    for i, ind_value in enumerate(value[current_index+2:top_index+1]):
-                        df_columns += [key+str(i)]
             else:
                 for i, candle in enumerate(candles[current_index+1:top_index]):
                     data = np.append(data, list(candle)[1:])
-                    df_columns += [
-                        'open'+str(i), 
-                        'high'+str(i), 
-                        'low'+str(i), 
-                        'close'+str(i), 
-                        'volume'+str(i)
-                    ]
                 for key, value in dict_values.items():
                     data = np.append(data, value[current_index+1:top_index])
-                    for i, ind_value in enumerate(value[current_index+2:top_index+1]):
-                        df_columns += [key+str(i)]
             ans[ind] = data
             ind += 1
         ans = pd.DataFrame(ans[:ind], columns=df_columns)
-        ans.to_csv("results.csv", index=False)
-            
-            
+        if filename is None:
+            ans.to_csv("results.csv", index=False)
+        else:
+            assert isinstance(filename, str)
+            ans.to_csv(filename+".csv", index=False)

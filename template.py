@@ -33,7 +33,7 @@ def on_bar(instrument):
 name = "Cornucopia"
 regime = "SP"
 start_date = datetime(2018, 9, 1)
-end_date = datetime(2018, 9, 1, 2)
+end_date = datetime(2018, 9, 4)
 ticker = "btcusd"
 timeframe = 60
 alg = TNG(name, regime, start_date, end_date)
@@ -45,7 +45,7 @@ signal = 0
 
 alg.run_backtest(on_bar)
 new_stat = bs.BacktestStatistics(alg)
-new_stat.backtest_results(plot=False)
+new_stat.backtest_results(plot=True)
 
 
 inds = {'sma':(5), 'ema':(), 'roc':(4)}
