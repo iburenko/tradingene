@@ -4,31 +4,7 @@ import tng.backtest_statistics.backtest_statistics as bs
 from tng.algorithm_backtest.export import Export
 
 def on_bar(instrument):
-    global entry
-    global signal
-    if entry == 0:
-        if (instrument.high[1] / instrument.high[2] < 1
-                and instrument.low[1] / instrument.low[2] < 1):
-            alg.sell()
-            entry = -1
-            return
-        elif (instrument.high[1] / instrument.high[2] > 1
-              and instrument.low[1] / instrument.low[2] > 1):
-            alg.buy()
-            entry = 1
-            return
-    elif entry == 1:
-        if (instrument.high[1] / instrument.high[2] < 1
-                and instrument.low[1] / instrument.low[2] < 1):
-            alg.sell()
-            entry = -1
-            return
-    elif entry == -1:
-        if (instrument.high[1] / instrument.high[2] > 1
-                and instrument.low[1] / instrument.low[2] > 1):
-            alg.buy()
-            entry = 1
-            return
+    #Code your strategy here!
 
 name = "Cornucopia"
 regime = "SP"
@@ -40,13 +16,9 @@ alg = TNG(name, regime, start_date, end_date)
 alg.addInstrument(ticker)
 alg.addTimeframe(ticker, timeframe)
 
-entry = 0
-signal = 0
-
 alg.run_backtest(on_bar)
 new_stat = bs.BacktestStatistics(alg)
 new_stat.backtest_results(plot=True)
-
 
 inds = {'sma':(5), 'ema':(), 'roc':(4)}
 lookback = 2
