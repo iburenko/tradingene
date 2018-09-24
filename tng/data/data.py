@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import urllib.request
 import json
 from tng.algorithm_backtest.limits import instrument_ids
+import tng.algorithm_backtest.limits as limits
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -71,17 +72,17 @@ class Data:
                     end_date += 100
             return start, end
 
-        ###############
-        # all_data = pd.read_csv(filename)
-        # start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
-        # end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        # #start, end = find_start_end(all_data, start_date, end_date)
-        # hist_data = all_data[all_data['time'].between(start_date, end_date, inclusive=True)]
-        # #hist_data = hist_data[::-1]
-        # #hist_data = hist_data.to_records(index=False)
-        # return hist_data
-        ###############
-
+        earliest_start = eval(limits.EARLISET_START)
+        if start_date < earliest_start:
+            warn_str = "Can't get data from {}. Data are available form 01.01.2017".format(start_date)
+            start_date = earliest_start
+        if end_date > datetime.today():
+            warn_str = "Can't get data till {}. Data are available till today ({})".format(
+                end_date,
+                datetime.today()
+            )
+            _date = datetime.today()
+            end_date = datetime(_date.year, _date.month, _date.day)
         if not cls._check_file(filename):
             data = cls._download_minute_data(start_date, end_date, filename)
             data.to_csv(Data.hist_path + filename + ".csv", index=False)

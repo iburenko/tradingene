@@ -81,7 +81,12 @@ def import_candles(ticker,
                    indicators={},
                    cache=True,
                    shift=0):
-
+    if not isinstance(ticker, str) or \
+        not isinstance(timeframe, int) or \
+        not isinstance(start_date, datetime) or \
+        not isinstance(end_date, datetime):
+        raise TypeError("Check types of arguments!")
+    
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)

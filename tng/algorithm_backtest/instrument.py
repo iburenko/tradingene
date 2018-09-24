@@ -75,14 +75,6 @@ class Instrument(Indicators):
                 err_str = "Index {} is out of range!".format(indices)
                 raise IndexError(err_str)
             else:
-                # dt = np.dtype(
-                #     [('time', np.uint64),
-                #     ('open', np.float64),
-                #     ('high', np.float64),
-                #     ('low', np.float64),
-                #     ('close', np.float64),
-                #     ('vol', np.float64)]
-                # )
                 arr = np.array(
                     [(self.time[indices % lookback],
                       self.open[indices % lookback],

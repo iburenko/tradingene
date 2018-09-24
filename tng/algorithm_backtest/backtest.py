@@ -345,11 +345,11 @@ class Backtest(Environment):
             pre_start_date = \
                     self.start_date -  timedelta(minutes = lookback * timeframe)
             if pre_start_date < earliest_start:
-                warn("Some values in history will be zero! Data available from"+\
-                     " 01.01.2017")
                 pre_start_date = earliest_start
             pre_start_array.append(pre_start_date)
         pre_start_date = min(pre_start_array)
+        if pre_end_date < pre_start_date:
+            return
         for ticker in self.ticker_timeframes.keys():
             ticker_data = Data.load_data(
                 ticker, pre_start_date, pre_end_date, pre=1)

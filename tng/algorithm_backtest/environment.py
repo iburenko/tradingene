@@ -200,6 +200,10 @@ class Environment(Algorithm):
     @end_date.setter
     def end_date(self, value):
         assert type(value) is datetime
+        today = datetime.today()
+        today = datetime(today.yeay, today.month, today.day)
+        if value > today:
+            value = today
         self._end_date = value
 
     @end_date.deleter
