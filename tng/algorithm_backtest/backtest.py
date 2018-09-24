@@ -32,7 +32,7 @@ class Backtest(Environment):
                 completed timeframe and appears in the last minute candle that
                 was send to backtest.
             now (int): Time of the beggining of the most recent minute candle.
-            recent_price (float): The most recent price of an instrument.
+            recent_price (tuple): The most recent price of an instrument.
                 Minute candle divides into four ticks:
                 a) if a candle goes down: open, high, low, close;
                 b) otherwise: open, low, high, close.
@@ -283,8 +283,6 @@ class Backtest(Environment):
                                     instr.high[0], instr.low[0],\
                                     instr.close[0], instr.vol[0])],\
                                     dtype = dt)
-            # instr.rates[0] = last_candle[0]
-            # instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
             if instr.candles is not None:
                 instr.candles[instr.candle_ind] = last_candle
                 instr.candle_ind += 1
@@ -313,10 +311,10 @@ class Backtest(Environment):
         return sorted(completed_tfs)
 
     def _completed_tickers(self, completed_timeframes, ct):
-        new_set = {ticker for ticker, timeframes \
+        ticker_set = {ticker for ticker, timeframes \
                           in self.ticker_timeframes.items()\
                           if set(completed_timeframes) & set(timeframes)}
-        return list(new_set | set(ct))
+        return list(ticker_set | set(ct))
 
     def _load_data(self, start_date, end_date, shift, modeling):
         for ticker in self.ticker_timeframes.keys():
@@ -349,7 +347,7 @@ class Backtest(Environment):
             if pre_start_date < earliest_start:
                 warn("Some values in history will be zero! Data available from"+\
                      " 01.01.2017")
-                pre_start_date = self.start_date
+                pre_start_date = earliest_start
             pre_start_array.append(pre_start_date)
         pre_start_date = min(pre_start_array)
         for ticker in self.ticker_timeframes.keys():

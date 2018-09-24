@@ -634,7 +634,7 @@ class TradeActivity(Backtest):
                         else:
                             raise ValueError(
                                 "Position side in neither 1, nor -1!")
-                        pos.close_trades(self.now, int(close_price))
+                        pos.close_trades(self.now, float(close_price))
                         pos.closed = True
                         closed = True
                         if pos.on_close is not None:

@@ -55,7 +55,7 @@ class BacktestStatistics:
         if self.alg.positions and self.alg.positions[-1].close_time != 0:
             pnl += self.alg.positions[-1].profit
         self.PnL = pnl
-        return float(pnl)
+        return pnl
 
     def calculate_number_of_trades(self):
         return self.number_of_positions
@@ -178,7 +178,7 @@ class BacktestStatistics:
             last_pos = self.alg.positions[-1]
             if last_pos.close_time == 0 and last_pos.profit > 0:
                 profit += last_pos.profit
-        self.profit = float(profit)
+        self.profit = profit
         return self.profit
 
     def calculate_loss(self):
@@ -189,7 +189,7 @@ class BacktestStatistics:
             last_pos = self.alg.positions[-1]
             if last_pos.close_time == 0 and last_pos.profit < 0:
                 loss += last_pos.profit
-        self.loss = float(loss)
+        self.loss = loss
         return self.loss
 
     def calculate_AWT(self):
@@ -217,7 +217,7 @@ class BacktestStatistics:
     def calculate_LWT(self):
         profits = [pos.profit for pos in self.winning_trades_]
         if profits:
-            self.largest_winning_trade = float(max(profits))
+            self.largest_winning_trade = max(profits)
             return self.largest_winning_trade
         else:
             return 0
@@ -225,7 +225,7 @@ class BacktestStatistics:
     def calculate_LLT(self):
         losses = [pos.profit for pos in self.losing_trades_]
         if losses:
-            self.largest_losing_trade = float(min(losses))
+            self.largest_losing_trade = min(losses)
             return self.largest_losing_trade
         else:
             return 0
