@@ -29,17 +29,17 @@ class BacktestStatistics:
             self.losing_trades = len(self.losing_trades_)
         except AssertionError:
             print("No positions was open while backtest!")
-        self.PnL = 0
+        self.PnL = None
         self.max_drawdown = 0
         self.reliability = 0
         self.risk_reward_ratio = 0
         self.average_trade = 0
         self.average_time_in_trade = 0
         self.average_deals_per_day = 0
-        self.profit = 0
-        self.loss = 0
-        self.average_winning_trade = 0
-        self.average_losing_trade = 0
+        self.profit = None
+        self.loss = None
+        self.average_winning_trade = None
+        self.average_losing_trade = None
         self.largest_winning_trade = 0
         self.largest_losing_trade = 0
         self.average_time_in_winning_trade = 0
@@ -69,8 +69,14 @@ class BacktestStatistics:
             return self.reliability
 
     def calculate_RRR(self):
-        average_win = self.calculate_AWT()
-        average_loss = self.calculate_ALT()
+        if self.average_winning_trade is None:
+            average_win = self.calculate_AWT()
+        else:
+            average_win = self.average_winning_trade
+        if self.average_losing_trade is None:
+            average_loss = self.calculate_ALT()
+        else:
+            average_loss = self.average_losing_trade
         if average_win == 0:
             return 0
         else:
@@ -131,7 +137,10 @@ class BacktestStatistics:
             return (self.max_drawdown, int(drawdown_len))
 
     def calculate_AT(self):
-        pnl = self.calculate_PnL()
+        if self.PnL is None:
+            pnl = self.calculate_PnL()
+        else:
+            pnl = self.PnL
         if self.number_of_positions == 0:
             return 0
         else:
@@ -176,10 +185,10 @@ class BacktestStatistics:
             profit += pos.profit
         if self.alg.positions:
             last_pos = self.alg.positions[-1]
-            if last_pos.close_time == 0 and last_pos.profit > 0:
+            if last_pos.close_time != 0 and last_pos.profit > 0:
                 profit += last_pos.profit
         self.profit = profit
-        return self.profit
+        return profit
 
     def calculate_loss(self):
         loss = 0
@@ -187,13 +196,16 @@ class BacktestStatistics:
             loss += pos.profit
         if self.alg.positions:
             last_pos = self.alg.positions[-1]
-            if last_pos.close_time == 0 and last_pos.profit < 0:
+            if last_pos.close_time != 0 and last_pos.profit < 0:
                 loss += last_pos.profit
         self.loss = loss
-        return self.loss
+        return loss
 
     def calculate_AWT(self):
-        profit = self.calculate_profit()
+        if self.profit is None:
+            profit = self.calculate_profit()
+        else:
+            profit = self.profit
         if self.winning_trades == 0:
             return 0
         else:
@@ -201,7 +213,10 @@ class BacktestStatistics:
             return self.average_winning_trade
 
     def calculate_ALT(self):
-        loss = self.calculate_loss()
+        if self.loss is None:
+            loss = self.calculate_loss()
+        else:
+            loss = self.loss
         if self.losing_trades == 0:
             return 0
         else:
@@ -312,8 +327,8 @@ class BacktestStatistics:
         return corr
 
     def _do_all_caclulations(self):
-        closed_pos = [pos for pos in self.all_positions_ if pos.closed]
-        if not closed_pos:
+        #closed_pos = [pos for pos in self.all_positions_ if pos.closed]
+        if not self.all_positions_:
             print("No backtest statistics available!")
             return
         all_stats = [method for method in dir(BacktestStatistics) \
@@ -330,8 +345,11 @@ class BacktestStatistics:
             plot_cs_prof(self.alg)
             html = "<table>"
             for elem in self.__dict__:
+                if elem[-1] == "_" or elem[0] == "_":
+                    continue
                 value = eval("self." + elem)
-                if type(value) is int or type(value) is float:
+                #if type(value) is int or type(value) is float or type(value)
+                if type(value) in (int, float, np.float64):
                     html += "<tr><td>" + elem + "</td><td>" + str(
                         value) + "</td></tr>"
             html += "</table>"
