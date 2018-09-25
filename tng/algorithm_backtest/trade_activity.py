@@ -404,14 +404,16 @@ class TradeActivity(Backtest):
             ```
         """
 
-        is_closed = self._is_last_pos_closed()
-        if is_closed is not None and not is_closed:
-            warn("Can't open long since there is an open position!\n")
-            pos_id = None
-        else:
-            pos_id = self.openPosition()
-            self.buy(volume)
+        pos_id = self.buy(volume)
         return pos_id
+        # is_closed = self._is_last_pos_closed()
+        # if is_closed is not None and not is_closed:
+        #     warn("Can't open long since there is an open position!\n")
+        #     pos_id = None
+        # else:
+        #     pos_id = self.openPosition()
+        #     self.buy(volume)
+        # return pos_id
 
     def openShort(self, volume=1):
         """ Opens a position and sells specified number of lots.
@@ -458,14 +460,17 @@ class TradeActivity(Backtest):
                     alg.openShort(0.1)
             ```
         """
-        is_closed = self._is_last_pos_closed()
-        if is_closed is not None and not is_closed:
-            warn("Can't open short since there is an open position!\n")
-            pos_id = None
-        else:
-            pos_id = self.openPosition()
-            self.sell(volume)
+        
+        pos_id = self.sell(volume)
         return pos_id
+        # is_closed = self._is_last_pos_closed()
+        # if is_closed is not None and not is_closed:
+        #     warn("Can't open short since there is an open position!\n")
+        #     pos_id = None
+        # else:
+        #     pos_id = self.openPosition()
+        #     self.sell(volume)
+        # return pos_id
 
     def setSL(self, loss=None):
         """ Sets the maximum loss for a position.

@@ -327,7 +327,6 @@ class BacktestStatistics:
         return corr
 
     def _do_all_caclulations(self):
-        #closed_pos = [pos for pos in self.all_positions_ if pos.closed]
         if not self.all_positions_:
             print("No backtest statistics available!")
             return
