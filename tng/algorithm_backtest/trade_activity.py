@@ -31,6 +31,7 @@ class TradeActivity(Backtest):
         super(TradeActivity, self).__init__(name, regime, start_date, end_date)
         self.positions = list()
 
+
     def openPosition(self, ticker=None):
         """Open position without acquiring any asset.
 
@@ -112,6 +113,7 @@ class TradeActivity(Backtest):
             return new_pos.id
         else:
             return None
+
 
     def buy(self, volume=1):
         """ Buys specified volume of an asset.
@@ -234,6 +236,7 @@ class TradeActivity(Backtest):
                     self._open_trade(volume, side=1)
         pos_id = self.positions[-1].id
         return pos_id
+
 
     def sell(self, volume=1):
         """ Sells specified volume of an asset.
@@ -358,6 +361,7 @@ class TradeActivity(Backtest):
         pos_id = self.positions[-1].id
         return pos_id
 
+
     def openLong(self, volume=1):
         """ Opens a position and buys specified number of lots.
 
@@ -406,14 +410,7 @@ class TradeActivity(Backtest):
 
         pos_id = self.buy(volume)
         return pos_id
-        # is_closed = self._is_last_pos_closed()
-        # if is_closed is not None and not is_closed:
-        #     warn("Can't open long since there is an open position!\n")
-        #     pos_id = None
-        # else:
-        #     pos_id = self.openPosition()
-        #     self.buy(volume)
-        # return pos_id
+
 
     def openShort(self, volume=1):
         """ Opens a position and sells specified number of lots.
@@ -463,14 +460,6 @@ class TradeActivity(Backtest):
         
         pos_id = self.sell(volume)
         return pos_id
-        # is_closed = self._is_last_pos_closed()
-        # if is_closed is not None and not is_closed:
-        #     warn("Can't open short since there is an open position!\n")
-        #     pos_id = None
-        # else:
-        #     pos_id = self.openPosition()
-        #     self.sell(volume)
-        # return pos_id
 
     def setSL(self, loss=None):
         """ Sets the maximum loss for a position.

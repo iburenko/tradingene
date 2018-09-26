@@ -97,7 +97,6 @@ class Position:
                 last_pos.profit = pos_profit
                 if last_pos.stop_loss is not None:
                     if pos_profit < -last_pos.stop_loss:
-                        #last_pos.profit = -last_pos.stop_loss
                         side = obj.getPositionSide(last_pos.id)
                         if side == 1:
                             obj.recent_price = (
@@ -112,7 +111,6 @@ class Position:
                         obj.closePosition()
                 if last_pos.take_profit is not None:
                     if pos_profit >= last_pos.take_profit:
-                        #last_pos.profit = last_pos.take_profit
                         side = obj.getPositionSide(last_pos.id)
                         if side == 1:
                             obj.recent_price = (

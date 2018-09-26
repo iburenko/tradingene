@@ -23,13 +23,14 @@ class Export:
             for key in ind_values.keys():
                 dict_values[key + explanatory_str] = ind_values[key]
 
-        size = lookback*(len(dict_values)+5)+3
+        size = lookback*(len(dict_values)+5)+4
         positions = len(self.alg.positions)
         ans = np.zeros((positions,size))
+        data = np.full((size), np.nan)
         ind = 0
         current_index = -1
         candles = list(self.alg.instruments)[0].candles
-        df_columns = ['time', 'price', 'side']
+        df_columns = ['time', 'price', 'side', 'profit']
         for i in range(lookback):
             df_columns += [
                         'open'+str(i), 
@@ -48,17 +49,38 @@ class Export:
             top_index = current_index+lookback+1
             if top_index >= 1:
                 continue
-            data = np.array([int(trade.open_time), trade.open_price, int(trade.side)])
+            data[0:4] = np.array([int(trade.open_time), trade.open_price, int(trade.side), pos.profit])
             if trade.open_time != candles[current_index]['time']:
                 for i, candle in enumerate(candles[current_index+2:top_index+1]):
-                    data = np.append(data, list(candle)[1:])
+                        data[4+i*5:4+(i+1)*5] = list(candle)[1:]
+                i = 0
                 for key, value in dict_values.items():
-                    data = np.append(data, value[current_index+2:top_index+1])
+                    length = -current_index - 1 + top_index
+                    start_ind = 4+lookback*5 + i*length
+                    end_ind = 4+lookback*5+ (i+1)*length
+                    data[start_ind:end_ind] = value[current_index+2:top_index+1]
+                    i += 1
             else:
-                for i, candle in enumerate(candles[current_index+1:top_index]):
-                    data = np.append(data, list(candle)[1:])
-                for key, value in dict_values.items():
-                    data = np.append(data, value[current_index+1:top_index])
+                if top_index == 0:
+                    for i, candle in enumerate(candles[current_index+1:]):
+                        data[4+i*5:4+(i+1)*5] = list(candle)[1:]
+                    i = 0
+                    for key, value in dict_values.items():
+                        length = -current_index - 1
+                        start_ind = 4+lookback*5 + i*length
+                        end_ind = 4+lookback*5+(i+1)*length
+                        data[start_ind:end_ind] = value[current_index+1:]
+                        i += 1
+                else:
+                    for i, candle in enumerate(candles[current_index+1:top_index]):
+                        data[4+i*5:4+(i+1)*5] = list(candle)[1:]
+                    i = 0
+                    for key, value in dict_values.items():
+                        length = -current_index - 1 + top_index
+                        start_ind = 4+lookback*5 + i*length
+                        end_ind = 4+lookback*5+(i+1)*length
+                        data[start_ind:end_ind] = value[current_index+1:top_index]
+                        i += 1
             ans[ind] = data
             ind += 1
         ans = pd.DataFrame(ans[:ind], columns=df_columns)
