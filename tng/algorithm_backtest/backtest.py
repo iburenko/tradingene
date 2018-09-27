@@ -382,7 +382,7 @@ class Backtest(Environment):
         elif ticker == "xrpbtc":
             self.slippage = limits.XRPBTC_SLIPPAGE
         else:
-            raise NameError("slippage cannot be set, unknown ticker!")
+            raise NameError("Slippage cannot be set, unknown ticker!")
 
     def _update_progress_bar(self):
         start_date = self.start_date
