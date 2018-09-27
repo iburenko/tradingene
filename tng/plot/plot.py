@@ -160,9 +160,14 @@ def plot_cs_prof(alg):
     close_df['range'] = p.x_range.end - p.x_range.start
     open_df['range'] = p.x_range.end - p.x_range.start
     p.segment(df.date, df.high, df.date, df.low, color="black")
-
     min_diff = np.fabs(df['close'] - df['open'])
     min_diff = min_diff[min_diff > 0].min()
+    prec = "0"
+    for i in range(0, 16):
+        if min_diff * 10 ** i >=1:
+            prec = prec * i
+            break
+
     df['close_eq'] = df['close'] + min_diff
     df.loc[df['close'] + min_diff > df['high'], 'close_eq'] = df['close'] - min_diff
     ind_eq = df['close'] == df['open']
@@ -200,8 +205,8 @@ def plot_cs_prof(alg):
         fill_alpha=0.0)
     hover = HoverTool(
         renderers=[bars_1, bars_2, bars_3],
-        tooltips=[('high', '@high{0.0}'), ('low', '@low{0.0}'),
-                  ('open', '@open{0.0}'), ('close', '@close{0.0}'),
+        tooltips=[('high', '@high{0.'+str(prec)+'}'), ('low', '@low{0.'+str(prec)+'}'),
+                  ('open', '@open{0.'+str(prec)+'}'), ('close', '@close{0.'+str(prec)+'}'),
                   ('volume', '@vol{0.0}'), ('date',
                                             '@date{%Y-%m-%d %H:%M:%S}')],
         formatters={"date": "datetime"})
@@ -256,8 +261,8 @@ def plot_cs_prof(alg):
         hover1 = HoverTool(
             renderers=[tr_1, inv_tr_1, tr_3, inv_tr_3],
             tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'),
-                      ('open_price', '@open_price{0.0}'),
-                      ('close_price_onop', '@close_price_onop{0.0}')],
+                      ('open_price', '@open_price{0.'+str(prec)+'}'),
+                      ('close_price_onop', '@close_price_onop{0.'+str(prec)+'}')],
             formatters={"date": "datetime"})
         p.add_tools(hover1)
 
@@ -310,8 +315,8 @@ def plot_cs_prof(alg):
         hover2 = HoverTool(
             renderers=[tr_2, inv_tr_2, tr_4, inv_tr_4],
             tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'),
-                      ('close_price', '@close_price{0.0}'),
-                      ('open_price_oncl', '@open_price_oncl{0.0}')],
+                      ('close_price', '@close_price{0.'+str(prec)+'}'),
+                      ('open_price_oncl', '@open_price_oncl{0.'+str(prec)+'}')],
             formatters={"date": "datetime"})
         p.add_tools(hover2)
 
@@ -413,7 +418,7 @@ def plot_cs_prof(alg):
     hover3 = HoverTool(
         renderers=[profit_line],
         tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'), ('profit',
-                                                         '@cumsum{0.0}')],
+                                                         '@cumsum{0.'+str(prec)+'}')],
         formatters={"date": "datetime"})
     plot_prof.add_tools(hover3)
     save(column(p, plot_prof), "stats.html")
