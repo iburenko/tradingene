@@ -1,13 +1,13 @@
 ################################################################################
-#                               Spreads constants
+#                               SLIPPAGEs constants
 ################################################################################
-BTCUSD_SPREAD = 1e0
-ETHUSD_SPREAD = 1e-1
-LTCUSD_SPREAD = 1e-2
-ETHBTC_SPREAD = 1e-6
-LTCBTC_SPREAD = 1e-6
-DSHBTC_SPREAD = 1e-6
-XRPBTC_SPREAD = 1e-9
+BTCUSD_SLIPPAGE = 1e0
+ETHUSD_SLIPPAGE = 1e-1
+LTCUSD_SLIPPAGE = 1e-2
+ETHBTC_SLIPPAGE = 1e-6
+LTCBTC_SLIPPAGE = 1e-6
+DSHBTC_SLIPPAGE = 1e-6
+XRPBTC_SLIPPAGE = 1e-9
 ################################################################################
 
 ################################################################################
@@ -32,6 +32,6 @@ instrument_ids = {
     'ethbtc': 22,
     'ltcbtc': 23,
     'dshbtc': 24,
-    'xprbtc': 25,
+    'xrpbtc': 25,
     'rts': 100
 }

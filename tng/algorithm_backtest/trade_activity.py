@@ -600,9 +600,9 @@ class TradeActivity(Backtest):
                 last_pos.close_time = self.now
                 side = self.getPositionSide(last_pos.id)
                 if side == 1:
-                    close_price = self.recent_price - self.spread
+                    close_price = self.recent_price - self.slippage
                 elif side == -1:
-                    close_price = self.recent_price + self.spread
+                    close_price = self.recent_price + self.slippage
                 else:
                     raise ValueError("Position side in neither 1, nor -1!")
                 last_pos.close_trades(self.now, close_price)
@@ -622,9 +622,9 @@ class TradeActivity(Backtest):
                         pos.close_time = self.now
                         side = self.getPositionSide(pos.id)
                         if side == 1:
-                            close_price = self.recent_price - self.spread
+                            close_price = self.recent_price - self.slippage
                         elif side == -1:
-                            close_price = self.recent_price + self.spread
+                            close_price = self.recent_price + self.slippage
                         else:
                             raise ValueError(
                                 "Position side in neither 1, nor -1!")
@@ -642,7 +642,7 @@ class TradeActivity(Backtest):
                 volume_traded += abs(trade.volume)
             self.positions[-1].profit = self.positions[
                 -1].calculate_final_profit()
-            #self.positions[-1].profit -= (2 * volume_traded * self.spread)
+            #self.positions[-1].profit -= (2 * volume_traded * self.slippage)
 
     def onPositionClose(self, pos_id, handler):
         """ Call handler right after position close.
@@ -990,9 +990,9 @@ class TradeActivity(Backtest):
         else:
             trade_id = randint(2**1, 2**31 - 1)
         if side == 1:
-            open_price = self.recent_price + self.spread
+            open_price = self.recent_price + self.slippage
         elif side == -1:
-            open_price = self.recent_price - self.spread
+            open_price = self.recent_price - self.slippage
         new_trade = Trade(trade_id, open_price, volume, self.now)
         if self.positions and self.positions[-1].trades:
             last_trade = self.positions[-1].trades[-1]

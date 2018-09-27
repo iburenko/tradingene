@@ -10,7 +10,7 @@ from tng.algorithm_backtest.price_event import PriceEvent
 import tng.algorithm_backtest.limits as limits
 from tng.data.data import Data, dt
 
-#from tng.ind.spread_estimation_corwin_schultz import corwin_schultz
+#from tng.ind.slippage_estimation_corwin_schultz import corwin_schultz
 
 
 class Backtest(Environment):
@@ -36,7 +36,7 @@ class Backtest(Environment):
                 Minute candle divides into four ticks:
                 a) if a candle goes down: open, high, low, close;
                 b) otherwise: open, low, high, close.
-            spread (float): Spread. Specified for each instrument.
+            slippage (float): slippage. Specified for each instrument.
             instruments (set): Set of intances of Instrument class.
                 each instance contains information about opens, highs,
                 lows, closes, volumes, values of indicators. 
@@ -57,7 +57,7 @@ class Backtest(Environment):
         self.completed_tickers = list()
         self._now = 0
         self._recent_price = (0, 0)
-        self.spread = 0
+        self.slippage = 0
         self.instruments = set()
         self.time_events = list()
         self.price_events = list()
@@ -95,7 +95,7 @@ class Backtest(Environment):
         self._load_data(self.start_date, self.end_date, shift, modeling)
         if modeling:
             sys.stdout.write("Data loaded!\n")
-        self._set_spread()
+        self._set_slippage()
         self._initialize_candles()
         candle_generator = self._iterate_data(self.start_date, self.end_date,
                                               self.history_data)
@@ -365,24 +365,24 @@ class Backtest(Environment):
         self._run_generator(pre_data_candles_generator, self._foo, shift,
                             modeling)
 
-    def _set_spread(self):
+    def _set_slippage(self):
         ticker = list(self.ticker_timeframes)[0]
-        if ticker == "btcusd" or ticker == "compressedbtcusd":
-            self.spread = limits.BTCUSD_SPREAD
+        if ticker == "btcusd":
+            self.slippage = limits.BTCUSD_SLIPPAGE
         elif ticker == "ethusd":
-            self.spread = limits.ETHUSD_SPREAD
+            self.slippage = limits.ETHUSD_SLIPPAGE
         elif ticker == "ltcusd":
-            self.spread = limits.LTCUSD_SPREAD
+            self.slippage = limits.LTCUSD_SLIPPAGE
         elif ticker == "ethbtc":
-            self.spread = limits.ETHBTC_SPREAD
+            self.slippage = limits.ETHBTC_SLIPPAGE
         elif ticker == "ltcbtc":
-            self.spread = limits.LTCBTC_SPREAD
+            self.slippage = limits.LTCBTC_SLIPPAGE
         elif ticker == "dshbtc":
-            self.spread = limits.DSHBTC_SPREAD
+            self.slippage = limits.DSHBTC_SLIPPAGE
         elif ticker == "xrpbtc":
-            self.spread = limits.XRPBTC_SPREAD
+            self.slippage = limits.XRPBTC_SLIPPAGE
         else:
-            raise NameError("Spread cannot be set, unknown ticker!")
+            raise NameError("slippage cannot be set, unknown ticker!")
 
     def _update_progress_bar(self):
         start_date = self.start_date
