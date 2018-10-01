@@ -30,7 +30,7 @@ class CheatBacktest:
 
 
     def buy(self, volume=1):
-        last_candle = self.data.iloc[-self.iter-1]
+        last_candle = self.data.iloc[-self.iter]
         price = last_candle.open + self.slippage
         time_ = int(last_candle.time)
         fee = self.calculate_fees
@@ -50,7 +50,7 @@ class CheatBacktest:
 
     def sell(self, volume=1):
         volume *= -1
-        last_candle = self.data.iloc[-self.iter-1]
+        last_candle = self.data.iloc[-self.iter]
         price = last_candle.open - self.slippage
         time_ = int(last_candle.time)
         fee = self.calculate_fees
@@ -108,6 +108,9 @@ class CheatBacktest:
         if fees:
             self.calculate_fees = True
         for self.iter in range(51, len(self.data)):
-            on_bar(self.data[-self.iter-1:])
+            on_bar(self.data[-self.iter:])
 
         
+    def reset_backtest(self):
+        self.positions = list()
+        self.iter = 51
