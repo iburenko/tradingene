@@ -1,15 +1,15 @@
+import datetime as dt
 import numpy as np
+import pandas as pd
 from bokeh import events
 from bokeh.core import properties
-import pandas as pd
 from bokeh.plotting import figure, save, output_file
 from bokeh.layouts import column
-import datetime as dt
 from bokeh.models import ColumnDataSource, CustomJS, Band
 from bokeh.models.tools import HoverTool
 
 
-def plot_cs_prof(alg):
+def plot_cs_prof(alg, comment):
     def update_triangle(source):
         return CustomJS(
             args=dict(source=source, xr=p.x_range),
@@ -427,4 +427,4 @@ def plot_cs_prof(alg):
                                                          '@cumsum{0.'+str(prec)+'}')],
         formatters={"date": "datetime"})
     plot_prof.add_tools(hover3)
-    save(column(p, plot_prof), "stats.html")
+    save(column(comment, p, plot_prof), "stats.html")

@@ -12,23 +12,9 @@ class BacktestStatistics:
         self.all_positions_ = list()
         self.winning_trades_ = list()
         self.losing_trades_ = list()
-        try:
-            assert len(positions) > 0
-            if positions[-1].close_time == 0:
-                self.all_positions_ = positions[:-1]
-            else:
-                self.all_positions_ = positions
-            self.winning_trades_ = [
-                pos for pos in self.all_positions_ if pos.profit >= 0
-            ]
-            self.losing_trades_ = [
-                pos for pos in self.all_positions_ if pos.profit < 0
-            ]
-            self.number_of_positions = len(self.all_positions_)
-            self.winning_trades = len(self.winning_trades_)
-            self.losing_trades = len(self.losing_trades_)
-        except AssertionError:
-            print("No positions was open while backtest!")
+        self.number_of_positions = 0
+        self.winning_trades = 0
+        self.losing_trades = 0
         self.PnL = None
         self.max_drawdown = 0
         self.reliability = 0
@@ -47,6 +33,24 @@ class BacktestStatistics:
         self.max_consecutive_winners = 0
         self.max_consecutive_losers = 0
         self._calculated = 0
+        try:
+            assert len(positions) > 0
+            if positions[-1].close_time == 0:
+                self.all_positions_ = positions[:-1]
+            else:
+                self.all_positions_ = positions
+            self.winning_trades_ = [
+                pos for pos in self.all_positions_ if pos.profit >= 0
+            ]
+            self.losing_trades_ = [
+                pos for pos in self.all_positions_ if pos.profit < 0
+            ]
+            self.number_of_positions = len(self.all_positions_)
+            self.winning_trades = len(self.winning_trades_)
+            self.losing_trades = len(self.losing_trades_)
+        except AssertionError:
+            print("No positions was open while backtest!")
+
 
     def calculate_PnL(self):
         pnl = 0
@@ -336,12 +340,13 @@ class BacktestStatistics:
         for method in all_stats:
             eval("self." + method)()
 
-    def backtest_results(self, plot = True):
+    def backtest_results(self, plot=True, comment=""):
         if not self._calculated:
             self._do_all_caclulations()
             self._calculated = 1
-        if plot and self.all_positions_:
-            plot_cs_prof(self.alg)
+        if self.all_positions_:
+            plot_cs_prof(self.alg, comment)
+            
             html = "<table>"
             for elem in self.__dict__:
                 if elem[-1] == "_" or elem[0] == "_":
@@ -352,12 +357,13 @@ class BacktestStatistics:
                     html += "<tr><td>" + elem + "</td><td>" + str(
                         value) + "</td></tr>"
             html += "</table>"
-            with open("stats.html", "r") as file:
-                filedata = file.read()
-            filedata.replace("</body>", "")
-            filedata.replace("</html>", "")
-            with open("stats.html", "a") as file:
-                file.write(html)
+            with open("stats.html", "r") as file_:
+                content = file_.read()
+            content.replace("</body>", "")
+            content.replace("</html>", "")
+            with open("stats.html", "a") as file_:
+                file_.write(html)
+        if plot:
             if sys.platform.startswith('darwin'):
                 subprocess.call(('open', "stats.html"))
             elif os.name == 'nt':
