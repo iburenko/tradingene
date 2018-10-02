@@ -427,4 +427,4 @@ def plot_cs_prof(alg, comment):
                                                          '@cumsum{0.'+str(prec)+'}')],
         formatters={"date": "datetime"})
     plot_prof.add_tools(hover3)
-    save(column(comment, p, plot_prof), "stats.html")
+    save(column(p, plot_prof), "stats.html")

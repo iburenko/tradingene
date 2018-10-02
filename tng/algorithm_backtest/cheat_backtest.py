@@ -72,7 +72,7 @@ class CheatBacktest:
         if self.positions:
             last_pos = self.positions[-1]
             if not last_pos.closed:
-                last_candle = self.data.iloc[-self.iter-1]
+                last_candle = self.data.iloc[-self.iter]
                 price = last_candle.open
                 time_ = int(last_candle.time)
                 if last_pos.side == 1:
