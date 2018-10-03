@@ -129,7 +129,6 @@ class Data:
             raise ValueError("Instrument {} was not found!".format(filename))
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
               str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
-        print(url)
         data = urllib.request.urlopen(url).read()
         obj = json.loads(data)
         df_data = pd.DataFrame(

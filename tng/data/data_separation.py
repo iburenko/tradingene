@@ -3,6 +3,7 @@ import numpy as np
 
 def separate_data(data, split, calculate_input, calculate_output, lookback,
                   lookforward, bootstrap):
+    data = data[::-1]
     data = data.to_records()
     split_data = dict()
     input_parameters = np.empty((0, 0))
@@ -54,9 +55,6 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
     output_parameters = np.reshape(output_parameters,
                                    (output_overall_len // out_len, out_len))
 
-    print("shape of input parameters:" + str(np.shape(input_parameters)))
-    print("shape of output parameters:" + str(np.shape(output_parameters)))
-
     # SH START
     if np.shape(
             output_timelimits
@@ -87,7 +85,6 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
                                          probabilities)  # Choosing a sample.
             else:
                 index = random.randint(0, samples_num - 1)
-            #print("%d: chosen=%d"%(samples_to_draw_counter,index))
             samples_drawn[index] = True  # To let us know it's chosen.
             sample_indexes_drawn[
                 samples_to_draw_counter] = index  # Saving the index of a yet another sample drawn.
@@ -159,7 +156,6 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
         # 				overlap += r2 - l2
         # 			else:
         # 				overlap += r1 - l2
-        # print( "Total overlaps=%d"%(overlap) )
 
         # num_candles_to_cover = len(data)
         # candles_covered = np.zeros( num_candles_to_cover, dtype=int)
@@ -173,7 +169,6 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
         # for counter in range(num_candles_to_cover):
         # 	if candles_covered[counter] == 1:
         # 		num_covered += 1
-        # print( "Covered time interval = %f" % (num_covered/num_candles_to_cover) )
         # input("")
         # END OF "FOR DEBUGGING PURPOSES ONLY. TO BE DELETED LATER!"
 
