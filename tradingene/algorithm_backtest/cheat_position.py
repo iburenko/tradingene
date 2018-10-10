@@ -1,5 +1,5 @@
 from numpy import sign
-from tng.algorithm_backtest.trade import Trade
+from tradingene.algorithm_backtest.trade import Trade
 
 class CheatPosition:
 

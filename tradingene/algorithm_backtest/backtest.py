@@ -1,16 +1,16 @@
 import sys
-from warnings import warn
 import time
-import numpy as np
 from datetime import datetime, timedelta
-from tng.algorithm_backtest.environment import Environment
-from tng.algorithm_backtest.position import Position
-from tng.algorithm_backtest.time_event import TimeEvent
-from tng.algorithm_backtest.price_event import PriceEvent
-import tng.algorithm_backtest.limits as limits
-from tng.data.data import Data, dt
+from warnings import warn
+import numpy as np
+from tradingene.algorithm_backtest.environment import Environment
+from tradingene.algorithm_backtest.position import Position
+from tradingene.algorithm_backtest.time_event import TimeEvent
+from tradingene.algorithm_backtest.price_event import PriceEvent
+import tradingene.algorithm_backtest.limits as limits
+from tradingene.data.data import Data, dt
 
-#from tng.ind.slippage_estimation_corwin_schultz import corwin_schultz
+#from tradingene.ind.slippage_estimation_corwin_schultz import corwin_schultz
 
 
 class Backtest(Environment):

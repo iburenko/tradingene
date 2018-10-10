@@ -1,7 +1,7 @@
 import numpy as np
-from tng.algorithm_backtest.limits import LOOKBACK_PERIOD as lookback
-from tng.ind.ind import Indicators
-from tng.data.data import dt
+from tradingene.algorithm_backtest.limits import LOOKBACK_PERIOD as lookback
+from tradingene.ind.ind import Indicators
+from tradingene.data.data import dt
 
 
 class Instrument(Indicators):

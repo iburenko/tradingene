@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from tng.data.load import import_candles
-from tng.algorithm_backtest.cheat_position import CheatPosition
-import tng.algorithm_backtest.limits as limits
+from tradingene.data.load import import_candles
+from tradingene.algorithm_backtest.cheat_position import CheatPosition
+import tradingene.algorithm_backtest.limits as limits
 
 
 class CheatBacktest:

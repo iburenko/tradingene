@@ -1,5 +1,5 @@
 from datetime import datetime
-from tng.algorithm_backtest.trade_activity import TradeActivity
+from tradingene.algorithm_backtest.trade_activity import TradeActivity
 
 
 class TNG(TradeActivity):
@@ -30,7 +30,7 @@ class TNG(TradeActivity):
                 # Note: start_date and end_date may be specified
                 # in any order.
                 from datetime import datetime
-                from tng.algorithmic_backtest.tng import TNG
+                from tradingene.algorithmic_backtest.tng import TNG
                 start_date = datetime(2018, 1, 1)
                 end_date = datetime(2018, 2, 1)
                 alg = TNG(start_date, end_date)
@@ -42,7 +42,7 @@ class TNG(TradeActivity):
                 # Note: start_date and end_date may be specified
                 # in any order
                 from datetime import datetime
-                from tng.algorithmic_backtest.tng import TNG
+                from tradingene.algorithmic_backtest.tng import TNG
                 name = "Fleece"
                 start_date = datetime(2018, 1, 1)
                 end_date = datetime(2018, 2, 1)
@@ -55,7 +55,7 @@ class TNG(TradeActivity):
                 # Note: start_date and end_date may be specified
                 # in any order.
                 from datetime import datetime
-                from tng.algorithmic_backtest.tng import TNG
+                from tradingene.algorithmic_backtest.tng import TNG
                 regime = "MP"
                 start_date = datetime(2018, 1, 1)
                 end_date = datetime(2018, 2, 1)

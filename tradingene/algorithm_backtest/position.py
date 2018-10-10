@@ -1,4 +1,4 @@
-from tng.algorithm_backtest.limits import MAX_AVAILABLE_VOLUME
+from tradingene.algorithm_backtest.limits import MAX_AVAILABLE_VOLUME
 
 
 class Position:

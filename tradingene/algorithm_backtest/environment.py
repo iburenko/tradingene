@@ -1,7 +1,7 @@
 from datetime import datetime
 from warnings import warn
-from tng.algorithm_backtest.algorithm import Algorithm
-from tng.algorithm_backtest.instrument import Instrument
+from tradingene.algorithm_backtest.algorithm import Algorithm
+from tradingene.algorithm_backtest.instrument import Instrument
 
 
 class Environment(Algorithm):

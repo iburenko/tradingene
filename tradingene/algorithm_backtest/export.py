@@ -1,7 +1,8 @@
-from tng.data.load import import_candles
-import tng.ind.ind as tngind
 import pandas as pd
 import numpy as np
+from tradingene.data.load import import_candles
+import tradingene.ind.ind as tngind
+
 
 class Export:
 
