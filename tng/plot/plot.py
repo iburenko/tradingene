@@ -9,7 +9,7 @@ from bokeh.models import ColumnDataSource, CustomJS, Band
 from bokeh.models.tools import HoverTool
 
 
-def plot_cs_prof(alg, comment):
+def plot_cs_prof(alg, filename, comment=""):
     def update_triangle(source):
         return CustomJS(
             args=dict(source=source, xr=p.x_range),
@@ -131,7 +131,7 @@ def plot_cs_prof(alg, comment):
 
     w = (timeframe / 2) * 60 * 1000
 
-    output_file("stats.html", title="Graphs")
+    output_file(filename, title="Graphs")
     TOOLS = "pan,wheel_zoom,reset,save"
 
     inc = df['close'] > df['open']
@@ -427,4 +427,4 @@ def plot_cs_prof(alg, comment):
                                                          '@cumsum{0.'+str(prec)+'}')],
         formatters={"date": "datetime"})
     plot_prof.add_tools(hover3)
-    save(column(p, plot_prof), "stats.html")
+    save(column(p, plot_prof), filename)

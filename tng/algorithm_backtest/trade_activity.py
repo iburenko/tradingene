@@ -33,7 +33,7 @@ class TradeActivity(Backtest):
 
 
     def openPosition(self, ticker=None):
-        """Open position without acquiring any asset.
+        """ Open position without acquiring any asset.
 
             Arguments:
                 ticker (str): Asset for which position will open.
@@ -590,6 +590,7 @@ class TradeActivity(Backtest):
                     alg.openLong(1)
                     if instrument.open[1] > 10000:
                         alg.closePosition()
+            ```
         """
 
         closed = False
@@ -744,7 +745,7 @@ class TradeActivity(Backtest):
             Arguments:
                 ticker (str, optional): Name of the underlying asset.
 
-            Returns
+            Returns:
                 float: Last price of the instrument.
 
             Raises:
@@ -807,6 +808,19 @@ class TradeActivity(Backtest):
             raise NameError("Ticker {} was not specified!".format(ticker))
 
     def getPositionSide(self, pos_id):
+        """ Docs!
+        
+        Arguments:
+            pos_id {[type]} -- [description]
+        
+        Raises:
+            TypeError -- [description]
+            ValueError -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """
+
         if not isinstance(pos_id, int):
             raise TypeError("Position id must be int!")
         #pos = [pos for pos in self.positions if pos.id == pos_id]
@@ -935,6 +949,9 @@ class TradeActivity(Backtest):
                 return
         warn("Event with id {} was not found!\n".format(id))
 
+###############################################################################
+#                           Utility routines
+###############################################################################
     def _check_price_params(self, params, handler):
         if isinstance(params, int) or isinstance(params, float):
             if callable(handler):

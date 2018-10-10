@@ -340,34 +340,36 @@ class BacktestStatistics:
         for method in all_stats:
             eval("self." + method)()
 
-    def backtest_results(self, plot=True, comment=""):
+    def backtest_results(self, plot=True, filename=None, comment=""):
+        stats_filename = "stats.html"
+        if filename is not None:
+            assert isinstance(filename, str), "File name is not string!"
+            stats_filename = filename + ".html"
         if not self._calculated:
             self._do_all_caclulations()
             self._calculated = 1
         if self.all_positions_:
-            plot_cs_prof(self.alg, comment)
-            
+            plot_cs_prof(self.alg, stats_filename, comment=comment)
             html = "<table>"
             for elem in self.__dict__:
                 if elem[-1] == "_" or elem[0] == "_":
                     continue
                 value = eval("self." + elem)
-                #if type(value) is int or type(value) is float or type(value)
                 if type(value) in (int, float, np.float64):
                     html += "<tr><td>" + elem + "</td><td>" + str(
                         value) + "</td></tr>"
             html += "</table>"
-            with open("stats.html", "r") as file_:
+            with open(stats_filename, "r") as file_:
                 content = file_.read()
             content.replace("</body>", "")
             content.replace("</html>", "")
-            with open("stats.html", "a") as file_:
+            with open(stats_filename, "a") as file_:
                 file_.write(html)
         if plot:
             if sys.platform.startswith('darwin'):
-                subprocess.call(('open', "stats.html"))
+                subprocess.call(('open', stats_filename))
             elif os.name == 'nt':
-                os.startfile("stats.html")
+                os.startfile(stats_filename)
             elif os.name == 'posix':
-                subprocess.call(('xdg-open', "stats.html"))
+                subprocess.call(('xdg-open', stats_filename))
 
