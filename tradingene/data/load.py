@@ -114,8 +114,10 @@ def _get_filename(ticker, timeframe, start_date, end_date, shift):
     return filename
 
 
-def _get_cached_file(ticker, timeframe):
+def _get_cached_file(ticker, timeframe, shift=None):
     start_string = "__" + ticker + str(timeframe) + "_s"
+    if shift is not None and isinstance(shift, int):
+        start_string += str(shift)
     cached_file = [
         file_ for file_ in os.listdir(where_to_cache)
         if os.path.isfile((os.path.join(where_to_cache, file_)))
@@ -253,9 +255,6 @@ def _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
     cached_file = _get_cached_file(ticker, timeframe)
     if not cached_file:
         return False
-    # replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators, 0)
-    # if replace_ind or add_ind:
-    #     return False
     cached_file = cached_file.replace("__", "")
     cached_file = cached_file.replace(ticker + str(timeframe) + "_", "")
     shift_and_dates = cached_file.split("_")
@@ -277,7 +276,7 @@ def _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
 
 
 def _cache_data(data, filename, ticker, timeframe, shift):
-    already_cached = _get_cached_file(ticker, timeframe)
+    already_cached = _get_cached_file(ticker, timeframe, shift)
     if already_cached:
         os.remove(where_to_cache + already_cached)
         data.to_csv(where_to_cache + filename, index=False, mode="a")
