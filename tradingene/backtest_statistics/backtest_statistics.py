@@ -2,7 +2,7 @@ import os, sys, subprocess
 import time
 import datetime
 import numpy as np
-from tng.plot.plot import plot_cs_prof
+from tradingene.plot.plot import plot_cs_prof
 
 
 class BacktestStatistics:

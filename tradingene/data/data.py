@@ -5,8 +5,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import urllib.request
 import json
-from tng.algorithm_backtest.limits import instrument_ids
-import tng.algorithm_backtest.limits as limits
+from tradingene.algorithm_backtest.limits import instrument_ids
+import tradingene.algorithm_backtest.limits as limits
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],

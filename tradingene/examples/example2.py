@@ -1,6 +1,6 @@
 from datetime import datetime
-from tng.algorithm_backtest.tng import TNG
-from tng.backtest_statistics import backtest_statistics as bs
+from tradingene.algorithm_backtest.tng import TNG
+from tradingene.backtest_statistics import backtest_statistics as bs
 
 name = "example1"
 regime = "SP"

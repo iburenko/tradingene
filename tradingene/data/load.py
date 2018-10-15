@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 import time
 import numpy as np
 import pandas as pd
-from tng.algorithm_backtest.tng import TNG
-from tng.data.data import Data
-from tng.data.data_separation import separate_data
-import tng.ind.ind as tngind
+from tradingene.algorithm_backtest.tng import TNG
+from tradingene.data.data import Data
+from tradingene.data.data_separation import separate_data
+import tradingene.ind.ind as tngind
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -195,8 +195,9 @@ def _find_uncached_data(ticker, timeframe, start_date, end_date):
     return uncached_data
 
 
-def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators,
-                           shift):
+def _load_data_given_dates(
+        ticker, timeframe, start_date, end_date, indicators=None, shift=0
+    ):
     end_date += timedelta(minutes=1 + shift)
     start_date += timedelta(minutes=shift)
     data = Data.load_data(ticker, start_date, end_date)
@@ -225,21 +226,22 @@ def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators,
     if ind - iters < 0:
         rates = rates[:ind - iters]
     rates = pd.DataFrame(rates[::-1])
-    for ind_name, ind_params in indicators.items():
-        for class_name in dir(tngind):
-            if ind_name == class_name[3:].lower():
-                break
-        if not isinstance(ind_params, tuple):
-            ind_params = (ind_params, )
-        new_ind = eval("tngind." + class_name + str(ind_params))
-        explanatory_str = ""
-        ind_values = new_ind.calculateRates(rates)
-        for param in ind_params:
-            explanatory_str += "_" + str(param)
-        dict_values = dict()
-        for key in ind_values.keys():
-            dict_values[key + explanatory_str] = ind_values[key]
-        rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis=1)
+    if indicators is not None:
+        for ind_name, ind_params in indicators.items():
+            for class_name in dir(tngind):
+                if ind_name == class_name[3:].lower():
+                    break
+            if not isinstance(ind_params, tuple):
+                ind_params = (ind_params, )
+            new_ind = eval("tngind." + class_name + str(ind_params))
+            explanatory_str = ""
+            ind_values = new_ind.calculateRates(rates)
+            for param in ind_params:
+                explanatory_str += "_" + str(param)
+            dict_values = dict()
+            for key in ind_values.keys():
+                dict_values[key + explanatory_str] = ind_values[key]
+            rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis=1)
     return rates
 
 

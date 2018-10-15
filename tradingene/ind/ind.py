@@ -1,5 +1,5 @@
-import tng.ind.ti as ti
-from tng.algorithm_backtest.limits import LOOKBACK_PERIOD
+import tradingene.ind.ti as ti
+from tradingene.algorithm_backtest.limits import LOOKBACK_PERIOD
 import numpy as np
 
 
