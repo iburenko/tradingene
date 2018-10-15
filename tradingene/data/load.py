@@ -145,8 +145,8 @@ def _get_cached_dates(ticker, timeframe):
     return prev_start_date, prev_end_date
 
 
-def _load_cached_data(ticker, timeframe, start_date, end_date, indicators,
-                      shift):
+def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
+                      shift=0):
     start_date_, end_date_ = _get_cached_dates(ticker, timeframe)
     if start_date > start_date_:
         start_date_ = start_date
@@ -165,16 +165,17 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators,
             elem for elem in list(data) if elem.startswith(ind_name)
         ]
         data = data.drop(inds_to_delete, axis=1)
-    for ind in indicators.keys():
-        if ind in replace_ind.keys():
-            add_ind.update({ind: indicators[ind]})
-    if add_ind:
-        add_data = _load_data_given_dates(ticker, timeframe, start_date_,
-                                          end_date_, add_ind, shift)
-        add_data = add_data.drop(
-            ['time', 'open', 'high', 'low', 'close', 'vol'], axis=1)
-        data = pd.concat([data, add_data], axis=1)
-        data = data[list(data)[:6] + sorted(list(data)[6:])]
+    if indicators is not None:
+        for ind in indicators.keys():
+            if ind in replace_ind.keys():
+                add_ind.update({ind: indicators[ind]})
+        if add_ind:
+            add_data = _load_data_given_dates(ticker, timeframe, start_date_,
+                                            end_date_, add_ind, shift)
+            add_data = add_data.drop(
+                ['time', 'open', 'high', 'low', 'close', 'vol'], axis=1)
+            data = pd.concat([data, add_data], axis=1)
+            data = data[list(data)[:6] + sorted(list(data)[6:])]
     for col in data.columns[6:]:
         col_ = col.split("_")[0]
         if not any(col_.startswith(key) for key in indicators.keys()):
@@ -291,12 +292,13 @@ def _find_uncached_indicators(cached_file, indicators, check):
     ind_dict = _indicators_to_dict(list(data_file)[6:])
     replace_ind = dict()
     add_ind = dict()
-    for ind, params in indicators.items():
-        if ind not in ind_dict.keys():
-            add_ind[ind] = params
-        else:
-            if ind_dict[ind] != params:
-                replace_ind[ind] = ind_dict[ind]
+    if indicators is not None:
+        for ind, params in indicators.items():
+            if ind not in ind_dict.keys():
+                add_ind[ind] = params
+            else:
+                if ind_dict[ind] != params:
+                    replace_ind[ind] = ind_dict[ind]
     if check:
         for ind in ind_dict.keys():
             if ind not in indicators.keys():

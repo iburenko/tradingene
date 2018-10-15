@@ -130,7 +130,7 @@ class Data:
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
               str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
         data = urllib.request.urlopen(url).read()
-        obj = json.loads(data)
+        obj = json.loads(data.decode('utf-8'))
         df_data = pd.DataFrame(
             obj, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
         df_data.drop_duplicates(subset=['time'], inplace=True)
