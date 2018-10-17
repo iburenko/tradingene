@@ -376,16 +376,16 @@ def plot_cs_prof(alg, filename, comment=""):
 
     date_mid = pd.DataFrame()
     close_df['date'] = (pd.DatetimeIndex(close_df['date']).astype(np.int64))
-    date_mid['date'] = close_df['date'].shift() + close_df['cumsum'].shift(
-    ) * (close_df['date'] - close_df['date'].shift()) / (
-        close_df['cumsum'].shift() - close_df['cumsum'])
+
+    curloc = np.sign(
+        close_df['cumsum'].shift().fillna(0) * close_df['cumsum']) < 0
+
+    date_mid['date'] = close_df['date'].shift()[curloc] + close_df['cumsum'].shift(
+    )[curloc] * (close_df['date'][curloc] - close_df['date'].shift())[curloc] / (
+        close_df['cumsum'].shift()[curloc] - close_df['cumsum'])[curloc]
     date_mid = date_mid[np.isfinite(date_mid['date'])]
     date_mid['date'] = pd.to_datetime(date_mid['date'])
     close_df['date'] = pd.to_datetime(close_df['date'])
-
-    date_mid['diff'] = np.sign(
-        close_df['cumsum'].shift().fillna(0) * close_df['cumsum'])
-    date_mid = date_mid[date_mid['diff'] < 0]
 
     date_mid['cumsum'] = 0.0
     date_mid['pos'] = 0.0
