@@ -78,7 +78,7 @@ def import_candles(ticker,
                    start_date,
                    end_date,
                    reverse=True,
-                   indicators={},
+                   indicators=None,
                    cache=True,
                    shift=0):
     if not isinstance(ticker, str) or \
@@ -129,8 +129,8 @@ def _get_cached_file(ticker, timeframe, shift=None):
         return False
 
 
-def _get_cached_dates(ticker, timeframe):
-    cached_file = _get_cached_file(ticker, timeframe)
+def _get_cached_dates(ticker, timeframe, shift):
+    cached_file = _get_cached_file(ticker, timeframe, shift)
     if not cached_file:
         return None
     replaced_filename = cached_file.replace("0__", "0")
@@ -147,7 +147,7 @@ def _get_cached_dates(ticker, timeframe):
 
 def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
                       shift=0):
-    start_date_, end_date_ = _get_cached_dates(ticker, timeframe)
+    start_date_, end_date_ = _get_cached_dates(ticker, timeframe, shift)
     if start_date > start_date_:
         start_date_ = start_date
     if end_date < end_date_:
@@ -255,7 +255,7 @@ def _rename_columns(data):
 
 
 def _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
-    cached_file = _get_cached_file(ticker, timeframe)
+    cached_file = _get_cached_file(ticker, timeframe, shift)
     if not cached_file:
         return False
     cached_file = cached_file.replace("__", "")
