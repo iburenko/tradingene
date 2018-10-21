@@ -707,19 +707,19 @@ class TradeActivity(Backtest):
                 # In SP regime
                 def onBar(instrument):
                     alg.buy()
-                    alg.getAvailableVolume() returns 0
+                    alg.getAvailableVolume()# returns 0
             ```
             ```python
                 # In MP regime
                 def onBar(instrument):
                     alg.buy(0.2)
-                    alg.getAvailableVolume() returns 0.8
+                    alg.getAvailableVolume()# returns 0.8
             ```
             ```python
                 # In MP regime
                 def onBar(instrument):
                     alg.sell(0.5)
-                    alg.getAvailableVolume() returns 0.5
+                    alg.getAvailableVolume()# returns 0.5
             ```
         """
 
@@ -807,7 +807,7 @@ class TradeActivity(Backtest):
             raise NameError("Ticker {} was not specified!".format(ticker))
 
     def getPositionSide(self, pos_id):
-        """ Docs!
+        """ Returns position side given position's id.
         
         Arguments:
             pos_id (int) -- Id of position.

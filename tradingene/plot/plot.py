@@ -9,7 +9,7 @@ from bokeh.models import ColumnDataSource, CustomJS, Band
 from bokeh.models.tools import HoverTool
 
 
-def plot_cs_prof(alg, filename, comment=""):
+def plot_cs_prof(alg, filename):
     def update_triangle(source):
         return CustomJS(
             args=dict(source=source, xr=p.x_range),

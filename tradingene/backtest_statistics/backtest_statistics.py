@@ -53,7 +53,7 @@ class BacktestStatistics:
 
 
     def calculate_PnL(self):
-        pnl = 0
+        pnl = 0.
         for pos in self.all_positions_:
             pnl += pos.profit
         if self.alg.positions and self.alg.positions[-1].close_time != 0:
@@ -319,37 +319,13 @@ class BacktestStatistics:
         else:
             return 0
 
-    def _calculate_correlation(self):
-        price_array = np.zeros((len(self.all_positions_)))
-        profit_array = np.zeros((len(self.all_positions_)))
-        i = 0
-        for pos in self.all_positions_:
-            price_array[i] = pos.trades[0].open_price
-            profit_array[i] = pos.profit
-            i += 1
-        corr = np.corrcoef(price_array, profit_array)[0][1]
-        return corr
-
-    def _do_all_caclulations(self):
-        if not self.all_positions_:
-            print("No backtest statistics available!")
-            return
-        all_stats = [method for method in dir(BacktestStatistics) \
-                            if callable(getattr(BacktestStatistics, method)) \
-                            if method.startswith('calculate_')]
-        for method in all_stats:
-            eval("self." + method)()
-
-    def backtest_results(self, plot=True, filename=None, comment=""):
-        stats_filename = "stats.html"
-        if filename is not None:
-            assert isinstance(filename, str), "File name is not string!"
-            stats_filename = filename + ".html"
+    def backtest_results(self, plot=True, filename="stats"):
+        stats_filename = filename + ".html"
         if not self._calculated:
             self._do_all_caclulations()
             self._calculated = 1
         if self.all_positions_:
-            plot_cs_prof(self.alg, stats_filename, comment=comment)
+            plot_cs_prof(self.alg, stats_filename)
             html = "<table>"
             for elem in self.__dict__:
                 if elem[-1] == "_" or elem[0] == "_":
@@ -373,3 +349,32 @@ class BacktestStatistics:
             elif os.name == 'posix':
                 subprocess.call(('xdg-open', stats_filename))
 
+
+###############################################################################
+#                       for internal use only
+###############################################################################
+   
+    def _do_all_caclulations(self):
+        if not self.all_positions_:
+            print("No backtest statistics available!")
+            return
+        all_stats = [method for method in dir(BacktestStatistics) \
+                            if callable(getattr(BacktestStatistics, method)) \
+                            if method.startswith('calculate_')]
+        for method in all_stats:
+            eval("self." + method)()
+
+###############################################################################
+#                       work-in-progress
+###############################################################################
+
+    def _calculate_correlation(self):
+        price_array = np.zeros((len(self.all_positions_)))
+        profit_array = np.zeros((len(self.all_positions_)))
+        i = 0
+        for pos in self.all_positions_:
+            price_array[i] = pos.trades[0].open_price
+            profit_array[i] = pos.profit
+            i += 1
+        corr = np.corrcoef(price_array, profit_array)[0][1]
+        return corr

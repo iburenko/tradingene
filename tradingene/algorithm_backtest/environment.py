@@ -43,7 +43,7 @@ class Environment(Algorithm):
             '''python
                 # Add new instrument to your algorithm
                 alg = tng(name, regime, start_date, end_date)
-                alg.add_instrument("btcusd")
+                alg.addInstrument("btcusd")
                 # After that piece of code your algorithm has
                 # object alg which contains all functionality
                 # for backtest and your backtest will run on
@@ -51,7 +51,7 @@ class Environment(Algorithm):
             '''
 
             Args:
-                ticker (str): name of the underlying asset.
+                ticker (str): Name of the underlying asset.
 
             Returns:
                 None
@@ -77,16 +77,16 @@ class Environment(Algorithm):
             '''python
                 # Add new instrument to your algorithm
                 alg = tng(name, regime, start_date, end_date)
-                alg.add_instrument("btcusd")
-                alg.add_instrument("ethusd")
-                alg.delete_instrument("btcusd")
+                alg.addInstrument("btcusd")
+                alg.addInstrument("ethusd")
+                alg.deleteInstrument("btcusd")
                 # After that piece of code your algorithm
                 # will have only one instrument, namely
                 # ethusd.
             '''
 
             Args:
-                ticker (str): name the asset to delete.
+                ticker (str): Name the asset to delete
 
             Returns:
                 None
@@ -105,8 +105,8 @@ class Environment(Algorithm):
             '''python
                 # Add new instrument to your algorithm
                 alg = tng(name, regime, start_date, end_date)
-                alg.add_instrument("btcusd")
-                alg.add_timeframe("btcusd", 5, 15)
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 5, 15)
                 # After this piece of code your algorithm
                 # will add btcusd as the underlying asset
                 # and will add 5 and 15 minutes timeframes,
@@ -116,13 +116,13 @@ class Environment(Algorithm):
             '''
 
             Args:
-                timeframes (tuple): tuple of ints
+                timeframes (tuple): Tuple of ints
 
             Returns:
                 None
 
             Raises:
-                TypeError: if tuple has non int element.
+                TypeError: If tuple has non int element
         """
 
         for elem in timeframes:
@@ -146,9 +146,9 @@ class Environment(Algorithm):
             '''python
                 # Add new instrument to your algorithm
                 alg = tng(name, regime, start_date, end_date)
-                alg.add_instrument("btcusd")
-                alg.add_timeframe("btcusd", 5, 15)
-                alg.delete_timeframe("btcusd", 5)
+                alg.addInstrument("btcusd")
+                alg.addTimeframe("btcusd", 5, 15)
+                alg.deleteTimeframe("btcusd", 5)
                 # After this piece of code your algorithm
                 # will add btcusd as the underlying asset
                 # and will 15 minutes timeframe,
@@ -157,13 +157,13 @@ class Environment(Algorithm):
             '''
 
             Args:
-                timeframes (tuple): tuple of ints
+                timeframes (tuple): Tuple of ints
 
             Returns:
                 None
 
             Raises:
-                TypeError: if tuple has non int element.
+                TypeError: If tuple has non int element
         """
 
         for elem in timeframes:

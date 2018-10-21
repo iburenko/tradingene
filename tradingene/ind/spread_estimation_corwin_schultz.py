@@ -39,5 +39,5 @@ def corwin_schultz(L_obs_0, H_obs_0, L_obs_1, H_obs_1, mode=0):
                                                 - np.sqrt(gamma / (3 - 2 * np.sqrt(2))) - alpha
         alpha_solve = fsolve(func_alpha_ignor_ineq, alpha_guess)
         #alph = np.linspace(-1, 1, )
-    perc_spread = 2 * (np.exp(alpha_solve) - 1) / (1 + np.exp(alpha_solve))
-    return perc_spread
+    perc_slippage = 2 * (np.exp(alpha_solve) - 1) / (1 + np.exp(alpha_solve))
+    return perc_slippage
