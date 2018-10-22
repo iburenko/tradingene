@@ -1,7 +1,7 @@
 from datetime import datetime
-from tng.data.load import import_data, import_candles
-from tng.algorithm_backtest.tng import TNG
-import tng.backtest_statistics.backtest_statistics as bs
+from tradingene.data.load import import_data, import_candles
+from tradingene.algorithm_backtest.tng import TNG
+import tradingene.backtest_statistics.backtest_statistics as bs
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.initializers import he_uniform
@@ -33,7 +33,6 @@ def train_model():
         lookforward=lookforward,
         split = (70, 30, 0), indicators = inds,
     )
-    data
     # data = import_candles(
     #     ticker,
     #     timeframe,
@@ -77,24 +76,24 @@ def calculate_output(data):
         return -1
     else:
         return 0
-        
-for i in range(1):
-    model = train_model()
-    start_date = datetime(2018, 1, 1)
-    end_date = datetime(2018, 2, 1)
-    alg = TNG(start_date, end_date)
-    alg.addInstrument("btcusd")
-    alg.addTimeframe("btcusd", 60)
+    
 
-    i = 0
-    def onBar(instrument):
-        global model, i
-        pred = model.predict_classes(calculate_input(instrument.rates[1:7]))
-        if pred == 1:
-            alg.buy()
-        elif pred == 2:
-            alg.sell()
-        
-    alg.run_backtest(onBar)
-    new_stat = bs.BacktestStatistics(alg)
-    new_stat.backtest_results()
+model = train_model()
+start_date = datetime(2018, 1, 1)
+end_date = datetime(2018, 2, 1)
+alg = TNG(start_date, end_date)
+alg.addInstrument("btcusd")
+alg.addTimeframe("btcusd", 60)
+
+i = 0
+def onBar(instrument):
+    global model, i
+    pred = model.predict_classes(calculate_input(instrument.rates[1:7]))
+    if pred == 1:
+        alg.buy()
+    elif pred == 2:
+        alg.sell()
+    
+alg.run_backtest(onBar)
+new_stat = bs.BacktestStatistics(alg)
+new_stat.backtest_results()

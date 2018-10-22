@@ -176,10 +176,10 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
                 ['time', 'open', 'high', 'low', 'close', 'vol'], axis=1)
             data = pd.concat([data, add_data], axis=1)
             data = data[list(data)[:6] + sorted(list(data)[6:])]
-    for col in data.columns[6:]:
-        col_ = col.split("_")[0]
-        if not any(col_.startswith(key) for key in indicators.keys()):
-            data.drop(columns=[col], inplace=True)
+        for col in data.columns[6:]:
+            col_ = col.split("_")[0]
+            if not any(col_.startswith(key) for key in indicators.keys()):
+                data.drop(columns=[col], inplace=True)
     return data
 
 

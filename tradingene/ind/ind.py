@@ -701,7 +701,11 @@ class IndBollinger(Indicator):
                 ma[i] = None
                 top[i] = None
                 bottom[i] = None
-        return {'ma': ma, 'top': top, 'bottom': bottom}
+        return {
+            'bollinger.ma': ma, 
+            'bollinger.top': top, 
+            'bollinger.bottom': bottom
+            }
 
 
 # end of IndBollinger
