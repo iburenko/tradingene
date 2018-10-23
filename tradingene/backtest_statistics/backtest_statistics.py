@@ -1,6 +1,7 @@
 import os, sys, subprocess
 import time
 import datetime
+import webbrowser
 import numpy as np
 from tradingene.plot.plot import plot_cs_prof
 
@@ -342,12 +343,13 @@ class BacktestStatistics:
             with open(stats_filename, "a") as file_:
                 file_.write(html)
         if plot:
-            if sys.platform.startswith('darwin'):
-                subprocess.call(('open', stats_filename))
-            elif os.name == 'nt':
-                os.startfile(stats_filename)
-            elif os.name == 'posix':
-                subprocess.call(('xdg-open', stats_filename))
+            webbrowser.open('file://' + os.path.realpath(stats_filename))
+            # if sys.platform.startswith('darwin'):
+            #     subprocess.call(('open', stats_filename))
+            # elif os.name == 'nt':
+            #     os.startfile(stats_filename)
+            # elif os.name == 'posix':
+            #     subprocess.call(('xdg-open', stats_filename))
 
 
 ###############################################################################
