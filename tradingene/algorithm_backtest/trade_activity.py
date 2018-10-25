@@ -115,7 +115,7 @@ class TradeActivity(Backtest):
             return None
 
 
-    def buy(self, volume=1):
+    def buy(self, volume=1.):
         """ Buys specified volume of an asset.
 
             In Single Position regime:
@@ -238,7 +238,7 @@ class TradeActivity(Backtest):
         return pos_id
 
 
-    def sell(self, volume=1):
+    def sell(self, volume=1.):
         """ Sells specified volume of an asset.
 
             In Single Position regime:
@@ -362,7 +362,7 @@ class TradeActivity(Backtest):
         return pos_id
 
 
-    def openLong(self, volume=1):
+    def openLong(self, volume=1.):
         """ Opens a position and buys specified number of lots.
 
             This function combains functionality of the following code:
@@ -412,7 +412,7 @@ class TradeActivity(Backtest):
         return pos_id
 
 
-    def openShort(self, volume=1):
+    def openShort(self, volume=1.):
         """ Opens a position and sells specified number of lots.
 
             This function combains functionality of the following code:

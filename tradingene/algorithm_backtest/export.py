@@ -10,6 +10,12 @@ class Export:
         self.alg = alg_
 
     def export_results(self, indicators, lookback, filename=None):
+        if indicators is not None and not isinstance(indicators, dict):
+            raise TypeError("Indicators must be dictionary or None!")
+        if lookback is not None and not isinstance(lookback, int):
+            raise TypeError("Lookback must be integer!")
+        if filename is not None and not isinstance(filename, str):
+            raise TypeError("Filename must be string!")
         dict_values = dict()
         for ind_name, ind_params in indicators.items():
             for class_name in dir(tngind):
