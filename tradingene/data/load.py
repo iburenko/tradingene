@@ -58,6 +58,7 @@ def import_data(ticker,
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
+    indicators = _check_indicators(indicators)
     if _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
         data = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
@@ -90,17 +91,18 @@ def import_candles(ticker,
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
+    list_of_ind_names = list(indicators.keys())
+    indicators = _check_indicators(indicators)
     if _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
         data = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
     else:
-        data = _load_data_given_dates(ticker, timeframe, start_date, end_date,
+        data, ind_str = _load_data_given_dates(ticker, timeframe, start_date, end_date,
                                       indicators, shift)
     if cache:
-        _cache_data(data, filename, ticker, timeframe, shift)
+        _cache_data(data, ind_str, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
-    data = _rename_columns(data)
     return data
 
 
@@ -147,6 +149,16 @@ def _get_cached_dates(ticker, timeframe, shift):
 
 def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
                       shift=0):
+    def dict_to_list(ind_dict):
+        ret_list = list()
+        for ind_name in ind_dict.values():
+            if isinstance(ind_name, str):
+                ind = ind_name
+            elif isinstance(ind_name, tuple):
+                ind = ind_name[0]
+        ret_list.append(ind)
+        return ret_list
+
     start_date_, end_date_ = _get_cached_dates(ticker, timeframe, shift)
     if start_date > start_date_:
         start_date_ = start_date
@@ -166,9 +178,10 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
         ]
         data = data.drop(inds_to_delete, axis=1)
     if indicators is not None:
-        for ind in indicators.keys():
+        for ind_name in indicators.keys():
+            ind = ind_name[0]
             if ind in replace_ind.keys():
-                add_ind.update({ind: indicators[ind]})
+                add_ind.update({ind_name: indicators[ind_name]})
         if add_ind:
             add_data = _load_data_given_dates(ticker, timeframe, start_date_,
                                             end_date_, add_ind, shift)
@@ -178,7 +191,7 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
             data = data[list(data)[:6] + sorted(list(data)[6:])]
         for col in data.columns[6:]:
             col_ = col.split("_")[0]
-            if not any(col_.startswith(key) for key in indicators.keys()):
+            if not any(col_.startswith(key) for key in dict_to_list(indicators)):
                 data.drop(columns=[col], inplace=True)
     return data
 
@@ -227,23 +240,33 @@ def _load_data_given_dates(
     if ind - iters < 0:
         rates = rates[:ind - iters]
     rates = pd.DataFrame(rates[::-1])
+    ind_names_string = list(rates.columns)
     if indicators is not None:
-        for ind_name, ind_params in indicators.items():
+        for ind_key, ind_header in indicators.items():
+            ind_name = ind_header[0]
+            ind_params = ind_header[1:]
             for class_name in dir(tngind):
                 if ind_name == class_name[3:].lower():
                     break
-            if not isinstance(ind_params, tuple):
-                ind_params = (ind_params, )
             new_ind = eval("tngind." + class_name + str(ind_params))
-            explanatory_str = ""
             ind_values = new_ind.calculateRates(rates)
+            
+            dict_values = dict()
+            l = [item.split(".")[1] for item in ind_values if len(item.split(".")) > 1]
+            if l:
+                for key in ind_values.keys():
+                    dict_values[ind_key+"."+key.split(".")[1]] = ind_values[key]
+            else:
+                dict_values[ind_key] = ind_values[list(ind_values.keys())[0]]
+
+            explanatory_str = ""
             for param in ind_params:
                 explanatory_str += "_" + str(param)
-            dict_values = dict()
             for key in ind_values.keys():
-                dict_values[key + explanatory_str] = ind_values[key]
+                ind_names_string.append(key + explanatory_str)
+            key+explanatory_str
             rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis=1)
-    return rates
+    return rates, ind_names_string
 
 
 def _rename_columns(data):
@@ -278,13 +301,14 @@ def _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
         return True
 
 
-def _cache_data(data, filename, ticker, timeframe, shift):
+def _cache_data(data, ind_str, filename, ticker, timeframe, shift):
     already_cached = _get_cached_file(ticker, timeframe, shift)
+    renamed_data = data.rename(columns=dict(zip(list(data.columns), ind_str)))
     if already_cached:
         os.remove(where_to_cache + already_cached)
-        data.to_csv(where_to_cache + filename, index=False, mode="a")
+        renamed_data.to_csv(where_to_cache + filename, index=False, mode="a")
     else:
-        data.to_csv(where_to_cache + filename, index=False, mode="a")
+        renamed_data.to_csv(where_to_cache + filename, index=False, mode="a")
 
 
 def _find_uncached_indicators(cached_file, indicators, check):
@@ -293,12 +317,14 @@ def _find_uncached_indicators(cached_file, indicators, check):
     replace_ind = dict()
     add_ind = dict()
     if indicators is not None:
-        for ind, params in indicators.items():
-            if ind not in ind_dict.keys():
-                add_ind[ind] = params
+        for ind_header in indicators.values():
+            ind_name = ind_header[0]
+            ind_params = ind_header[1:]
+            if ind_name not in ind_dict.keys():
+                add_ind[ind_name] = ind_params
             else:
-                if ind_dict[ind] != params:
-                    replace_ind[ind] = ind_dict[ind]
+                if ind_dict[ind_name] != ind_params:
+                    replace_ind[ind_name] = ind_dict[ind_name]
     if check:
         for ind in ind_dict.keys():
             if ind not in indicators.keys():
@@ -320,6 +346,8 @@ def _get_inds_for_aux_dates(cached_file, indicators):
 
 
 def _indicators_to_dict(indicators):
+    print(indicators)
+    input("")
     ind_dict = dict()
     for ind in indicators:
         splitted_ind = ind.split("_")
@@ -334,6 +362,11 @@ def _indicators_to_dict(indicators):
             else:
                 ind_dict[ind_name] = ()
     return ind_dict
+
+
+def _check_indicators(indicators):
+    to_str = lambda x: (x,) if isinstance(x, str) else x
+    return {key: to_str(indicators[key]) for key in indicators.keys()}
 
 
 def check_home_folder():
@@ -352,139 +385,3 @@ def delete_old_files():
         this_moment = datetime.now()
         if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
             os.remove(where_to_cache + file_)
-
-
-###############################################################################
-# def _load_data_given_dates(ticker, timeframe, start_date, end_date, indicators, shift):
-#     data_columns = ['time', 'open', 'high', 'low', 'close', 'vol']
-#     sample = np.empty(len(data_columns))
-#     data = np.array([])
-#     ind_dict = dict()
-
-#     def on_bar(instrument):
-#         nonlocal data, ind_dict
-#         sample[0:6] = instrument.time[1],\
-#                     instrument.open[1], \
-#                     instrument.high[1],\
-#                     instrument.low[1],\
-#                     instrument.close[1],\
-#                     instrument.vol[1]
-#         i = 6
-#         if indicators:
-#             for key, params in indicators.items():
-#                 if not isinstance(params, tuple):
-#                     params = (params, )
-#                 column_param = ""
-#                 for signle_param in params:
-#                     column_param += (str(signle_param)+"_")
-#                 column_param = column_param[:-1]
-#                 ind = eval("instrument." + str(key))
-#                 parsed = _parse_indicator(key, ind(*params))
-#                 for key, value in parsed.items():
-#                     if column_param:
-#                         new_key = key+"_"+column_param
-#                     else:
-#                         new_key = key
-#                     if new_key in ind_dict.keys():
-#                         ind_dict[new_key].append(value)
-#                     else:
-#                         ind_dict[new_key] = [value]
-#         data = np.append(data, sample)
-
-#     name = "import_data"
-#     regime = "SP"
-#     alg = TNG(name, regime, start_date, end_date)
-#     alg.addInstrument(ticker)
-#     alg.addTimeframe(ticker, timeframe)
-#     alg.run_backtest(on_bar, shift, modeling = False)
-#     del alg
-#     data = np.reshape(data,
-#                       (len(data) // len(data_columns), len(data_columns)))
-#     data = pd.DataFrame(data, columns=data_columns)
-#     data = pd.concat([data, pd.DataFrame.from_dict(ind_dict)], axis=1)
-#     return data
-
-# def _parse_indicator(ind_name, ind_value):
-#     if isinstance(ind_value, list):
-#         ret_dict = dict.fromkeys([ind_name])
-#         ret_dict[ind_name] = ind_value[1]
-#     else:
-#         keys = [
-#             ind_name + "." + str(elem) for elem in ind_value.__dict__.keys()
-#         ]
-#         ret_dict = dict.fromkeys(keys)
-#         for key, value in (ind_value.__dict__.items()):
-#             ret_dict[ind_name + "." + key] = value[1]
-#     return ret_dict
-
-# def separate_data(data, split, calculate_input, calculate_output, lookback,
-#                   lookforward):
-#     data = data.to_records()
-#     split_data = dict()
-#     input_parameters = np.empty([])
-#     output_parameters = np.empty([])
-#     for i in range(lookback, len(data) - lookforward - 1):
-#         inp = np.array([calculate_input(data[i - lookback:i + 1][::-1])])
-#         out = np.array([calculate_output(data[i:i + lookforward + 1])])
-#         input_parameters = np.append(input_parameters, inp)
-#         output_parameters = np.append(output_parameters, out)
-#     input_parameters = np.delete(input_parameters, 0)
-#     output_parameters = np.delete(output_parameters, 0)
-#     input_len = len(input_parameters)
-#     input_parameters = np.reshape(input_parameters,
-#                                   (input_len // inp.shape[-1], inp.shape[-1]))
-#     if len(split) == 2:
-#         train_len = input_parameters.shape[0] * split[0] // 100
-#         split_data['train_input'] = input_parameters[1:train_len]
-#         split_data['train_output'] = output_parameters[1:train_len]
-#         split_data['test_input'] = input_parameters[train_len:]
-#         split_data['test_output'] = output_parameters[train_len:]
-#     elif len(split) == 3:
-#         train_len = input_parameters.shape[0] * split[0] // 100
-#         validation_len = input_parameters.shape[0] * split[1] // 100
-#         split_data['train_input'] = input_parameters[0:train_len]
-#         split_data['train_output'] = output_parameters[0:train_len]
-#         split_data['validation_input'] = input_parameters[train_len:train_len +
-#                                                           validation_len]
-#         split_data['validation_output'] = output_parameters[
-#             train_len:train_len + validation_len]
-#         split_data['test_input'] = input_parameters[train_len +
-#                                                     validation_len:]
-#         split_data['test_output'] = output_parameters[train_len +
-#                                                       validation_len:]
-#     return split_data
-
-# def _load_data(ticker, timeframe, start_date, end_date, indicators, shift = 0):
-#     data_to_cache = _find_uncached_data(ticker, timeframe, start_date, end_date)
-#     already_cached = _get_cached_dates(ticker, timeframe)
-#     if already_cached is None:
-#         start_date, end_date = data_to_cache[0][0], data_to_cache[0][1]
-#         data = _load_data_given_dates(
-#             ticker, timeframe, start_date, end_date, indicators, shift
-#         )
-#         data = data[list(data)[:6]+sorted(list(data)[6:])]
-#     else:
-#         cached_file = _get_cached_file(ticker, timeframe)
-#         if not data_to_cache:
-#             replace, add = _find_uncached_indicators(cached_file, indicators, 0)
-#             return _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
-#         new_data_to_cache = list()
-#         for item in data_to_cache:
-#             inds = _get_inds_for_aux_dates(cached_file, indicators)
-#             new_data = _load_data_given_dates(
-#                 ticker, timeframe, item[0], item[1], inds, shift
-#             )
-#             new_data = new_data[list(new_data)[:6]+sorted(list(new_data)[6:])]
-#             new_data_to_cache.append(new_data)
-#         data = _load_cached_data(ticker, timeframe, start_date, end_date, indicators, shift)
-#         data = data[list(data)[:6]+sorted(list(data)[6:])]
-#         if len(data_to_cache) == 1:
-#             if data_to_cache[0][1] == already_cached[0]:
-#                 data = new_data_to_cache[0].append(data, ignore_index = True)
-#             elif data_to_cache[0][0] == already_cached[1]:
-#                 data = data.append(new_data_to_cache[0], ignore_index = True)
-#         elif len(data_to_cache) == 2:
-#             data = new_data_to_cache[0].append(data, ignore_index = True)
-#             data = data.append(new_data_to_cache[1], ignore_index = True)
-#     return data
-###############################################################################

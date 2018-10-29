@@ -10,14 +10,13 @@ import keras
 import numpy as np
 import pandas as pd
 
-
+start_date = datetime(2018, 1, 1)
+end_date = datetime(2018, 2, 1)
+ticker = "btcusd"
+timeframe = 60
+lookback = 5
+lookforward = 2
 def train_model():
-    start_date = datetime(2018, 1, 1)
-    end_date = datetime(2018, 3, 31)
-    ticker = "btcusd"
-    timeframe = 60
-    lookback = 5
-    lookforward = 2
     inds = {'sma':(10, 'open'), 'ema':(3), 'rsi':(), 'apo':(), \
             'atr':(), 'cci':(), 'chande':(), \
             'momentum': (), 'ppo':(), 'roc':(), \
@@ -31,7 +30,7 @@ def train_model():
         lookback=lookback, 
         calculate_output=calculate_output, 
         lookforward=lookforward,
-        split = (70, 30, 0), indicators = inds,
+        split = (70, 30), indicators = inds
     )
     # data = import_candles(
     #     ticker,
@@ -79,6 +78,16 @@ def calculate_output(data):
     else:
         return 1
     
+
+new_inds = {'sma5':('sma', 5, 'close'), 'sma10':('sma', 10, 'high'), 'rsi':('rsi')}
+#new_inds = {'sma':(), 'ema':()}
+for shft in [0,3]:
+    new_data = import_candles(ticker, timeframe, start_date, end_date, indicators=new_inds, shift = shft)
+    print(new_data.columns)
+
+
+input("before doing somethig meaningful")
+
 
 model = train_model()
 start_date = datetime(2018, 4, 1)
