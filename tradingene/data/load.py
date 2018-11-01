@@ -61,7 +61,7 @@ def import_data(ticker,
     if indicators:
         indicators = _check_indicators(indicators)
     if _is_cached(ticker, timeframe, start_date, end_date, shift):
-        data = _load_cached_data(ticker, timeframe, start_date, end_date,
+        data, ind_str = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
     else:
         data, ind_str = _load_data_given_dates(ticker, timeframe, start_date, end_date,
