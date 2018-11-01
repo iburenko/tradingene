@@ -63,13 +63,12 @@ def import_data(ticker,
         data = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
     else:
-        data = _load_data_given_dates(ticker, timeframe, start_date, end_date,
+        data, ind_str = _load_data_given_dates(ticker, timeframe, start_date, end_date,
                                       indicators, shift)
     if cache:
-        _cache_data(data, filename, ticker, timeframe, shift)
+        _cache_data(data, ind_str, filename, ticker, timeframe, shift)
     if not reverse:
         data = data[::-1]
-    data = _rename_columns(data)
     return separate_data(data, split, calculate_input, calculate_output,
                          lookback, lookforward, bootstrap)
 
@@ -91,10 +90,9 @@ def import_candles(ticker,
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
-    list_of_ind_names = list(indicators.keys())
     indicators = _check_indicators(indicators)
     if _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
-        data = _load_cached_data(ticker, timeframe, start_date, end_date,
+        data, ind_str = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
     else:
         data, ind_str = _load_data_given_dates(ticker, timeframe, start_date, end_date,
@@ -104,47 +102,6 @@ def import_candles(ticker,
     if not reverse:
         data = data[::-1]
     return data
-
-
-def _get_filename(ticker, timeframe, start_date, end_date, shift):
-    start_date_str = start_date.strftime("%Y%m%d%H%M%S")
-    end_date_str = end_date.strftime("%Y%m%d%H%M%S")
-    filename = "__" + ticker + str(timeframe)\
-                +"_s"+str(shift) + "_" \
-                + start_date_str + "_" \
-                + end_date_str + "__"
-    return filename
-
-
-def _get_cached_file(ticker, timeframe, shift=None):
-    start_string = "__" + ticker + str(timeframe) + "_s"
-    if shift is not None and isinstance(shift, int):
-        start_string += str(shift)
-    cached_file = [
-        file_ for file_ in os.listdir(where_to_cache)
-        if os.path.isfile((os.path.join(where_to_cache, file_)))
-        and file_.startswith(start_string)
-    ]
-    if cached_file:
-        return cached_file[0]
-    else:
-        return False
-
-
-def _get_cached_dates(ticker, timeframe, shift):
-    cached_file = _get_cached_file(ticker, timeframe, shift)
-    if not cached_file:
-        return None
-    replaced_filename = cached_file.replace("0__", "0")
-    start_string = "__" + ticker + str(timeframe) + "_"
-    dates = replaced_filename.replace(start_string, "").split("_")
-    start_date_str = dates[1]
-    end_date_str = dates[2]
-    prev_start_date = \
-                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
-    prev_end_date = \
-                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
-    return prev_start_date, prev_end_date
 
 
 def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
@@ -170,30 +127,17 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
     data = pd.read_csv(where_to_cache + cached_file, index_col=False)
     data = data[data['time'].between(
         start_date_int, end_date_int, inclusive=True)]
-    replace_ind, add_ind = _find_uncached_indicators(cached_file, indicators,
-                                                     0)
-    for ind_name in replace_ind.keys():
-        inds_to_delete = [
-            elem for elem in list(data) if elem.startswith(ind_name)
-        ]
-        data = data.drop(inds_to_delete, axis=1)
-    if indicators is not None:
-        for ind_name in indicators.keys():
-            ind = ind_name[0]
-            if ind in replace_ind.keys():
-                add_ind.update({ind_name: indicators[ind_name]})
-        if add_ind:
-            add_data = _load_data_given_dates(ticker, timeframe, start_date_,
-                                            end_date_, add_ind, shift)
-            add_data = add_data.drop(
-                ['time', 'open', 'high', 'low', 'close', 'vol'], axis=1)
-            data = pd.concat([data, add_data], axis=1)
-            data = data[list(data)[:6] + sorted(list(data)[6:])]
-        for col in data.columns[6:]:
-            col_ = col.split("_")[0]
-            if not any(col_.startswith(key) for key in dict_to_list(indicators)):
-                data.drop(columns=[col], inplace=True)
-    return data
+    new_ind, old_inds = _find_uncached_indicators(cached_file, indicators)    
+    data = delete_unneeded_indicators(data, new_ind)
+    inds_to_load = load_new_indicators(data, indicators, new_ind)
+    if inds_to_load:
+        add_data, add_data_str = _load_data_given_dates(ticker, timeframe, start_date_,
+                                            end_date_, inds_to_load, shift)
+        add_data.drop(['time', 'open', 'high', 'low', 'close', 'vol'], axis=1, inplace=True)
+        data = pd.concat([data, add_data], axis=1)
+        # data = data[list(data)[:6] + sorted(list(data)[6:])]
+    data, add_data_str = rename_columns(data, add_data_str, indicators, old_inds)
+    return data, add_data_str
 
 
 def _find_uncached_data(ticker, timeframe, start_date, end_date):
@@ -263,21 +207,24 @@ def _load_data_given_dates(
             for param in ind_params:
                 explanatory_str += "_" + str(param)
             for key in ind_values.keys():
-                ind_names_string.append(key + explanatory_str)
-            key+explanatory_str
+                dot_splitted = key.split(".")
+                if len(dot_splitted) == 1:
+                    ind_names_string.append(key + explanatory_str)    
+                else:
+                    ind_names_string.append(dot_splitted[0] + explanatory_str + "."+dot_splitted[1])
             rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis=1)
     return rates, ind_names_string
 
 
-def _rename_columns(data):
-    to_rename = dict.fromkeys(data.columns[6:])
-    for column_name in data.columns[6:]:
-        to_rename[column_name] = column_name.split('_')[0]
-    data.rename(columns=to_rename, inplace=True)
-    return data
-
-
 def _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
+    """ Whether data were cached.
+
+        Returns: False -- if there is not file with data
+                 False -- if cached start_date > required start_date
+                 False -- if cached end_date < required end_date
+                 True -- otherwise
+    """
+
     cached_file = _get_cached_file(ticker, timeframe, shift)
     if not cached_file:
         return False
@@ -311,57 +258,17 @@ def _cache_data(data, ind_str, filename, ticker, timeframe, shift):
         renamed_data.to_csv(where_to_cache + filename, index=False, mode="a")
 
 
-def _find_uncached_indicators(cached_file, indicators, check):
+def _find_uncached_indicators(cached_file, indicators):
     data_file = pd.read_csv(where_to_cache + cached_file)
-    ind_dict = _indicators_to_dict(list(data_file)[6:])
-    replace_ind = dict()
-    add_ind = dict()
-    if indicators is not None:
-        for ind_header in indicators.values():
-            ind_name = ind_header[0]
-            ind_params = ind_header[1:]
-            if ind_name not in ind_dict.keys():
-                add_ind[ind_name] = ind_params
-            else:
-                if ind_dict[ind_name] != ind_params:
-                    replace_ind[ind_name] = ind_dict[ind_name]
-    if check:
-        for ind in ind_dict.keys():
-            if ind not in indicators.keys():
-                add_ind[ind] = ind_dict[ind]
-    return replace_ind, add_ind
-
-
-def _get_inds_for_aux_dates(cached_file, indicators):
-    data_file = pd.read_csv(where_to_cache + cached_file)
-    ind_dict = _indicators_to_dict(list(data_file)[6:])
-    replace, add = _find_uncached_indicators(cached_file, indicators, 0)
-    new_inds = dict()
-    for ind in replace.keys():
-        if ind in ind_dict.keys():
-            ind_dict.pop(ind)
-            ind_dict[ind] = indicators[ind]
-    ind_dict.update(add)
-    return ind_dict
-
-
-def _indicators_to_dict(indicators):
-    print(indicators)
-    input("")
-    ind_dict = dict()
-    for ind in indicators:
-        splitted_ind = ind.split("_")
-        ind_name = splitted_ind[0].split(".")[0]
-        ind_params = (splitted_ind[1:])
-        if ind_name not in ind_dict.keys():
-            if len(ind_params) > 1:
-                ind_params[0] = int(ind_params[0])
-                ind_dict[ind_name] = tuple(ind_params)
-            elif len(ind_params) == 1:
-                ind_dict[ind_name] = int(ind_params[0])
-            else:
-                ind_dict[ind_name] = ()
-    return ind_dict
+    loaded_dict = {item.split(".")[0] for item in list(data_file)[6:]}
+    ind_dict = set()
+    for value in indicators.values():
+        exp_str = value[0]
+        for param in value[1:]:
+            exp_str += "_"+str(param)
+        ind_dict.add(exp_str)
+    # add_ind = ind_dict - loaded_dict
+    return ind_dict - loaded_dict, ind_dict & loaded_dict
 
 
 def _check_indicators(indicators):
@@ -385,3 +292,82 @@ def delete_old_files():
         this_moment = datetime.now()
         if (this_moment - datetime.fromtimestamp(timestamp)).days > 31:
             os.remove(where_to_cache + file_)
+
+
+def delete_unneeded_indicators(data, new_ind):
+    to_del = [item.split("_")[0] for item in new_ind]
+    for col in to_del:
+        data.drop(columns=[items for items in data.columns if items.startswith(col)], inplace=True)
+    return data  
+
+
+def load_new_indicators(data, indicators, new_ind):
+    new_dict = None
+    if indicators:
+        new_ind_tuple = list()
+        for elem in new_ind:
+            splitted = elem.split("_")
+            if len(splitted) > 1:
+                splitted[1] = int(splitted[1])
+            new_ind_tuple.append(tuple(splitted))
+        new_dict = {key:value for key, value in indicators.items() if value in new_ind_tuple}
+    return new_dict
+
+
+def rename_columns(data, add_str, indicators, old_inds):
+    old_dict = dict()
+    if old_inds:
+        new_ind_tuple = list()
+        for elem in old_inds:
+            splitted = elem.split("_")
+            if len(splitted) > 1:
+                splitted[1] = int(splitted[1])
+            for key, val in indicators.items():
+                if tuple(splitted) == val:
+                    old_dict.update({elem:key})
+                    continue
+    data.rename(columns=old_dict, inplace=True)
+    for elem in list(old_inds)[::-1]:
+        add_str.insert(6, elem)
+    return data, add_str
+
+
+def _get_filename(ticker, timeframe, start_date, end_date, shift):
+    start_date_str = start_date.strftime("%Y%m%d%H%M%S")
+    end_date_str = end_date.strftime("%Y%m%d%H%M%S")
+    filename = "__" + ticker + str(timeframe)\
+                +"_s"+str(shift) + "_" \
+                + start_date_str + "_" \
+                + end_date_str + "__"
+    return filename
+
+
+def _get_cached_file(ticker, timeframe, shift=None):
+    start_string = "__" + ticker + str(timeframe) + "_s"
+    if shift is not None and isinstance(shift, int):
+        start_string += str(shift)
+    cached_file = [
+        file_ for file_ in os.listdir(where_to_cache)
+        if os.path.isfile((os.path.join(where_to_cache, file_)))
+        and file_.startswith(start_string)
+    ]
+    if cached_file:
+        return cached_file[0]
+    else:
+        return False
+
+
+def _get_cached_dates(ticker, timeframe, shift):
+    cached_file = _get_cached_file(ticker, timeframe, shift)
+    if not cached_file:
+        return None
+    replaced_filename = cached_file.replace("0__", "0")
+    start_string = "__" + ticker + str(timeframe) + "_"
+    dates = replaced_filename.replace(start_string, "").split("_")
+    start_date_str = dates[1]
+    end_date_str = dates[2]
+    prev_start_date = \
+                datetime(*(time.strptime(start_date_str, "%Y%m%d%H%M%S")[0:6]))
+    prev_end_date = \
+                datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
+    return prev_start_date, prev_end_date
