@@ -58,8 +58,9 @@ def import_data(ticker,
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
-    indicators = _check_indicators(indicators)
-    if _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
+    if indicators:
+        indicators = _check_indicators(indicators)
+    if _is_cached(ticker, timeframe, start_date, end_date, shift):
         data = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
     else:
@@ -90,8 +91,9 @@ def import_candles(ticker,
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
-    indicators = _check_indicators(indicators)
-    if _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
+    if indicators:
+        indicators = _check_indicators(indicators)
+    if _is_cached(ticker, timeframe, start_date, end_date, shift):
         data, ind_str = _load_cached_data(ticker, timeframe, start_date, end_date,
                                  indicators, shift)
     else:
@@ -205,7 +207,7 @@ def _load_data_given_dates(
     return rates, ind_names_string
 
 
-def _is_cached(ticker, timeframe, start_date, end_date, indicators, shift):
+def _is_cached(ticker, timeframe, start_date, end_date, shift):
     """ Whether data were cached.
 
         Returns: False -- if there is not file with data
@@ -248,14 +250,14 @@ def _cache_data(data, ind_str, filename, ticker, timeframe, shift):
 
 
 def _find_uncached_indicators(saved_indicators, indicators):
-    # data_file = pd.read_csv(where_to_cache + cached_file)
     loaded_dict = {item.split(".")[0] for item in saved_indicators[6:]}
     ind_dict = set()
-    for value in indicators.values():
-        exp_str = value[0]
-        for param in value[1:]:
-            exp_str += "_"+str(param)
-        ind_dict.add(exp_str)
+    if indicators:
+        for value in indicators.values():
+            exp_str = value[0]
+            for param in value[1:]:
+                exp_str += "_"+str(param)
+            ind_dict.add(exp_str)
     return ind_dict - loaded_dict, ind_dict & loaded_dict, loaded_dict - ind_dict
 
 
@@ -319,11 +321,12 @@ def rename_columns(data, indicators):
 
 def convert_indnames(data, indicators):
     converted_list = list(data[:6])
-    for ind_name in list(data)[6:]:
-        ind_str = indicators[ind_name][0]
-        for item in indicators[ind_name][1:]:
-            ind_str += ("_"+str(item))
-        converted_list.append(ind_str)
+    if indicators:
+        for ind_name in list(data)[6:]:
+            ind_str = indicators[ind_name][0]
+            for item in indicators[ind_name][1:]:
+                ind_str += ("_"+str(item))
+            converted_list.append(ind_str)
     return converted_list
 
 
