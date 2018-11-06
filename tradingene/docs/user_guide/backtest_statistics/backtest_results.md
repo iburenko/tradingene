@@ -1,4 +1,4 @@
-#Backtest results
+# Backtest results
 
 After you have run ```alg.run_backtest(onBar)``` you are able to analyze the performance of your algorithm. To do this you need to initialize an instance of the ```BacktestStatistics``` class passing ```alg``` as a parameter for the initializer:
 
