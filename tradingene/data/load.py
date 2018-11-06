@@ -256,6 +256,8 @@ def _find_uncached_indicators(saved_indicators, indicators):
         for value in indicators.values():
             exp_str = value[0]
             for param in value[1:]:
+                if len(param) > 1 and not isinstance(param[1], int):
+                    raise TypeError("")
                 exp_str += "_"+str(param)
             ind_dict.add(exp_str)
     return ind_dict - loaded_dict, ind_dict & loaded_dict, loaded_dict - ind_dict

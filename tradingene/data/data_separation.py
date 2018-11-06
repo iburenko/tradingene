@@ -4,6 +4,9 @@ import numpy as np
 def separate_data(data, split, calculate_input, calculate_output, lookback,
                   lookforward, bootstrap):
     data = data[::-1]
+    print(data)
+    print(type(data))
+    input("")
     data = data.to_records()
     split_data = dict()
     input_parameters = np.empty((0, 0))
