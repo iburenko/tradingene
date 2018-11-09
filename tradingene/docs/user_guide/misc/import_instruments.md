@@ -14,15 +14,15 @@ not add several instruments**.
 
 **Arguments:**
 
-    ticker (str): Name of the underlying asset.
+* ticker (str): Name of the underlying asset.
 
 **Warns:**
 
-    warn: If you try to add an instrument that has been added already.
+* warn: If you try to add an instrument that has been added already.
 
 **Returns:**
 
-    None.
+* None.
 
 **Examples:**
 
@@ -38,11 +38,11 @@ Deletes a specified instrument from an algorithm.
 
 **Arguments:**
 
-    ticker (str): Name of the instrument to delete.
+* ticker (str): Name of the instrument to delete.
 
 **Returns:**
 
-    None.
+* None.
 
 **Examples:**
 
@@ -60,15 +60,15 @@ Adds specified timeframes to an algorithm.
 
 **Arguments:**
 
-    timeframes (tuple): Tuple of ints.
+* timeframes (tuple): Tuple of ints.
 
 **Raises:**
 
-    TypeError: If tuple has a non-int element.
+* TypeError: If tuple has a non-int element.
 
 **Returns:**
 
-    None.
+* None.
 
 **Examples:**
 
@@ -85,15 +85,15 @@ Deletes specified timeframes from an algorithm.
 
 **Arguments:**
 
-    timeframes (tuple): Tuple of ints.
+* timeframes (tuple): Tuple of ints.
 
 **Raises:**
 
-    TypeError: If tuple has non-int element.
+* TypeError: If tuple has non-int element.
 
 **Returns:**
 
-    None.
+* None.
 
 **Examples:**
 

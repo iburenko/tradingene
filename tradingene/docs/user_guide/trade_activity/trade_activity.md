@@ -10,12 +10,11 @@ Opens a position without acquiring any asset.
 
 **Arguments:**
 
-    ticker (str, default:None): Asset for which position will be opened.
+* ticker (str, default:None): Asset for which position will be opened.
 
 **Warns:**
 
-    warn: If you are trying to open a new position but there is another one already opened.
-          Only one opened position is allowed.
+* warn: If you are trying to open a new position but there is another one already opened. Only one opened position is allowed.
 
 **Returns:**
 
@@ -57,16 +56,16 @@ alg.buy(volume)
 ```
 **Arguments:**
 
-    volume (float, default:1.): Number of lots to buy.
+* volume (float, default:1.): Number of lots to buy.
 
 **Warns:**
 
-    warn: If there is an opened long position
+* warn: If there is an opened long position
 
 **Returns:**
 
-    1. None: If the last position is opened and long;
-    2. pos_id (int): Position id returned by ```openPosition()```.
+1. None: If the last position is opened and long;
+2. pos_id (int): Position id returned by ```openPosition()```.
 
 **Examples:**
 
@@ -111,16 +110,16 @@ alg.sell(volume)
 
 **Arguments:**
 
-    volume (float, default:1.): Number of lots to sell.
+* volume (float, default:1.): Number of lots to sell.
 
 **Warns:**
 
-    warn: If there is an opened short position.
+* warn: If there is an opened short position.
 
 **Returns:**
 
-    1. None: If the last position is opened and short.
-    2. pos_id (int): Position id returned by ```openPosition()```.
+1. None: If the last position is opened and short.
+2. pos_id (int): Position id returned by ```openPosition()```.
 
 **Examples:**
 
@@ -159,16 +158,16 @@ Closes the last opened position.
 
 **Arguments:**
 
-    id (int, default:None): id of a position to close.
+* id (int, default:None): id of a position to close.
 
 **Warns:**
 
-    warn: If there is no opened position.
-    warn: If the position with specified id has been closed already.
+* warn: If there is no opened position.
+* warn: If the position with specified id has been closed already.
 
 **Returns:**
 
-    None
+* None
 
 **Examples:**
 
@@ -193,8 +192,8 @@ Invokes handler function when the position referred by ```pos_id``` is closed.
 
 **Arguments:**
 
-    pos_id (int): id of a position.
-    handler (callable): function to be invoked after position is closed.
+* pos_id (int): id of a position.
+* handler (callable): function to be invoked after position is closed.
 
 **Raises:**
 
@@ -204,7 +203,7 @@ Invokes handler function when the position referred by ```pos_id``` is closed.
 
 **Returns:**
 
-    None
+* None
 
 **Examples:**
 
@@ -243,21 +242,21 @@ Notice that volume of any position is limited as follows:
 
 **Arguments**:
 
-    volume (float, default:1.): Number of lots to buy.
+* volume (float, default:1.): Number of lots to buy.
 
 **Warns**:
 
-    warn: If the specified volume is negative.
-    warn: If the last position is opened and long (in SP regime only).
+* warn: If the specified volume is negative.
+* warn: If the last position is opened and long (in SP regime only).
 
 **Raises**:
 
-    ValueError: If the specified volume exceeds MAX_AVAILABLE_VOLUME (in SP regime only).
-    ValueError: If cumulative volume of all trades within a position exceeds MAX_AVAILABLE_VOLUME (in MP regime only).
+* ValueError: If the specified volume exceeds MAX_AVAILABLE_VOLUME (in SP regime only).
+* ValueError: If cumulative volume of all trades within a position exceeds MAX_AVAILABLE_VOLUME (in MP regime only).
 
 **Returns**:
 
-    None
+* None
 
 **Examples:**
 
@@ -326,21 +325,21 @@ Notice that volume of any position is limited as follows:
 
 **Arguments:**
 
-    volume (float, default:1.): Number of lots to sell.
+* volume (float, default:1.): Number of lots to sell.
 
 **Warns:**
 
-    warn: If the specified volume is negative.
-    warn: If the last position is open and short (in SP regime only).
+* warn: If the specified volume is negative.
+* warn: If the last position is open and short (in SP regime only).
 
 **Raises:**
 
-    1. ValueError: If the specified volume exceeds MAX_AVAILABLE_VOLUME (in SP regime only).
-    2. ValueError: If cumulative volume of positions exceeds MAX_AVAILABLE_VOLUME (in MP regime only).
+1. ValueError: If the specified volume exceeds MAX_AVAILABLE_VOLUME (in SP regime only).
+2. ValueError: If cumulative volume of positions exceeds MAX_AVAILABLE_VOLUME (in MP regime only).
 
 **Returns:**
 
-    None
+* None
 
 **Examples:**
 
@@ -403,15 +402,15 @@ If you wish to cancel ```stoploss```, set the stop-loss to zero.
 
 **Arguments:**
 
-    loss (float, default:None): Value of the stop-loss.
+* loss (float, default:None): Value of the stop-loss.
 
 **Raises:**
 
-    ValueError: If loss is not nonnegative.
+* ValueError: If loss is not nonnegative.
 
 **Returns:**
 
-    None
+* None
 
 **Examples:**
 
@@ -440,15 +439,15 @@ If you wish to cancel ```takeprofit```, set the stop-loss to zero.
 
 **Arguments:**
 
-    profit (float, default:None): Value of the take-profit.
+* profit (float, default:None): Value of the take-profit.
 
 **Raises:**
 
-    ValueError: If profit is not nonnegative.
+* ValueError: If profit is not nonnegative.
 
 **Returns:**
 
-    None
+* None
 
 **Examples:**
 
@@ -476,12 +475,12 @@ alg.setTP(profit)
 
 **Arguments:**
 
-    loss (float, default:None): Value of the stop-loss.
-    profit (float, default:None): Value of the take-profit.
+* loss (float, default:None): Value of the stop-loss.
+* profit (float, default:None): Value of the take-profit.
 
 **Returns:**
 
-    None
+* None
 
 **Examples:**
 
@@ -510,12 +509,12 @@ If the last position is opened calculates available volume. Notice that for the 
 
 **Warns:**
 
-    warn: If the last position is closed.
+* warn: If the last position is closed.
 
 **Returns:**
 
-    None: If the last position is not opened
-    float: If the last position is opened.
+* None: If the last position is not opened
+* float: If the last position is opened.
 
 **Examples:**
 
@@ -552,17 +551,16 @@ instrument will be returned.
 
 **Arguments:**
 
-    ticker (str, default:None): Name of the underlying asset.
+* ticker (str, default:None): Name of the underlying asset.
 
 **Returns:**
 
-    float: Last price simulated while backtesting.
+* float: Last price simulated while backtesting.
 
 **Raises:**
 
-    AssertionError: If only one instrument has been added by a user,
-                    and a non-exisiting ticker was specified.
-    NameError: If the ticker was not found among the added instruments.
+* AssertionError: If only one instrument has been added by a user, and a non-exisiting ticker was specified.
+* NameError: If the ticker was not found among the added instruments.
 
 **Examples:**
 
@@ -615,7 +613,7 @@ Returns a position side given position's id ```pos_id```.
 
 **Arguments:**
 
-    pos_id (int): Id of the position
+* pos_id (int): Id of the position
 
 **Raises:**
 
@@ -625,8 +623,9 @@ Returns a position side given position's id ```pos_id```.
 
 **Returns:**
 
-    float: +1., if a position was long;
-           -1., if a position was short
+* float:
+  * +1., if a position was long;
+  * -1., if a position was short
 
 **Examples:**
 
@@ -659,20 +658,19 @@ Can be cancelled with [off()](#off) call.
 
 **Arguments:**
 
-    type_ (str, default:None): Name of the type of event: "Price" or "Time".
-    params (default:None): For Price event -- price (float).
-                           For Time event -- time (int).
-    argument (tuple, default:None): Arguments for a handler method.
-    handler (function, default:None): method to be invoked when the
-             specified event happens.
+* type_ (str, default:None): Name of the type of event: "Price" or "Time".
+* params (default:None): For Price event -- price (float).
+                       For Time event -- time (int).
+* argument (tuple, default:None): Arguments for a handler method.
+* handler (function, default:None): method to be invoked when the specified event happens.
 
 **Returns:**
 
-    int: id of the event.
+* int: id of the event.
 
 **Raises:**
 
-    ValueError: If type_ was neither "Price" nor "Time".
+* ValueError: If type_ was neither "Price" nor "Time".
 
 **Examples:**
 
@@ -709,15 +707,15 @@ If an event was set by [on()](#on) method, [off()](#off) will cancel it.
 
 **Arguments:**
 
-    id (int): id of the event.
+* id (int): id of the event.
 
 **Returns:**
 
-    None
+* None
 
 **Warns:**
 
-    warn: If no event with the specified id was found.
+* warn: If no event with the specified id was found.
 
 **Examples:**
 

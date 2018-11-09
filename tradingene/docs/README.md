@@ -96,4 +96,4 @@ One powerful ability of ```tradingene``` package is the ability to load and oper
 
 See examples of using neural networks for [classification]() and [regression]() problems or an example with [SVM]().
 
- See more on [loading data](user_quide/misc/loading_data.md).
+ See more on [loading data](user_guide/misc/loading_data.md).

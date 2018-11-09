@@ -2,21 +2,20 @@
 
 Any algorithm needs an instance of the ```TNG``` class. This instance contains all the methods required for trading and backtesting. To create an instance of the ```TNG``` class you must specify the starting and ending dates of a backtest. You may explicitly specify the name of your algorithm and the backtest regime. If you do not specify these arguments the default values will be used.
 
-## Name
-
-about ```name```.
-
 ## Regime
 
-about ```regime```.
+about ```regime``` .
 
 **Arguments:**
 
-    name (str, default: "Cornucopia"): Name of the algorithm;
-    regime (str, default: "SP"): Controls the number of trades in a single position.
-            In the "SP" regime only one trade is allowed, in the "MP" multiple trades are allowed.
-    start_date (datetime.datetime): Starting time of the backtest.
-    end_date (datetime.datetime): Ending time of the backtest.            
+* name (str, default: "Cornucopia"): Name of the algorithm;
+
+* regime (str, default: "SP"): Controls the number of trades in a single position.
+        In the "SP" regime only one trade is allowed, in the "MP" multiple trades are allowed.
+
+* start_date (datetime.datetime): Starting time of the backtest.
+
+* end_date (datetime.datetime): Ending time of the backtest.            
 
 **Raises:**
 
