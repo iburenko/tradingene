@@ -8,6 +8,20 @@ class Indicators:
         self._timeframe = _timeframeMin
         self._indicators = list()
 
+        self._available_indicators = [ 'ad', 'adx', 'apo', 'aroon', 'atr', 'bollinger', 'cci', 'chande', 'ema', 'keltner', 
+            'macd', 'momentum', 'roc', 'sma', 'rsi', 'stochastic', 'trima', 'williams' ]
+
+    @property
+    def available_indicators(self):
+        return self._available_indicators
+
+    def calc_all_available_indicators(self):
+        values = {}
+        for i in range(len(self._available_indicators)):
+            values[ self._available_indicators[i] ] = eval("self." + self._available_indicators[i] + "()")
+        return values
+
+
     @property
     def timeframe(self):
         return self._timeframe
