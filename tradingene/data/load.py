@@ -61,11 +61,11 @@ def import_data(ticker,
     if indicators:
         indicators = _check_indicators(indicators)
     if _is_cached(ticker, timeframe, start_date, end_date, shift):
-        data, ind_str = _load_cached_data(ticker, timeframe, start_date, end_date,
-                                 indicators, shift)
+        data, ind_str = _load_cached_data(ticker, timeframe, start_date,
+                                          end_date, indicators, shift)
     else:
-        data, ind_str = _load_data_given_dates(ticker, timeframe, start_date, end_date,
-                                      indicators, shift)
+        data, ind_str = _load_data_given_dates(ticker, timeframe, start_date,
+                                               end_date, indicators, shift)
     if cache:
         _cache_data(data, ind_str, filename, ticker, timeframe, shift)
     if not reverse:
@@ -87,18 +87,18 @@ def import_candles(ticker,
         not isinstance(start_date, datetime) or \
         not isinstance(end_date, datetime):
         raise TypeError("Check types of arguments!")
-    
+
     check_home_folder()
     delete_old_files()
     filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
     if indicators:
         indicators = _check_indicators(indicators)
     if _is_cached(ticker, timeframe, start_date, end_date, shift):
-        data, ind_str = _load_cached_data(ticker, timeframe, start_date, end_date,
-                                 indicators, shift)
+        data, ind_str = _load_cached_data(ticker, timeframe, start_date,
+                                          end_date, indicators, shift)
     else:
-        data, ind_str = _load_data_given_dates(ticker, timeframe, start_date, end_date,
-                                      indicators, shift)
+        data, ind_str = _load_data_given_dates(ticker, timeframe, start_date,
+                                               end_date, indicators, shift)
     if cache:
         _cache_data(data, ind_str, filename, ticker, timeframe, shift)
     if not reverse:
@@ -106,7 +106,11 @@ def import_candles(ticker,
     return data
 
 
-def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
+def _load_cached_data(ticker,
+                      timeframe,
+                      start_date,
+                      end_date,
+                      indicators=None,
                       shift=0):
     start_date_, end_date_ = _get_cached_dates(ticker, timeframe, shift)
     if start_date > start_date_:
@@ -119,14 +123,18 @@ def _load_cached_data(ticker, timeframe, start_date, end_date, indicators=None,
     data = pd.read_csv(where_to_cache + cached_file, index_col=False)
     data = data[data['time'].between(
         start_date_int, end_date_int, inclusive=True)]
-    to_add, old_inds, to_delete = _find_uncached_indicators(list(data), indicators)    
-    data = delete_unneeded_indicators(data, (to_add|to_delete))
+    to_add, old_inds, to_delete = _find_uncached_indicators(
+        list(data), indicators)
+    data = delete_unneeded_indicators(data, (to_add | to_delete))
     data = rename_columns(data, indicators)
     inds_to_load = load_new_indicators(data, indicators, to_add)
     if inds_to_load:
-        add_data, add_data_str = _load_data_given_dates(ticker, timeframe, start_date_,
-                                            end_date_, inds_to_load, shift)
-        add_data.drop(['time', 'open', 'high', 'low', 'close', 'vol'], axis=1, inplace=True)
+        add_data, add_data_str = _load_data_given_dates(
+            ticker, timeframe, start_date_, end_date_, inds_to_load, shift)
+        add_data.drop(
+            ['time', 'open', 'high', 'low', 'close', 'vol'],
+            axis=1,
+            inplace=True)
         data = pd.concat([data, add_data], axis=1)
     return data, convert_indnames(data, indicators)
 
@@ -144,9 +152,12 @@ def _find_uncached_data(ticker, timeframe, start_date, end_date):
     return uncached_data
 
 
-def _load_data_given_dates(
-        ticker, timeframe, start_date, end_date, indicators=None, shift=0
-    ):
+def _load_data_given_dates(ticker,
+                           timeframe,
+                           start_date,
+                           end_date,
+                           indicators=None,
+                           shift=0):
     end_date += timedelta(minutes=1 + shift)
     start_date += timedelta(minutes=shift)
     data = Data.load_data(ticker, start_date, end_date)
@@ -185,12 +196,16 @@ def _load_data_given_dates(
                     break
             new_ind = eval("tngind." + class_name + str(ind_params))
             ind_values = new_ind.calculateRates(rates)
-            
+
             dict_values = dict()
-            l = [item.split(".")[1] for item in ind_values if len(item.split(".")) > 1]
+            l = [
+                item.split(".")[1] for item in ind_values
+                if len(item.split(".")) > 1
+            ]
             if l:
                 for key in ind_values.keys():
-                    dict_values[ind_key+"."+key.split(".")[1]] = ind_values[key]
+                    dict_values[ind_key + "." +
+                                key.split(".")[1]] = ind_values[key]
             else:
                 dict_values[ind_key] = ind_values[list(ind_values.keys())[0]]
 
@@ -200,10 +215,12 @@ def _load_data_given_dates(
             for key in ind_values.keys():
                 dot_splitted = key.split(".")
                 if len(dot_splitted) == 1:
-                    ind_names_string.append(key + explanatory_str)    
+                    ind_names_string.append(key + explanatory_str)
                 else:
-                    ind_names_string.append(dot_splitted[0] + explanatory_str + "."+dot_splitted[1])
-            rates = pd.concat([rates, pd.DataFrame.from_dict(dict_values)], axis=1)
+                    ind_names_string.append(dot_splitted[0] + explanatory_str +
+                                            "." + dot_splitted[1])
+            rates = pd.concat(
+                [rates, pd.DataFrame.from_dict(dict_values)], axis=1)
     return rates, ind_names_string
 
 
@@ -256,15 +273,15 @@ def _find_uncached_indicators(saved_indicators, indicators):
         for value in indicators.values():
             exp_str = value[0]
             for param in value[1:]:
-                if len(param) > 1 and not isinstance(param[1], int):
+                if len(value) > 1 and not isinstance(value[1], int):
                     raise TypeError("")
-                exp_str += "_"+str(param)
+                exp_str += "_" + str(param)
             ind_dict.add(exp_str)
     return ind_dict - loaded_dict, ind_dict & loaded_dict, loaded_dict - ind_dict
 
 
 def _check_indicators(indicators):
-    to_str = lambda x: (x,) if isinstance(x, str) else x
+    to_str = lambda x: (x, ) if isinstance(x, str) else x
     return {key: to_str(indicators[key]) for key in indicators.keys()}
 
 
@@ -289,8 +306,10 @@ def delete_old_files():
 def delete_unneeded_indicators(data, new_ind):
     to_del = {item.split("_")[0] for item in new_ind}
     for col in to_del:
-        data.drop(columns=[items for items in data.columns if items.startswith(col)], inplace=True)
-    return data  
+        data.drop(
+            columns=[items for items in data.columns if items.startswith(col)],
+            inplace=True)
+    return data
 
 
 def load_new_indicators(data, indicators, new_ind):
@@ -302,7 +321,10 @@ def load_new_indicators(data, indicators, new_ind):
             if len(splitted) > 1:
                 splitted[1] = int(splitted[1])
             new_ind_tuple.append(tuple(splitted))
-        new_dict = {key:value for key, value in indicators.items() if value in new_ind_tuple}
+        new_dict = {
+            key: value
+            for key, value in indicators.items() if value in new_ind_tuple
+        }
     return new_dict
 
 
@@ -315,7 +337,7 @@ def rename_columns(data, indicators):
             item[1] = int(item[1])
         for key, value in indicators.items():
             if value == tuple(item):
-                rename_dict.update({ind:key})
+                rename_dict.update({ind: key})
                 continue
     data.rename(columns=rename_dict, inplace=True)
     return data
@@ -327,7 +349,7 @@ def convert_indnames(data, indicators):
         for ind_name in list(data)[6:]:
             ind_str = indicators[ind_name][0]
             for item in indicators[ind_name][1:]:
-                ind_str += ("_"+str(item))
+                ind_str += ("_" + str(item))
             converted_list.append(ind_str)
     return converted_list
 

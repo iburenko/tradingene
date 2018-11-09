@@ -31,6 +31,7 @@ def onBar(instrument):
             alg.closePosition(positionId)
             positionId = alg.openShort(1)
 
+
 alg.run_backtest(onBar)
 stat = bs.BacktestStatistics(alg)
 stat.backtest_results()

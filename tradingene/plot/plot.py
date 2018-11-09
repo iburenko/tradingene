@@ -170,12 +170,13 @@ def plot_cs_prof(alg, filename):
     min_diff = min_diff[min_diff > 0].min()
     prec = "0"
     for i in range(0, 16):
-        if min_diff * 10 ** i >=1:
+        if min_diff * 10**i >= 1:
             prec = prec * i
             break
 
     df['close_eq'] = df['close'] + min_diff
-    df.loc[df['close'] + min_diff > df['high'], 'close_eq'] = df['close'] - min_diff
+    df.loc[df['close'] + min_diff > df['high'],
+           'close_eq'] = df['close'] - min_diff
     ind_eq = df['close'] == df['open']
     mysource1 = ColumnDataSource(df[inc])
     mysource2 = ColumnDataSource(df[dec])
@@ -211,8 +212,10 @@ def plot_cs_prof(alg, filename):
         fill_alpha=0.0)
     hover = HoverTool(
         renderers=[bars_1, bars_2, bars_3],
-        tooltips=[('high', '@high{0.'+str(prec)+'}'), ('low', '@low{0.'+str(prec)+'}'),
-                  ('open', '@open{0.'+str(prec)+'}'), ('close', '@close{0.'+str(prec)+'}'),
+        tooltips=[('high', '@high{0.' + str(prec) + '}'),
+                  ('low', '@low{0.' + str(prec) + '}'),
+                  ('open', '@open{0.' + str(prec) + '}'),
+                  ('close', '@close{0.' + str(prec) + '}'),
                   ('volume', '@vol{0.0}'), ('date',
                                             '@date{%Y-%m-%d %H:%M:%S}')],
         formatters={"date": "datetime"})
@@ -267,8 +270,9 @@ def plot_cs_prof(alg, filename):
         hover1 = HoverTool(
             renderers=[tr_1, inv_tr_1, tr_3, inv_tr_3],
             tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'),
-                      ('open_price', '@open_price{0.'+str(prec)+'}'),
-                      ('close_price_onop', '@close_price_onop{0.'+str(prec)+'}')],
+                      ('open_price', '@open_price{0.' + str(prec) + '}'),
+                      ('close_price_onop',
+                       '@close_price_onop{0.' + str(prec) + '}')],
             formatters={"date": "datetime"})
         p.add_tools(hover1)
 
@@ -321,8 +325,9 @@ def plot_cs_prof(alg, filename):
         hover2 = HoverTool(
             renderers=[tr_2, inv_tr_2, tr_4, inv_tr_4],
             tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'),
-                      ('close_price', '@close_price{0.'+str(prec)+'}'),
-                      ('open_price_oncl', '@open_price_oncl{0.'+str(prec)+'}')],
+                      ('close_price', '@close_price{0.' + str(prec) + '}'),
+                      ('open_price_oncl',
+                       '@open_price_oncl{0.' + str(prec) + '}')],
             formatters={"date": "datetime"})
         p.add_tools(hover2)
 
@@ -380,9 +385,10 @@ def plot_cs_prof(alg, filename):
     curloc = np.sign(
         close_df['cumsum'].shift().fillna(0) * close_df['cumsum']) < 0
 
-    date_mid['date'] = close_df['date'].shift()[curloc] + close_df['cumsum'].shift(
-    )[curloc] * (close_df['date'][curloc] - close_df['date'].shift())[curloc] / (
-        close_df['cumsum'].shift()[curloc] - close_df['cumsum'])[curloc]
+    date_mid['date'] = close_df['date'].shift(
+    )[curloc] + close_df['cumsum'].shift()[curloc] * (
+        close_df['date'][curloc] - close_df['date'].shift())[curloc] / (
+            close_df['cumsum'].shift()[curloc] - close_df['cumsum'])[curloc]
     date_mid = date_mid[np.isfinite(date_mid['date'])]
     date_mid['date'] = pd.to_datetime(date_mid['date'])
     close_df['date'] = pd.to_datetime(close_df['date'])
@@ -423,8 +429,8 @@ def plot_cs_prof(alg, filename):
         x='date', y='cumsum', source=source_no_mids, line_width=2)
     hover3 = HoverTool(
         renderers=[profit_line],
-        tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'), ('profit',
-                                                         '@cumsum{0.'+str(prec)+'}')],
+        tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'),
+                  ('profit', '@cumsum{0.' + str(prec) + '}')],
         formatters={"date": "datetime"})
     plot_prof.add_tools(hover3)
     save(column(p, plot_prof), filename)

@@ -8,7 +8,7 @@ class CheatBacktest:
     def __init__(self, ticker, timeframe, start_date, end_date, indicators):
         self.ticker = ticker
         self.timeframe = timeframe
-        self.start_date = start_date - timedelta(minutes=50*self.timeframe)
+        self.start_date = start_date - timedelta(minutes=50 * self.timeframe)
         self.end_date = end_date
         self.indicators = indicators
         self.data = self._load_data()
@@ -17,17 +17,14 @@ class CheatBacktest:
         self.slippage = 0
         self.calculate_fees = False
 
-    
     def _load_data(self):
         data = import_candles(
-            self.ticker, 
-            self.timeframe, 
-            self.start_date, 
-            self.end_date, 
-            indicators=self.indicators
-        )
+            self.ticker,
+            self.timeframe,
+            self.start_date,
+            self.end_date,
+            indicators=self.indicators)
         return data
-
 
     def buy(self, volume=1):
         last_candle = self.data.iloc[-self.iter]
@@ -46,7 +43,6 @@ class CheatBacktest:
         else:
             pos = CheatPosition(price, volume, time_, fee)
         self.positions.append(pos)
-        
 
     def sell(self, volume=1):
         volume *= -1
@@ -67,7 +63,6 @@ class CheatBacktest:
             pos = CheatPosition(price, volume, time_, fee)
         self.positions.append(pos)
 
-
     def closePosition(self):
         if self.positions:
             last_pos = self.positions[-1]
@@ -80,7 +75,6 @@ class CheatBacktest:
                 else:
                     price += self.slippage
                 self.positions[-1].close_position(price, time_)
-
 
     def _set_slippage(self):
         ticker = self.ticker
@@ -101,7 +95,6 @@ class CheatBacktest:
         else:
             raise NameError("slippage cannot be set, unknown ticker!")
 
-
     def run_backtest(self, on_bar, slippage=True, fees=False):
         if slippage:
             self._set_slippage()
@@ -110,7 +103,6 @@ class CheatBacktest:
         for self.iter in range(51, len(self.data)):
             on_bar(self.data[-self.iter:])
 
-        
     def reset_backtest(self):
         self.positions = list()
         self.iter = 51

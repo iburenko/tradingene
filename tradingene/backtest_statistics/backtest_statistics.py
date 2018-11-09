@@ -52,7 +52,6 @@ class BacktestStatistics:
         except AssertionError:
             print("No positions was open while backtest!")
 
-
     def calculate_PnL(self):
         pnl = 0.
         for pos in self.all_positions_:
@@ -328,7 +327,7 @@ class BacktestStatistics:
         if self.all_positions_:
             plot_cs_prof(self.alg, stats_filename)
             html = "<table>"
-            for elem in self.__dict__:
+            for elem in sorted(self.__dict__):
                 if elem[-1] == "_" or elem[0] == "_":
                     continue
                 value = eval("self." + elem)
@@ -351,11 +350,10 @@ class BacktestStatistics:
             # elif os.name == 'posix':
             #     subprocess.call(('xdg-open', stats_filename))
 
-
 ###############################################################################
 #                       for internal use only
 ###############################################################################
-   
+
     def _do_all_caclulations(self):
         if not self.all_positions_:
             print("No backtest statistics available!")
@@ -365,6 +363,7 @@ class BacktestStatistics:
                             if method.startswith('calculate_')]
         for method in all_stats:
             eval("self." + method)()
+
 
 ###############################################################################
 #                       work-in-progress

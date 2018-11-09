@@ -255,7 +255,7 @@ class Backtest(Environment):
                 instr.candle_start_time = new_time
                 if instr.candles is not None:
                     instr.candles[instr.candle_ind] = last_candle
-                    instr.candles[instr.candle_ind+1] = new_candle
+                    instr.candles[instr.candle_ind + 1] = new_candle
                     instr.candle_ind += 1
         return instrument
 
@@ -264,10 +264,10 @@ class Backtest(Environment):
             open_price = np.array([0.])
             time_ = datetime(*(time.strptime(str(instr.time[0]), \
                                         "%Y%m%d%H%M%S")[0:6]))
-            if time_+timedelta(minutes=instr.timeframe) > self.end_date:
+            if time_ + timedelta(minutes=instr.timeframe) > self.end_date:
                 end_time = self.end_date
             else:
-                end_time = time_+timedelta(minutes=instr.timeframe)
+                end_time = time_ + timedelta(minutes=instr.timeframe)
             end_time = int(end_time.strftime("%Y%m%d%H%M%S"))
             instr.time = np.concatenate(([end_time], instr.time[:-1]))
             instr.open = np.concatenate((open_price, instr.open[:-1]))

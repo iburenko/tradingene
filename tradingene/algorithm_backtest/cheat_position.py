@@ -1,9 +1,8 @@
 from numpy import sign
 from tradingene.algorithm_backtest.trade import Trade
 
+
 class CheatPosition:
-
-
     def __init__(self, price, volume, now, calculate_fee):
         self.open_price = price
         self.close_price = 0
@@ -19,7 +18,6 @@ class CheatPosition:
         if calculate_fee:
             self.fee = price * 0.002
 
-
     def close_position(self, price, time_):
         self.close_price = price
         self.close_time = time_
@@ -29,7 +27,3 @@ class CheatPosition:
         self.trades[0].close_time = time_
         if self.calculate_fee:
             self.fee += (price * 0.002)
-      
-
-
-        

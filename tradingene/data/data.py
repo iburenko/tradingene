@@ -75,13 +75,12 @@ class Data:
 
         earliest_start = eval(limits.EARLISET_START)
         if start_date < earliest_start:
-            warn_str = "Can't get data from {}. Data are available form 01.01.2017".format(start_date)
+            warn_str = "Can't get data from {}. Data are available form 01.01.2017".format(
+                start_date)
             start_date = earliest_start
         if end_date > datetime.today():
             warn_str = "Can't get data till {}. Data are available till today ({})".format(
-                end_date,
-                datetime.today()
-            )
+                end_date, datetime.today())
             _date = datetime.today()
             end_date = datetime(_date.year, _date.month, _date.day)
         if not cls._check_file(filename):
@@ -138,7 +137,7 @@ class Data:
             data = err.partial
             data
         obj = json.loads(data.decode('utf-8'))
-        
+
         df_data = pd.DataFrame(
             obj, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
         df_data.drop_duplicates(subset=['time'], inplace=True)

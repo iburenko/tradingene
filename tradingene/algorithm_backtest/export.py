@@ -5,7 +5,6 @@ import tradingene.ind.ind as tngind
 
 
 class Export:
-
     def __init__(self, alg_):
         self.alg = alg_
 
@@ -30,9 +29,9 @@ class Export:
             for key in ind_values.keys():
                 dict_values[key + explanatory_str] = ind_values[key]
 
-        size = lookback*(len(dict_values)+5)+4
+        size = lookback * (len(dict_values) + 5) + 4
         positions = len(self.alg.positions)
-        ans = np.zeros((positions,size))
+        ans = np.zeros((positions, size))
         data = np.full((size), np.nan)
         ind = 0
         current_index = -1
@@ -40,53 +39,57 @@ class Export:
         df_columns = ['time', 'price', 'side', 'profit']
         for i in range(lookback):
             df_columns += [
-                        'open'+str(i), 
-                        'high'+str(i), 
-                        'low'+str(i), 
-                        'close'+str(i), 
-                        'volume'+str(i)
-                    ]
+                'open' + str(i), 'high' + str(i), 'low' + str(i),
+                'close' + str(i), 'volume' + str(i)
+            ]
         for key in dict_values.keys():
             for i in range(lookback):
-                df_columns += [key+str(i)]
+                df_columns += [key + str(i)]
         for pos in self.alg.positions:
             trade = pos.trades[0]
             while candles[current_index]['time'] < trade.open_time:
                 current_index -= 1
-            top_index = current_index+lookback+1
+            top_index = current_index + lookback + 1
             if top_index >= 1:
                 continue
-            data[0:4] = np.array([int(trade.open_time), trade.open_price, int(trade.side), pos.profit])
+            data[0:4] = np.array([
+                int(trade.open_time), trade.open_price,
+                int(trade.side), pos.profit
+            ])
             if trade.open_time != candles[current_index]['time']:
-                for i, candle in enumerate(candles[current_index+2:top_index+1]):
-                        data[4+i*5:4+(i+1)*5] = list(candle)[1:]
+                for i, candle in enumerate(
+                        candles[current_index + 2:top_index + 1]):
+                    data[4 + i * 5:4 + (i + 1) * 5] = list(candle)[1:]
                 i = 0
                 for key, value in dict_values.items():
                     length = -current_index - 1 + top_index
-                    start_ind = 4+lookback*5 + i*length
-                    end_ind = 4+lookback*5+ (i+1)*length
-                    data[start_ind:end_ind] = value[current_index+2:top_index+1]
+                    start_ind = 4 + lookback * 5 + i * length
+                    end_ind = 4 + lookback * 5 + (i + 1) * length
+                    data[start_ind:end_ind] = value[current_index +
+                                                    2:top_index + 1]
                     i += 1
             else:
                 if top_index == 0:
-                    for i, candle in enumerate(candles[current_index+1:]):
-                        data[4+i*5:4+(i+1)*5] = list(candle)[1:]
+                    for i, candle in enumerate(candles[current_index + 1:]):
+                        data[4 + i * 5:4 + (i + 1) * 5] = list(candle)[1:]
                     i = 0
                     for key, value in dict_values.items():
                         length = -current_index - 1
-                        start_ind = 4+lookback*5 + i*length
-                        end_ind = 4+lookback*5+(i+1)*length
-                        data[start_ind:end_ind] = value[current_index+1:]
+                        start_ind = 4 + lookback * 5 + i * length
+                        end_ind = 4 + lookback * 5 + (i + 1) * length
+                        data[start_ind:end_ind] = value[current_index + 1:]
                         i += 1
                 else:
-                    for i, candle in enumerate(candles[current_index+1:top_index]):
-                        data[4+i*5:4+(i+1)*5] = list(candle)[1:]
+                    for i, candle in enumerate(
+                            candles[current_index + 1:top_index]):
+                        data[4 + i * 5:4 + (i + 1) * 5] = list(candle)[1:]
                     i = 0
                     for key, value in dict_values.items():
                         length = -current_index - 1 + top_index
-                        start_ind = 4+lookback*5 + i*length
-                        end_ind = 4+lookback*5+(i+1)*length
-                        data[start_ind:end_ind] = value[current_index+1:top_index]
+                        start_ind = 4 + lookback * 5 + i * length
+                        end_ind = 4 + lookback * 5 + (i + 1) * length
+                        data[start_ind:end_ind] = value[current_index +
+                                                        1:top_index]
                         i += 1
             ans[ind] = data
             ind += 1
@@ -95,4 +98,4 @@ class Export:
             ans.to_csv("results.csv", index=False)
         else:
             assert isinstance(filename, str)
-            ans.to_csv(filename+".csv", index=False)
+            ans.to_csv(filename + ".csv", index=False)
