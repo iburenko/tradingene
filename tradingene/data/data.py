@@ -30,7 +30,7 @@ class Data:
     """ Class for loading instrument history. """
 
     hist_path = os.path.dirname(
-        os.path.abspath(__file__)) + "/../history_data/"
+        os.path.abspath(__file__)) + "/../__cached_history__/"
 
     def __init__(self):
         pass
@@ -119,32 +119,23 @@ class Data:
     @classmethod
     def _download_minute_data(cls, start_date, end_date, filename):
         end_date -= timedelta(minutes=1)
-        start_date = int(start_date.strftime("%Y%m%d%H%M%S"))
-        end_date = int(end_date.strftime("%Y%m%d%H%M%S"))
-        req_start_date = start_date * 1000
-        req_end_date = end_date * 1000
         if filename in instrument_ids.keys():
             instr_id = instrument_ids[filename]
         else:
             raise ValueError("Instrument {} was not found!".format(filename))
-        url = "https://candles.tradingene.com/candles?instrument_id=" + \
-              str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
-        # try here to return uncomplete read
-        try:
-            data = urllib.request.urlopen(url).read()
-        except http.client.IncompleteRead as err:
-            print("INCOMPLETE READ!")
-            data = err.partial
-            data
-        obj = json.loads(data.decode('utf-8'))
-
-        df_data = pd.DataFrame(
-            obj, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
-        df_data.drop_duplicates(subset=['time'], inplace=True)
-        df_data['time'] = df_data['time'].astype('int64')
-        df_data['time'] //= 1000
-        df_data.rename(columns={'volume': 'vol'}, inplace=True)
-        return df_data
+        iters = (end_date - start_date).days//90
+        data = pd.DataFrame()            
+        for i in range(iters):
+            iter_start_date = start_date + timedelta(days=90*i) + timedelta(minutes=1)
+            iter_end_date = start_date + timedelta(days=90*(i+1))
+            new_data = cls._download_data(iter_start_date, iter_end_date, instr_id)
+            data = data.append(new_data, ignore_index=True)
+        if iters == 0:
+            new_data = cls._download_data(start_date, end_date, instr_id)
+        else:
+            new_data = cls._download_data(iter_end_date, end_date, instr_id)
+        data = data.append(new_data, ignore_index=True)
+        return data
 
     @staticmethod
     def _check_file(filename):
@@ -177,3 +168,21 @@ class Data:
         if end_date > prev_end_date:
             to_cache.append((prev_end_date, end_date, 2))
         return to_cache
+
+    @staticmethod
+    def _download_data(iter_start_date, iter_end_date, instr_id):
+        iter_start_date = int(iter_start_date.strftime("%Y%m%d%H%M%S"))
+        iter_end_date = int(iter_end_date.strftime("%Y%m%d%H%M%S"))
+        req_start_date = iter_start_date * 1000
+        req_end_date = iter_end_date * 1000
+        url = "https://candles.tradingene.com/candles?instrument_id=" + \
+            str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
+        data = urllib.request.urlopen(url).read()
+        obj = json.loads(data.decode('utf-8'))
+        df_data = pd.DataFrame(
+            obj, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+        df_data.drop_duplicates(subset=['time'], inplace=True)
+        df_data['time'] = df_data['time'].astype('int64')
+        df_data['time'] //= 1000
+        df_data.rename(columns={'volume': 'vol'}, inplace=True)
+        return df_data
