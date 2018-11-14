@@ -125,9 +125,9 @@ def _load_cached_data(ticker,
         start_date_int, end_date_int, inclusive=True)]
     to_add, old_inds, to_delete = _find_uncached_indicators(
         list(data), indicators)
-    data = delete_unneeded_indicators(data, (to_add | to_delete))
+    data = delete_unneeded_indicators(data, to_delete)
     data = rename_columns(data, indicators)
-    inds_to_load = load_new_indicators(data, indicators, to_add)
+    inds_to_load = load_new_indicators(data, indicators, to_add) if to_add else None
     if inds_to_load:
         add_data, add_data_str = _load_data_given_dates(
             ticker, timeframe, start_date_, end_date_, inds_to_load, shift)
@@ -158,6 +158,27 @@ def _load_data_given_dates(ticker,
                            end_date,
                            indicators=None,
                            shift=0):
+    """ Loads data in the given time period
+
+        Returns: 
+
+        data (pandas' DataFrame): Columns of this
+        DataFrame correponds to the names of indicators
+        given by a user.
+
+        ind_names_string (list): list of names used for
+        storing calculated data on a drive. Uses values
+        from a user's dict that defines indicators.
+
+        Example: inds = {'my_macd': ('macd', 5), 'ema': ('ema', 10)}
+        list(data)[6:] is [
+            'my_macd.macd', my_macd.signal', 'my_macd.histogram', 'ema'
+            ]
+        ind_names_string is [
+            'macd_5.macd, 'macd_5.signal', 'macd_5.histogram', 'ema_10'
+            ]
+    """
+
     end_date += timedelta(minutes=1 + shift)
     start_date += timedelta(minutes=shift)
     data = Data.load_data(ticker, start_date, end_date)
@@ -304,11 +325,13 @@ def delete_old_files():
 
 
 def delete_unneeded_indicators(data, new_ind):
-    to_del = {item.split("_")[0] for item in new_ind}
-    for col in to_del:
-        data.drop(
-            columns=[items for items in data.columns if items.startswith(col)],
-            inplace=True)
+    to_del = [elem for elem in data if any(elem.startswith(item) for item in new_ind)]
+    data.drop(columns=to_del, inplace=True)
+    # to_del = {item.split("_")[0] for item in new_ind}
+    # for col in to_del:
+    #     data.drop(
+    #         columns=[items for items in data.columns if items.startswith(col)],
+    #         inplace=True)
     return data
 
 
@@ -330,27 +353,28 @@ def load_new_indicators(data, indicators, new_ind):
 
 def rename_columns(data, indicators):
     rename_dict = dict()
-    inds = list(data)[6:]
-    for ind in inds:
-        item = ind.split("_")
-        if len(item) > 1:
-            item[1] = int(item[1])
-        for key, value in indicators.items():
-            if value == tuple(item):
-                rename_dict.update({ind: key})
-                continue
+    for ind_name in list(data)[6:]:
+        splitted_name = ind_name.split(".")
+        ind_key = _get_vocab_key_by_value(indicators, splitted_name[0])
+        converted = ind_key + "." + splitted_name[1] if len(splitted_name) > 1 else ind_key
+        rename_dict.update({ind_name:converted})
+        rename_dict
     data.rename(columns=rename_dict, inplace=True)
     return data
 
 
 def convert_indnames(data, indicators):
-    converted_list = list(data[:6])
+    converted_list = list(data)[:6]
     if indicators:
         for ind_name in list(data)[6:]:
-            ind_str = indicators[ind_name][0]
-            for item in indicators[ind_name][1:]:
-                ind_str += ("_" + str(item))
-            converted_list.append(ind_str)
+            splitted_name = ind_name.split(".")
+            new_name = indicators[splitted_name[0]][0]
+            explanatory_str = ""
+            for param in indicators[splitted_name[0]][1:]:
+                explanatory_str += "_" + str(param)
+            new_name += explanatory_str
+            converted = new_name + "." + splitted_name[1] if len(splitted_name) > 1 else new_name
+            converted_list.append(converted)
     return converted_list
 
 
@@ -393,3 +417,17 @@ def _get_cached_dates(ticker, timeframe, shift):
     prev_end_date = \
                 datetime(*(time.strptime(end_date_str, "%Y%m%d%H%M%S")[0:6]))
     return prev_start_date, prev_end_date
+
+
+def _get_vocab_key_by_value(indicators, value):
+    ind_params = value.split("_")
+    if len(ind_params) == 1:
+        ind_value = tuple(ind_params, )
+    if len(ind_params) >= 2:
+        ind_params[1] = int(ind_params[1])
+        ind_value = tuple(ind_params)
+    for key, value in indicators.items():
+        if value == ind_value:
+            return key
+
+

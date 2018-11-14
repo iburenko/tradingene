@@ -8,6 +8,15 @@ ETHBTC_SLIPPAGE = 1e-6
 LTCBTC_SLIPPAGE = 1e-6
 DSHBTC_SLIPPAGE = 1e-6
 XRPBTC_SLIPPAGE = 1e-9
+EOSUSD_SLIPPAGE = 1e-4
+EOSBTC_SLIPPAGE = 1e-6
+XBTUSD_SLIPPAGE = 1e-1
+ETHUSD_SLIPPAGE = 1e0
+SI_SLIPPAGE = 1e0
+RTS_SLIPPAGE = 1e0
+BR_SLIPPAGE = 1e-2
+SBRF_SLIPPAGE = 1e0
+GAZR_SLIPPAGE = 1e0
 ################################################################################
 
 ################################################################################
@@ -32,5 +41,14 @@ instrument_ids = {
     'ethbtc': 22,
     'ltcbtc': 23,
     'dshbtc': 24,
-    'xrpbtc': 25
+    'xrpbtc': 25,
+    'eosusd': 26,
+    'eosbtc': 27,
+    'xbtusd': 28,
+    'ethusd': 33,
+    'si': 42,
+    'rts': 43,
+    'br': 44,
+    'sbrf': 45,
+    'gazr': 46
 }

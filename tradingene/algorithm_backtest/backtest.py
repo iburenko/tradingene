@@ -381,6 +381,24 @@ class Backtest(Environment):
             self.slippage = limits.DSHBTC_SLIPPAGE
         elif ticker == "xrpbtc":
             self.slippage = limits.XRPBTC_SLIPPAGE
+        elif ticker == "eosusd":
+            self.slippage = limits.EOSUSD_SLIPPAGE
+        elif ticker == "eosbtc":
+            self.slippage = limits.EOSBTC_SLIPPAGE
+        elif ticker == "xbtusd":
+            self.slippage = limits.XBTUSD_SLIPPAGE
+        elif ticker == "ethusd":
+            self.slippage = limits.ETHUSD_SLIPPAGE
+        elif ticker == "si":
+            self.slippage = limits.SI_SLIPPAGE
+        elif ticker == "rts":
+            self.slippage = limits.RTS_SLIPPAGE
+        elif ticker == "br":
+            self.slippage = limits.BR_SLIPPAGE
+        elif ticker == "sbrf":
+            self.slippage = limits.SBRF_SLIPPAGE
+        elif ticker == "gazr":
+            self.slippage = limits.GAZR_SLIPPAGE
         else:
             raise NameError("Slippage cannot be set, unknown ticker!")
 
