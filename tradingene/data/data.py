@@ -177,10 +177,8 @@ class Data:
         req_end_date = iter_end_date * 1000
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
             str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
-        print(url)
         data = requests.get(url)
-        obj = data.json()        
-        # obj = json.loads(data.decode('utf-8'))
+        obj = data.json()
         df_data = pd.DataFrame(
             obj, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
         df_data.drop_duplicates(subset=['time'], inplace=True)
