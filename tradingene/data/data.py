@@ -72,7 +72,7 @@ class Data:
                     end_date += 100
             return start, end
 
-        earliest_start = eval(limits.EARLISET_START)
+        earliest_start = limits.EARLISET_START
         if start_date < earliest_start:
             warn_str = "Can't get data from {}. Data are available form 01.01.2017".format(
                 start_date)
@@ -177,7 +177,10 @@ class Data:
         req_end_date = iter_end_date * 1000
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
             str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
+        print(url)
         data = requests.get(url)
+        if not data:
+            raise Exception("Data was not downloaded! Please try again!")
         obj = data.json()
         df_data = pd.DataFrame(
             obj, columns=['time', 'open', 'high', 'low', 'close', 'volume'])

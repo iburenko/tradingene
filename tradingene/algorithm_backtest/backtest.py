@@ -335,21 +335,11 @@ class Backtest(Environment):
         pass
 
     def _load_pre_data(self, shift, modeling):
-        lookback = limits.LOOKBACK_PERIOD
-        earliest_start = eval(limits.EARLISET_START)
         pre_data = dict.fromkeys(self.ticker_timeframes)
+        pre_start_date = self._calculate_pre_start_date()
         pre_end_date = self.start_date
-        pre_start_array = list()
-        for ticker in self.ticker_timeframes.keys():
-            timeframe = max(self.ticker_timeframes[ticker])
-            pre_start_date = \
-                    self.start_date -  timedelta(minutes = lookback * timeframe)
-            if pre_start_date < earliest_start:
-                pre_start_date = earliest_start
-            pre_start_array.append(pre_start_date)
-        pre_start_date = min(pre_start_array)
-        if pre_end_date < pre_start_date:
-            return
+        print(pre_start_date, pre_end_date)
+        input("")
         for ticker in self.ticker_timeframes.keys():
             ticker_data = Data.load_data(
                 ticker, pre_start_date, pre_end_date, pre=1)
@@ -364,6 +354,87 @@ class Backtest(Environment):
             pre_start_date, pre_end_date, pre_data)
         self._run_generator(pre_data_candles_generator, self._foo, shift,
                             modeling)
+
+
+    def _update_progress_bar(self):
+        start_date = self.start_date
+        end_date = self.end_date
+        current_time = datetime(*(time.strptime(str(self.now), \
+                                            "%Y%m%d%H%M%S")[0:6]))
+        if current_time < start_date:
+            return
+        progress = int(
+            1000 * (1 - (end_date - current_time) / (end_date - start_date)))
+        string = "\rBacktest in progress:\t"+\
+                "[{0}{1}] {2}%".format('#'*(progress//20),'-'*(50-(progress//20)),progress/10)
+        sys.stdout.write(string)
+        sys.stdout.flush()
+
+    def _initialize_candles(self):
+        mins = self._calculate_number_of_minutes()
+        for instr in self.instruments:
+            number_of_bars = mins // instr.timeframe + 1
+            instr.candles = np.empty(number_of_bars, dtype=dt)
+            instr.candle_ind = 0
+
+    def _delete_unused_candles(self):
+        mins = self._calculate_number_of_minutes()
+        for instr in self.instruments:
+            number_of_bars = mins // instr.timeframe + 1
+            instr.candles = instr.candles[:instr.candle_ind]
+            instr.candles = instr.candles[::-1]
+
+    def _calculate_number_of_minutes(self):
+        td = (self.end_date - self.start_date)
+        minutes = 1440 * td.days + td.seconds // 60
+        return minutes
+
+
+    def _ticker_from_moscow_exchange(self):
+        if [ticker for ticker in self.ticker_timeframes.keys() if ticker in limits.moex_tickers]:
+            return True
+        else:
+            return False
+
+
+    def _calculate_shift_in_days(self, pre_start):
+        pre_end = self.start_date
+        shift = timedelta(days=0)
+        weeks = (pre_end - pre_start).days//7
+        if pre_start.weekday() not in [0, 1] and pre_end.weekday() in [5,6]:
+            shift = timedelta(days=(2*weeks+2))
+        elif pre_start.weekday() in [0,1] and pre_end.weekday() in [5,6]:
+            shift = timedelta(days=(2*weeks)+4)
+        elif pre_start.weekday() in [5,6]:
+            shift = timedelta(days=(2*weeks+2))
+        return shift
+            
+
+
+    def _calculate_pre_start_date(self):
+        lookback = limits.LOOKBACK_PERIOD
+        earliest_start = limits.EARLISET_START
+        pre_start_array = list()
+        for ticker in self.ticker_timeframes.keys():
+            timeframe = max(self.ticker_timeframes[ticker])
+            pre_start_date = \
+                    self.start_date -  timedelta(minutes = lookback * timeframe)
+            pre_start_array.append(pre_start_date)
+        pre_start_date = min(pre_start_array)
+        days_to_shift = 0
+        print("bef ", pre_start_date)
+        if self._ticker_from_moscow_exchange():
+            days_to_shift = self._calculate_shift_in_days(pre_start_date)
+        pre_start_date -= days_to_shift
+        print("aft ", pre_start_date, "days = ", days_to_shift)
+        if pre_start_date < earliest_start:
+            pre_start_date = earliest_start
+        return pre_start_date
+
+
+################################################################################
+#       Set slippage
+################################################################################
 
     def _set_slippage(self):
         ticker = list(self.ticker_timeframes)[0]
@@ -401,39 +472,6 @@ class Backtest(Environment):
             self.slippage = limits.GAZR_SLIPPAGE
         else:
             raise NameError("Slippage cannot be set, unknown ticker!")
-
-    def _update_progress_bar(self):
-        start_date = self.start_date
-        end_date = self.end_date
-        current_time = datetime(*(time.strptime(str(self.now), \
-                                            "%Y%m%d%H%M%S")[0:6]))
-        if current_time < start_date:
-            return
-        progress = int(
-            1000 * (1 - (end_date - current_time) / (end_date - start_date)))
-        string = "\rBacktest in progress:\t"+\
-                "[{0}{1}] {2}%".format('#'*(progress//20),'-'*(50-(progress//20)),progress/10)
-        sys.stdout.write(string)
-        sys.stdout.flush()
-
-    def _initialize_candles(self):
-        mins = self._calculate_number_of_minutes()
-        for instr in self.instruments:
-            number_of_bars = mins // instr.timeframe + 1
-            instr.candles = np.empty(number_of_bars, dtype=dt)
-            instr.candle_ind = 0
-
-    def _delete_unused_candles(self):
-        mins = self._calculate_number_of_minutes()
-        for instr in self.instruments:
-            number_of_bars = mins // instr.timeframe + 1
-            instr.candles = instr.candles[:instr.candle_ind]
-            instr.candles = instr.candles[::-1]
-
-    def _calculate_number_of_minutes(self):
-        td = (self.end_date - self.start_date)
-        minutes = 1440 * td.days + td.seconds // 60
-        return minutes
 
 
 ################################################################################

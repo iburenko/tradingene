@@ -281,10 +281,9 @@ def _cache_data(data, ind_str, filename, ticker, timeframe, shift):
     already_cached = _get_cached_file(ticker, timeframe, shift)
     renamed_data = data.rename(columns=dict(zip(list(data.columns), ind_str)))
     if already_cached:
-        os.remove(where_to_cache + already_cached)
-        renamed_data.to_csv(where_to_cache + filename, index=False, mode="a")
+        renamed_data.to_csv(where_to_cache + filename, index=False)
     else:
-        renamed_data.to_csv(where_to_cache + filename, index=False, mode="a")
+        renamed_data.to_csv(where_to_cache + filename, index=False)
 
 
 def _find_uncached_indicators(saved_indicators, indicators):
@@ -327,11 +326,6 @@ def delete_old_files():
 def delete_unneeded_indicators(data, new_ind):
     to_del = [elem for elem in data if any(elem.startswith(item) for item in new_ind)]
     data.drop(columns=to_del, inplace=True)
-    # to_del = {item.split("_")[0] for item in new_ind}
-    # for col in to_del:
-    #     data.drop(
-    #         columns=[items for items in data.columns if items.startswith(col)],
-    #         inplace=True)
     return data
 
 
