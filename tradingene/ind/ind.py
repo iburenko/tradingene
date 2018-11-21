@@ -21,6 +21,25 @@ class Indicators:
             values[ self._available_indicators[i] ] = eval("self." + self._available_indicators[i] + "()")
         return values
 
+    def calc_indicators(indicators):
+        values = {}
+
+        for key in indicators: # keys of indicators
+            params = indicators[key]
+            name = params[0]
+            to_eval = "self." + name  + "(";
+            for p in range(1,len(params)):
+                if p > 1:
+                    to_eval += ","
+                if( type(params[p])) == str:
+                    to_eval += "'" + str(params[p]) + "'"
+                else:
+                    to_eval += str(params[p])
+            to_eval += ")"  
+
+            values[key] = eval(to_eval)
+        return values
+    # end of calc_indicator()        
 
     @property
     def timeframe(self):
