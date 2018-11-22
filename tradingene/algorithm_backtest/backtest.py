@@ -443,7 +443,11 @@ class Backtest(Environment):
         return pre_start_date
 
 
-    def _set_moex_start_date(self, start_date):       
+    def _set_moex_start_date(self, start_date):
+        if start_date.weekday() == 5:
+            start_date += timedelta(days=2)
+        elif start_date.weekday() == 6:
+            start_date += timedelta(days=1)
         if start_date.hour < 7:
             new_hour = 7
             new_minute = 0
