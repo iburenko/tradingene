@@ -92,6 +92,14 @@ class Backtest(Environment):
         if modeling:
             sys.stdout.write("Loading data!\n")
             sys.stdout.flush()
+        
+        ###############################################################
+        #           Only for one instrument
+        ###############################################################
+        if list(self.instruments)[0].ticker in limits.moex_tickers:
+            self.start_date = self._set_moex_start_date(self.start_date)
+
+
         self._load_data(self.start_date, self.end_date, shift, modeling)
         if modeling:
             sys.stdout.write("Data loaded!\n")
@@ -101,6 +109,7 @@ class Backtest(Environment):
                                               self.history_data)
         self._run_generator(candle_generator, on_bar_function, shift, modeling)
         self._delete_unused_candles()
+
 
     def _run_generator(self,
                        generator,
@@ -144,7 +153,9 @@ class Backtest(Environment):
             if modeling:
                 sys.stdout.write("\n")
                 sys.stdout.flush()
-            self._update_last_candle()
+            instr_list = [instr for instr in self.instruments]
+            list(map(self._update_last_candle, instr_list))
+            
 
     def _update_recent_price(self, candles):
         ticker = list(self.ticker_timeframes)[0]
@@ -259,36 +270,37 @@ class Backtest(Environment):
                     instr.candle_ind += 1
         return instrument
 
-    def _update_last_candle(self):
-        for instr in self.instruments:
-            open_price = np.array([0.])
-            time_ = datetime(*(time.strptime(str(instr.time[0]), \
-                                        "%Y%m%d%H%M%S")[0:6]))
-            if time_ + timedelta(minutes=instr.timeframe) > self.end_date:
-                end_time = self.end_date
-            else:
-                end_time = time_ + timedelta(minutes=instr.timeframe)
-            end_time = int(end_time.strftime("%Y%m%d%H%M%S"))
-            instr.time = np.concatenate(([end_time], instr.time[:-1]))
-            instr.open = np.concatenate((open_price, instr.open[:-1]))
-            instr.high = np.concatenate((open_price, instr.high[:-1]))
-            instr.low = np.concatenate((open_price, instr.low[:-1]))
-            instr.close = np.concatenate((open_price, instr.close[:-1]))
-            instr.vol = np.concatenate(([0], instr.vol[:-1]))
-            last_candle = np.array([(instr.time[1], instr.open[1], \
-                                    instr.high[1], instr.low[1], \
-                                    instr.close[1], instr.vol[1])], \
-                                    dtype = dt)
-            new_candle = np.array([(end_time, instr.open[0], \
-                                    instr.high[0], instr.low[0],\
-                                    instr.close[0], instr.vol[0])],\
-                                    dtype = dt)
-            if instr.candles is not None:
-                instr.candles[instr.candle_ind] = last_candle
-                instr.candle_ind += 1
-            instr.rates[0] = last_candle[0]
-            instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
-            instr
+    def _update_last_candle(self, instr):
+        open_price = np.array([0.])
+        time_ = datetime(*(time.strptime(str(instr.time[0]), \
+                                    "%Y%m%d%H%M%S")[0:6]))
+        if time_ + timedelta(minutes=instr.timeframe) > self.end_date:
+            end_time = self.end_date
+        else:
+            end_time = time_ + timedelta(minutes=instr.timeframe)
+        end_time = int(end_time.strftime("%Y%m%d%H%M%S"))
+        instr.time = np.concatenate(([end_time], instr.time[:-1]))
+        instr.open = np.concatenate((open_price, instr.open[:-1]))
+        instr.high = np.concatenate((open_price, instr.high[:-1]))
+        instr.low = np.concatenate((open_price, instr.low[:-1]))
+        instr.close = np.concatenate((open_price, instr.close[:-1]))
+        instr.vol = np.concatenate(([0], instr.vol[:-1]))
+        last_candle = np.array([(instr.time[1], instr.open[1], \
+                                instr.high[1], instr.low[1], \
+                                instr.close[1], instr.vol[1])], \
+                                dtype = dt)
+        new_candle = np.array([(end_time, instr.open[0], \
+                                instr.high[0], instr.low[0],\
+                                instr.close[0], instr.vol[0])],\
+                                dtype = dt)
+        if instr.candles is not None:
+            instr.candles[instr.candle_ind] = last_candle
+            instr.candle_ind += 1
+        instr.rates[0] = last_candle[0]
+        instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
+        if instr.ticker in limits.moex_tickers:
+            instr.time[0] = int(self.start_date.strftime("%Y%m%d%H%M%S"))
+
 
     def _completed_instruments(self, tickers, timeframes):
         instr = set()
@@ -317,6 +329,7 @@ class Backtest(Environment):
         return list(ticker_set | set(ct))
 
     def _load_data(self, start_date, end_date, shift, modeling):
+        
         for ticker in self.ticker_timeframes.keys():
             self._load_pre_data(shift, False)
             ticker_data = Data.load_data(ticker, start_date, end_date)
@@ -336,11 +349,9 @@ class Backtest(Environment):
 
     def _load_pre_data(self, shift, modeling):
         pre_data = dict.fromkeys(self.ticker_timeframes)
-        pre_start_date = self._calculate_pre_start_date()
-        pre_end_date = self.start_date
-        print(pre_start_date, pre_end_date)
-        input("")
         for ticker in self.ticker_timeframes.keys():
+            pre_start_date = self._calculate_pre_start_date()
+            pre_end_date = self.start_date
             ticker_data = Data.load_data(
                 ticker, pre_start_date, pre_end_date, pre=1)
             pre_data[ticker] = ticker_data
@@ -370,12 +381,14 @@ class Backtest(Environment):
         sys.stdout.write(string)
         sys.stdout.flush()
 
+
     def _initialize_candles(self):
         mins = self._calculate_number_of_minutes()
         for instr in self.instruments:
             number_of_bars = mins // instr.timeframe + 1
             instr.candles = np.empty(number_of_bars, dtype=dt)
             instr.candle_ind = 0
+
 
     def _delete_unused_candles(self):
         mins = self._calculate_number_of_minutes()
@@ -384,13 +397,14 @@ class Backtest(Environment):
             instr.candles = instr.candles[:instr.candle_ind]
             instr.candles = instr.candles[::-1]
 
+
     def _calculate_number_of_minutes(self):
         td = (self.end_date - self.start_date)
         minutes = 1440 * td.days + td.seconds // 60
         return minutes
 
 
-    def _ticker_from_moscow_exchange(self):
+    def _tickers_from_moscow_exchange(self):
         if [ticker for ticker in self.ticker_timeframes.keys() if ticker in limits.moex_tickers]:
             return True
         else:
@@ -402,11 +416,11 @@ class Backtest(Environment):
         shift = timedelta(days=0)
         weeks = (pre_end - pre_start).days//7
         if pre_start.weekday() not in [0, 1] and pre_end.weekday() in [5,6]:
-            shift = timedelta(days=(2*weeks+2))
+            shift = timedelta(days=(2*weeks+4))
         elif pre_start.weekday() in [0,1] and pre_end.weekday() in [5,6]:
             shift = timedelta(days=(2*weeks)+4)
         elif pre_start.weekday() in [5,6]:
-            shift = timedelta(days=(2*weeks+2))
+            shift = timedelta(days=(2*weeks+4))
         return shift
             
 
@@ -421,15 +435,37 @@ class Backtest(Environment):
                     self.start_date -  timedelta(minutes = lookback * timeframe)
             pre_start_array.append(pre_start_date)
         pre_start_date = min(pre_start_array)
-        days_to_shift = 0
-        print("bef ", pre_start_date)
-        if self._ticker_from_moscow_exchange():
+        if self._tickers_from_moscow_exchange():
             days_to_shift = self._calculate_shift_in_days(pre_start_date)
-        pre_start_date -= days_to_shift
-        print("aft ", pre_start_date, "days = ", days_to_shift)
+            pre_start_date -= days_to_shift
         if pre_start_date < earliest_start:
             pre_start_date = earliest_start
         return pre_start_date
+
+
+    def _set_moex_start_date(self, start_date):       
+        if start_date.hour < 7:
+            new_hour = 7
+            new_minute = 0
+            new_second = 0
+        elif start_date.hour >= 22 and start_date.minutes > 45:
+            start_date += timedelta(days=1)
+            new_hour = 7
+            new_minute = 0
+            new_second = 0
+        else:
+            new_hour = start_date.hour
+            new_minute = start_date.minute
+            new_second = start_date.second
+        new_start_date = datetime(
+            start_date.year, 
+            start_date.month,
+            start_date.day,
+            new_hour,
+            new_minute,
+            new_second
+            )
+        return new_start_date
 
 
 ################################################################################

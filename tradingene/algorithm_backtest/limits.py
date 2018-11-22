@@ -47,7 +47,6 @@ instrument_ids = {
     'eosusd': 26,
     'eosbtc': 27,
     'xbtusd': 28,
-    'ethusd': 33,
     'si': 42,
     'rts': 43,
     'br': 44,

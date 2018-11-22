@@ -1,4 +1,5 @@
 import os, sys
+import platform
 import time
 import numpy as np
 import pandas as pd
@@ -28,8 +29,13 @@ dt = np.dtype({
 class Data:
     """ Class for loading instrument history. """
 
-    hist_path = os.path.dirname(
-        os.path.abspath(__file__)) + "/__cached_history__/"
+    if platform.system() != "Windows":
+        hist_path = os.path.dirname(
+            os.path.abspath(__file__)) + "/__cached_history__/"
+    else:
+        hist_path = os.path.dirname(
+            os.path.abspath(__file__)) + "\\__cached_history__\\"
+    
 
     def __init__(self):
         pass
@@ -84,6 +90,8 @@ class Data:
             end_date = datetime(_date.year, _date.month, _date.day)
         if not cls._check_file(filename):
             data = cls._download_minute_data(start_date, end_date, filename)
+            if len(data) == 0:
+                raise Exception("Data was not downloaded! Probably there are no data for this period!")
             data.to_csv(Data.hist_path + filename + ".csv", index=False)
         else:
             new_dates = cls._find_uncached_dates(start_date, end_date,
@@ -125,13 +133,17 @@ class Data:
         iters = (end_date - start_date).days//90
         data = pd.DataFrame()            
         for i in range(iters):
-            iter_start_date = start_date + timedelta(days=90*i) + timedelta(minutes=1)
+            if i != 0:
+                iter_start_date = start_date + timedelta(days=90*i) + timedelta(minutes=1)
+            else:
+                iter_start_date = start_date
             iter_end_date = start_date + timedelta(days=90*(i+1))
             new_data = cls._download_data(iter_start_date, iter_end_date, instr_id)
             data = data.append(new_data, ignore_index=True)
         if iters == 0:
             new_data = cls._download_data(start_date, end_date, instr_id)
         else:
+            iter_end_date += timedelta(minutes=1)
             new_data = cls._download_data(iter_end_date, end_date, instr_id)
         data = data.append(new_data, ignore_index=True)
         return data
