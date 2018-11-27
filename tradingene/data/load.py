@@ -69,7 +69,7 @@ def import_data(ticker,
     if cache:
         _cache_data(data, ind_str, filename, ticker, timeframe, shift)
     if not reverse:
-        data = data[::-1]
+        data = data[::-1].reset_index()
     return separate_data(data, split, calculate_input, calculate_output,
                          lookback, lookforward, bootstrap)
 
@@ -102,7 +102,7 @@ def import_candles(ticker,
     if cache:
         _cache_data(data, ind_str, filename, ticker, timeframe, shift)
     if not reverse:
-        data = data[::-1]
+        data = data[::-1].reset_index()
     return data
 
 
@@ -242,6 +242,8 @@ def _load_data_given_dates(ticker,
                                             "." + dot_splitted[1])
             rates = pd.concat(
                 [rates, pd.DataFrame.from_dict(dict_values)], axis=1)
+    # if shift:
+    #     rates = rates[:-1]
     return rates, ind_names_string
 
 
