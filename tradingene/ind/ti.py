@@ -498,6 +498,41 @@ def ppo(periodFast=12, periodSlow=26, shift=0, rates=None):
 # end of ppo
 
 
+# ROC - Rate Of Change Oscillator
+def roc(period=9, shift=0, rates=None):
+    if rates is None:
+        return None
+
+    nPeriodsAgoIndex = shift + period
+    if nPeriodsAgoIndex >= len(rates):
+        return None
+    if not (rates[nPeriodsAgoIndex] > 0):
+        return None
+
+    return (rates[shift] -
+            rates[nPeriodsAgoIndex]) * 100.0 / rates[nPeriodsAgoIndex]
+
+
+# end of roc
+
+
+# Return - ...
+def rr(period=9, shift=0, rates=None):
+    if rates is None:
+        return None
+
+    nPeriodsAgoIndex = shift + period
+    if nPeriodsAgoIndex >= len(rates):
+        return None
+    if not (rates[nPeriodsAgoIndex] > 0):
+        return None
+
+    return (rates[shift] / rates[nPeriodsAgoIndex])
+
+
+# end of roc
+
+
 # RSI - Relative Strength Index
 def rsi(period=14, shift=0, rates=None, prev=None):
     if rates is None:
@@ -541,24 +576,6 @@ def rsi(period=14, shift=0, rates=None, prev=None):
 
 
 # end of rsi
-
-
-# ROC - Rate Of Change Oscillator
-def roc(period=9, shift=0, rates=None):
-    if rates is None:
-        return None
-
-    nPeriodsAgoIndex = shift + period
-    if nPeriodsAgoIndex >= len(rates):
-        return None
-    if not (rates[nPeriodsAgoIndex] > 0):
-        return None
-
-    return (rates[shift] -
-            rates[nPeriodsAgoIndex]) * 100.0 / rates[nPeriodsAgoIndex]
-
-
-# end of roc
 
 
 # SMA - Simple Moving Average
