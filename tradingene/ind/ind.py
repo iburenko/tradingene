@@ -27,7 +27,7 @@ class Indicators:
         for key in indicators: # keys of indicators
             params = indicators[key]
             name = params[0]
-            to_eval = "self." + name  + "(";
+            to_eval = "self." + name  + "("
             for p in range(1,len(params)):
                 if p > 1:
                     to_eval += ","
