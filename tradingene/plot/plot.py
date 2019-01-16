@@ -3,18 +3,29 @@ import numpy as np
 import pandas as pd
 from bokeh import events
 from bokeh.core import properties
-from bokeh.plotting import figure, save, output_file
+from bokeh.plotting import figure, save, output_file, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, CustomJS, Band
+from bokeh.models import ColumnDataSource, CustomJS, Band, Axis
 from bokeh.models.tools import HoverTool
 
+def reindex_by_df(reindex_df, by_df, timeframe):
+    prev_index = 0
+    for j in range(reindex_df.shape[0]):
+        for i in range(prev_index, by_df.shape[0]):
+            prev_index = i
+            if reindex_df.at[j,'date'] == by_df.at[i,'date']:
+                reindex_df.at[j,'index'] = by_df.at[i,'index']
+                break
+            elif reindex_df.at[j,'date'] > by_df.at[i,'date'] and reindex_df.at[j,'date'] < by_df.at[i,'date'] + dt.timedelta(minutes=timeframe):
+                reindex_df.at[j,'index'] = ((reindex_df.at[j,'date'] - by_df.at[i,'date']) / dt.timedelta(minutes=timeframe)) + by_df.at[i,'index']
+                break
+    return reindex_df
 
 def plot_cs_prof(alg, filename):
     def update_triangle(source):
         return CustomJS(
             args=dict(source=source, xr=p.x_range),
             code="""
-        console.log(xr.start, xr.end)
         var data = source.data;
         var x = data["size"]
         var range = data["range"]
@@ -24,9 +35,6 @@ def plot_cs_prof(alg, filename):
                 x[i] = x[i] * cond;
                 range[i] = xr.end - xr.start
             }
-        console.log(x[0])
-        console.log(range[0])
-        console.log(cond)
         source.change.emit();
         """)
 
@@ -121,21 +129,30 @@ def plot_cs_prof(alg, filename):
     close_df["date"] = pd.to_datetime(
         close_df["time"].astype(str), format='%Y%m%d%H%M%S%f')
     close_df = close_df.drop(['time'], axis=1)
-
     open_df["date"] = pd.to_datetime(
         open_df["time"].astype(str), format='%Y%m%d%H%M%S%f')
     open_df = open_df.drop(['time'], axis=1)
+    df = df.sort_values(by=['date'])
+    close_df = close_df.sort_values(by=['date'])
+    open_df = open_df.sort_values(by=['date'])
 
-    close_df.index = range(len(close_df))
-    open_df.index = range(len(open_df))
+    df = df.reset_index()
+    df['index'] = df.index
+    close_df = close_df.reset_index()
+    open_df = open_df.reset_index()
+    df['index'] = df['index'].astype(np.float64)
+    close_df['index'] = df['index'].astype(np.float64)
+    open_df['index'] = df['index'].astype(np.float64)
 
-    w = (timeframe / 2) * 60 * 1000
+    close_df = reindex_by_df(close_df, df, timeframe)
+    open_df = reindex_by_df(open_df, df, timeframe)
+    w = (0.5)
 
     output_file(filename, title="Graphs")
     TOOLS = "pan,wheel_zoom,reset,save"
 
     inc = df['close'] > df['open']
-    dec = df['open'] > df['close']
+    dec = ~inc
 
     ind_close = close_df["last_indic"] == 1
     ind_close_subseq = close_df["last_indic"] == 0
@@ -146,26 +163,26 @@ def plot_cs_prof(alg, filename):
     ind_open_pos = open_df['open_side'] == -1
 
     max_range = (df['high'] - df['low']).max()
-    min_low_range = df['low'][(len(df) - 31):(len(df) - 1)].min()
 
-    max_high_range = df['high'][(len(df) - 31):(len(df) - 1)].max()
+    range_constant = 31 if len(df) - 31 > 0 else len(df)
+    min_low_range = df['low'][:range_constant].min()
 
+    max_high_range = df['high'][:range_constant].max()
     p = figure(
         title="Candlestick chart with timeframe = " + str(timeframe) +
         " munutes",
-        x_axis_type="datetime",
+        x_axis_type="linear",
         tools=TOOLS,
         plot_width=1000,
         toolbar_location="left",
-        x_range=(df["date"].min() - dt.timedelta(minutes=timeframe),
-                 df["date"].min() + dt.timedelta(minutes=timeframe * 30)),
+        x_range=(-1.5,30),
         y_range=(min_low_range - max_range / 2,
                  max_high_range + max_range / 2))
 
     df['range'] = p.x_range.end - p.x_range.start
     close_df['range'] = p.x_range.end - p.x_range.start
     open_df['range'] = p.x_range.end - p.x_range.start
-    p.segment(df.date, df.high, df.date, df.low, color="black")
+    p.segment(df['index'], df['high'], df['index'], df['low'], color="black")
     min_diff = np.fabs(df['close'] - df['open'])
     min_diff = min_diff[min_diff > 0].min()
     prec = "0"
@@ -178,13 +195,13 @@ def plot_cs_prof(alg, filename):
     df.loc[df['close'] + min_diff > df['high'],
            'close_eq'] = df['close'] - min_diff
     ind_eq = df['close'] == df['open']
+    df['index'] = df.index
     mysource1 = ColumnDataSource(df[inc])
     mysource2 = ColumnDataSource(df[dec])
     mysource3 = ColumnDataSource(df[ind_eq])
-
     bars_1 = p.vbar(
         source=mysource1,
-        x="date",
+        x="index",
         width=w,
         bottom="open",
         top="close",
@@ -193,7 +210,7 @@ def plot_cs_prof(alg, filename):
         line_width=1)
     bars_2 = p.vbar(
         source=mysource2,
-        x="date",
+        x="index",
         width=w,
         bottom="close",
         top="open",
@@ -202,7 +219,7 @@ def plot_cs_prof(alg, filename):
         line_width=1)
     bars_3 = p.vbar(
         source=mysource3,
-        x="date",
+        x="index",
         width=w,
         bottom="close_eq",
         top="open",
@@ -216,11 +233,13 @@ def plot_cs_prof(alg, filename):
                   ('low', '@low{0.' + str(prec) + '}'),
                   ('open', '@open{0.' + str(prec) + '}'),
                   ('close', '@close{0.' + str(prec) + '}'),
-                  ('volume', '@vol{0.0}'), ('date',
-                                            '@date{%Y-%m-%d %H:%M:%S}')],
-        formatters={"date": "datetime"})
+                  ('volume', '@vol{0.0}'),
+                    ('date', "@date{%Y-%m-%d %H:%M:%S}")],
+            formatters={"date": "datetime"})
     p.add_tools(hover)
-
+    p.xaxis.major_label_overrides = {
+        i: date.strftime('%Y-%m-%d %H:%M:%S') for i, date in enumerate(df["date"])
+    }
     if (opendf_len > 0):
         open_df['time'] = open_df['date'].dt.floor(str(timeframe) +
                                                    'T') + timedelta
@@ -232,30 +251,29 @@ def plot_cs_prof(alg, filename):
             open_df[ind_open_subseq & (open_df['open_side'] == 1)])
         source6 = ColumnDataSource(
             open_df[ind_open_subseq & (open_df['open_side'] == -1)])
-
         tr_1 = p.triangle(
-            x="time",
+            x="index",
             y="open_price",
             size="size",
             fill_alpha=0.7,
             source=source1,
             fill_color="green")
         inv_tr_1 = p.inverted_triangle(
-            x="time",
+            x="index",
             y="open_price",
             size="size",
             fill_alpha=0.7,
             source=source2,
             fill_color="green")
         tr_3 = p.triangle(
-            x="time",
+            x="index",
             y="open_price",
             size="size",
             fill_alpha=0.7,
             source=source5,
             fill_color="purple")
         inv_tr_3 = p.inverted_triangle(
-            x="time",
+            x="index",
             y="open_price",
             size="size",
             fill_alpha=0.7,
@@ -269,16 +287,17 @@ def plot_cs_prof(alg, filename):
 
         hover1 = HoverTool(
             renderers=[tr_1, inv_tr_1, tr_3, inv_tr_3],
-            tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'),
-                      ('open_price', '@open_price{0.' + str(prec) + '}'),
+            tooltips=[('open_price', '@open_price{0.' + str(prec) + '}'),
                       ('close_price_onop',
-                       '@close_price_onop{0.' + str(prec) + '}')],
+                       '@close_price_onop{0.' + str(prec) + '}'),
+                       ('date', "@date{%Y-%m-%d %H:%M:%S}")],
             formatters={"date": "datetime"})
         p.add_tools(hover1)
 
     if (closedf_len > 0):
         close_df['time'] = close_df['date'].dt.floor(str(timeframe) +
                                                      'T') + timedelta
+
         source3 = ColumnDataSource(
             close_df[ind_close & (close_df['close_side'] == 1)])
         source4 = ColumnDataSource(
@@ -289,28 +308,28 @@ def plot_cs_prof(alg, filename):
             close_df[ind_close_subseq & (close_df['close_side'] == -1)])
 
         tr_2 = p.inverted_triangle(
-            x="time",
+            x="index",
             y="close_price",
             size="size",
             fill_alpha=0.7,
             source=source3,
             fill_color="yellow")
         inv_tr_2 = p.triangle(
-            x="time",
+            x="index",
             y="close_price",
             size="size",
             fill_alpha=0.7,
             source=source4,
             fill_color="yellow")
         tr_4 = p.inverted_triangle(
-            x="time",
+            x="index",
             y="close_price",
             size="size",
             fill_alpha=0.7,
             source=source7,
             fill_color="brown")
         inv_tr_4 = p.triangle(
-            x="time",
+            x="index",
             y="close_price",
             size="size",
             fill_alpha=0.7,
@@ -324,10 +343,10 @@ def plot_cs_prof(alg, filename):
 
         hover2 = HoverTool(
             renderers=[tr_2, inv_tr_2, tr_4, inv_tr_4],
-            tooltips=[('date', '@date{%Y-%m-%d %H:%M:%S}'),
-                      ('close_price', '@close_price{0.' + str(prec) + '}'),
+            tooltips=[('close_price', '@close_price{0.' + str(prec) + '}'),
                       ('open_price_oncl',
-                       '@open_price_oncl{0.' + str(prec) + '}')],
+                       '@open_price_oncl{0.' + str(prec) + '}'),
+                       ('date', "@date{%Y-%m-%d %H:%M:%S}")],
             formatters={"date": "datetime"})
         p.add_tools(hover2)
 
@@ -339,15 +358,14 @@ def plot_cs_prof(alg, filename):
 
     close_df = close_df[close_df['last_indic'] == 1]
     close_df.loc[np.isnan(close_df['profit']), 'profit'] = 0.0
-
     prof = close_df['profit'].iloc[-1]
     if (open_df['date'].iloc[-1] > close_df['date'].iloc[-1]):
         prof = open_df['profit'].iloc[-1]
 
-    first_el = df.iloc[-1]
+    first_el = df.iloc[0]
     first_el = first_el.to_frame().T
     first_el['profit'] = 0.0
-    last_el = df.iloc[0]
+    last_el = df.iloc[-1]
     last_el = last_el.to_frame().T
     last_el['profit'] = prof
     last_el['date'] = last_el['date'] + dt.timedelta(minutes=timeframe)
@@ -366,7 +384,7 @@ def plot_cs_prof(alg, filename):
     close_df['neg'] = close_df.loc[close_df['cumsum'] < 0, 'cumsum']
     close_df.loc[np.isnan(close_df['neg']), 'neg'] = 0.0
     close_df['zeros'] = 0.0
-
+    print(close_df)
     plot_prof = figure(
         title="Profit plot",
         x_axis_type="datetime",
@@ -398,12 +416,15 @@ def plot_cs_prof(alg, filename):
     date_mid['neg'] = 0.0
     date_mid['zeros'] = 0.0
 
+    close_df = close_df.drop(['level_0','index'],axis=1)
     close_d_no_mids = close_df
     close_df = pd.concat([close_df, date_mid], sort=True)
     close_df = close_df.sort_values(by=['date'])
     close_df = close_df.reset_index()
     close_d_no_mids = close_d_no_mids.sort_values(by=['date'])
     close_d_no_mids = close_d_no_mids.reset_index()
+    close_d_no_mids = close_d_no_mids.drop(['index'],axis=1)
+    close_df = close_df.drop(['index'],axis=1)
 
     source_no_mids = ColumnDataSource(close_d_no_mids)
     source = ColumnDataSource(close_df)
@@ -433,4 +454,9 @@ def plot_cs_prof(alg, filename):
                   ('profit', '@cumsum{0.' + str(prec) + '}')],
         formatters={"date": "datetime"})
     plot_prof.add_tools(hover3)
-    save(column(p, plot_prof), filename)
+
+    candlestick_y_axis = p.select(dict(type=Axis, layout="left"))[0]
+    candlestick_y_axis.formatter.use_scientific = False
+    prof_y_axis = plot_prof.select(dict(type=Axis, layout="left"))[0]
+    prof_y_axis.formatter.use_scientific = False
+    save(column(p,plot_prof), filename)
