@@ -4,99 +4,78 @@ from tradingene.algorithm_backtest.tng import TNG
 import tradingene.backtest_statistics.backtest_statistics as bs
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.initializers import he_normal, he_uniform
-from keras.layers.normalization import BatchNormalization
+from keras.initializers import he_uniform
 import numpy as np
 
-LOOKBACK = 7  # How many prior candle bars each train sample embraces.
-NUM_FEATURES = LOOKBACK  # The number of features. This depends on how you implement the "calculate_input()" function.
-# This time the number of features equals the "lookback" period.
-LOOKFORWARD = 1  # How far in the future the algorithm "looks" and foresees.
-NUM_EPOCHS = 100  # The number of epochs to train your model through.
-TIMEFRAME = 60  # The time frame.
-TICKER = "btcusd"  # The ticker.
-START_TRAIN_DATE = datetime(2017, 6, 1)  # When a train period starts...
-END_TRAIN_DATE = datetime(
-    2017, 7, 1)  # When the train period ends and the test starts...
-END_TEST_DATE = datetime(2017, 7, 6)  # When the test ends...
+num_features = lookback = 7 
+lookforward = 1 
+num_epochs = 100
+timeframe = 60 
+ticker = "btcusd" 
+start_train_date = datetime(2017, 6, 1) 
+end_train_date = datetime(2017, 7, 1)
+end_test_date = datetime(2017, 7, 6) 
 
-_alg = None  # An instance of the "TNG" class used for simulated trading
+alg = None  # An instance of the "TNG" class used for simulated trading
 
 
 def prepare_model():
     data = import_data(
-        TICKER,
-        TIMEFRAME,
-        START_TRAIN_DATE,
-        END_TRAIN_DATE,
+        ticker,
+        timeframe,
+        start_train_date,
+        end_train_date,
         calculate_input,
-        LOOKBACK,
+        lookback,
         calculate_output,
-        LOOKFORWARD,
-        split=(
-            100, 0, 0
-        )  # This time we need only a train set (100% for train set, 0% for test and validation ones)
+        lookforward,
+        split=(100, 0, 0)
     )
-
-    # Creating a model...
-    model = Sequential()  # Creating a model class instance.
-    # The number of nodes in the first hidden layer equals the number of features.
+    model = Sequential()
     model.add(
         Dense(
-            units=NUM_FEATURES,
+            units=num_features,
             activation='tanh',
-            input_dim=NUM_FEATURES,
+            input_dim=num_features,
             kernel_initializer=he_uniform(1)))
-    # Adding another hidden layer
-    model.add(Dense(NUM_FEATURES, activation='tanh'))
-    # Adding an output layer
+    model.add(Dense(num_features, activation='tanh'))
     model.add(Dense(1, activation='linear'))
-    # Compiling the model
-    model.compile(
-        loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
-
-    model.fit(
-        data['train_input'], data['train_output'],
-        epochs=NUM_EPOCHS)  # Training the model
+    model.compile(loss='mean_squared_error', optimizer='sgd')
+    model.fit(data['train_input'], data['train_output'], epochs=num_epochs)
     return model
-
-
 # end of load_data
 
 
 def calculate_input(data):
-    input_vec = np.zeros(NUM_FEATURES)  # A vector to store inputs
-    for i in range(LOOKBACK):
+    input_vec = np.zeros(num_features)  # A vector to store inputs
+    for i in range(lookback):
         input_vec[i] = np.log(data['open'][i] / data['close'][0])
     return np.array([input_vec])
 
 
 def calculate_output(data):
-    return (data['close'][LOOKFORWARD - 1] - data['open'][0]) / data['open'][0]
+    return (data['close'][lookforward - 1] - data['open'][0]) / data['open'][0]
 
 
 def onBar(instrument):
-    inp = calculate_input(
-        instrument.rates[1:LOOKBACK + 1])  # Calculating inputs
-    prognosis = _model.predict([inp])  # Making prediction
-    if prognosis > 0:  # If market rising is predicted...
-        _alg.buy()  # ...trading long.
-    elif prognosis < 0:  # If market falling is predicted...
-        _alg.sell()  # ... trading short.
+    inp_vec = calculate_input(instrument.rates[1:lookback + 1]) 
+    prediction = model.predict([inp_vec])
+    if prediction > 0:  # If market rising is predicted...
+        alg.buy()
+    elif prediction < 0:  # If market falling is predicted...
+        alg.sell()
 
 
-_model = prepare_model()  # Creating a network (an ML-model).
-_alg = TNG(END_TRAIN_DATE, END_TEST_DATE
-           )  # Creating an instance of TNG class to run algorithm within.
-_alg.addInstrument(TICKER)  # Adding an instrument.
-_alg.addTimeframe(TICKER, TIMEFRAME)  # Adding a time frame.
-_alg.run_backtest(onBar)  # Backtesting...
+model = prepare_model()  # Creating a network (an ML-model).
+alg = TNG(end_train_date, end_test_date)  # Creating an instance of TNG class to run algorithm within.
+alg.addInstrument(ticker)  # Adding an instrument.
+alg.addTimeframe(ticker, timeframe)  # Adding a time frame.
+alg.run_backtest(onBar)  # Backtesting...
 
-stat = bs.BacktestStatistics(_alg)  # Retrieving statistics of the backtest
+stat = bs.BacktestStatistics(alg)  # Retrieving statistics of the backtest
 
 pnl = stat.calculate_PnL()  # Retrieving the PnL.
-num_positions = stat.calculate_number_of_trades(
-)  # Retrieving the number of trades done.
+num_positions = stat.calculate_number_of_trades()  # Retrieving the number of trades done.
 print("pnl=%f, num_positions=%d" % (pnl, num_positions))
 
 stat.backtest_results()  # Displaying the backtest statistics
