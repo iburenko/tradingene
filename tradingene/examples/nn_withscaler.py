@@ -17,9 +17,8 @@ ticker = "btcusd"
 start_train_date = datetime(2017, 6, 1)
 end_train_date = datetime(2017, 7, 1)
 end_test_date = datetime(2017, 7, 6) 
-
 alg = None 
-scaler = None  # An instance of the "StandardScaler" class used to normalize data
+scaler = None
 
 
 def prepare_model():
@@ -68,7 +67,6 @@ def calculate_output(data):
 def onBar(instrument):
     inp = calculate_input(instrument.rates[1:lookback + 1])
     inp = scaler.transform(inp)
-
     prediction = model.predict([inp])
     if prediction > 0:  # If market rising is predicted...
         alg.buy()
