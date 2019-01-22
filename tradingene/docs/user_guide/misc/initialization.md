@@ -4,7 +4,16 @@ Any algorithm needs an instance of the ```TNG``` class. This instance contains a
 
 ## Regime
 
-about ```regime``` .
+Different ```regimes``` allow you to open various number of trades after a position was opened. There are two possible options:
+
+* ```SP``` -- Single Position regime;
+* ```MP``` -- Multiple Position regime.
+
+In the ```SP``` regime you are allowed to open only one trade within opened position with prearranged volume. For instance if you opened a long position, you can't buy more offset since your algorithm used all available volume.
+
+In the ```MP``` regime you are allowed to open any number of trades within position.
+
+See more examples [here](../../trade_activity/trade_activity/#buy)
 
 **Arguments:**
 
