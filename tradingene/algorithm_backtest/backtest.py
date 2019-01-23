@@ -108,9 +108,7 @@ class Backtest(Environment):
         self._initialize_candles()
         candle_generator = self._iterate_data(self.pre_start_date, self.end_date,
                                               self.history_data)
-        t = time.time()
         self._run_generator(candle_generator, on_bar_function, shift, modeling)
-        print("true time = ", time.time() - t)
 
 
     def _run_generator(self,
@@ -302,7 +300,6 @@ class Backtest(Environment):
                                 instr.close[0], instr.vol[0])],\
                                 dtype = dt)
         instr.candles[instr.candle_ind] = last_candle
-        # instr.candles[instr.candle_ind + 1] = new_candle
         instr.rates[0] = last_candle[0]
         instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
         if instr.ticker in limits.moex_tickers:
@@ -377,7 +374,7 @@ class Backtest(Environment):
     def _initialize_candles(self):
         mins = self._calculate_number_of_minutes()
         for instr in self.instruments:
-            number_of_bars = mins // instr.timeframe + 1 + 50
+            number_of_bars = mins // instr.timeframe + 51
             instr.candles = np.empty(number_of_bars, dtype=dt)
             instr.candle_ind = 0
 
