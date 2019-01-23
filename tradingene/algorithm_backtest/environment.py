@@ -26,6 +26,7 @@ class Environment(Algorithm):
     def __init__(self, *args):
         super(Environment, self).__init__(args[0], args[1])
         self._start_date = args[2]
+        self.start_date_int = int(args[2].strftime("%Y%m%d%H%M%S"))
         self._end_date = args[3]
         self.ticker_timeframes = dict()
 
@@ -188,10 +189,12 @@ class Environment(Algorithm):
     def start_date(self, value):
         assert type(value) is datetime
         self._start_date = value
+        self.start_date_int = int(value.strftime("%Y%m%d%H%M%S"))
 
     @start_date.deleter
     def start_date(self):
         self._start_date = None
+        self.start_date_int = None
 
     @property
     def end_date(self):

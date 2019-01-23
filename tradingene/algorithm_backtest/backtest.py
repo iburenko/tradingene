@@ -46,8 +46,6 @@ class Backtest(Environment):
                 Price events added by user in the onBar function.
     """
 
-    t = time.time()
-
     def __init__(self, *args):
         name, regime = args[0], args[1]
         start_date, end_date = args[2], args[3]
@@ -61,6 +59,7 @@ class Backtest(Environment):
         self.instruments = set()
         self.time_events = list()
         self.price_events = list()
+        self._sl_or_tp = False
 
 ################################################################################
 
@@ -82,13 +81,16 @@ class Backtest(Environment):
                 no instrument was added.
         
         """
+        
         if not callable(on_bar_function):
             err_str = "on_bar_function must be callable, not of "+\
                       "{} type!".format(type(on_bar_function).__name__)
             raise TypeError(err_str)
         if not self.ticker_timeframes:
             raise RuntimeError("No instrument was added!")
-
+        code_methods = on_bar_function.__code__.co_names
+        if any(elem in code_methods for elem in ('setSL', 'setTP', 'setSLTP')):
+            self._sl_or_tp = True
         if modeling:
             sys.stdout.write("Loading data!\n")
             sys.stdout.flush()
@@ -98,17 +100,17 @@ class Backtest(Environment):
         ###############################################################
         if list(self.instruments)[0].ticker in limits.moex_tickers:
             self.start_date = self._set_moex_start_date(self.start_date)
-
-
+        self.pre_start_date = self._calculate_pre_start_date()
         self._load_data(self.start_date, self.end_date, shift, modeling)
         if modeling:
             sys.stdout.write("Data loaded!\n")
         self._set_slippage()
         self._initialize_candles()
-        candle_generator = self._iterate_data(self.start_date, self.end_date,
+        candle_generator = self._iterate_data(self.pre_start_date, self.end_date,
                                               self.history_data)
+        t = time.time()
         self._run_generator(candle_generator, on_bar_function, shift, modeling)
-        self._delete_unused_candles()
+        print("true time = ", time.time() - t)
 
 
     def _run_generator(self,
@@ -145,10 +147,12 @@ class Backtest(Environment):
                         instr, candles, show_bar=modeling)
                 instrs -= call
                 complete_tickers = list(set(complete_tickers) - on_bar_tickers)
-                list(map(on_bar_function, call))
+                if self.start_date_int < self._now:
+                    list(map(on_bar_function, call))
                 minutes_left += 1
                 self._update_instruments(candles)
-                self._minute_to_ticks(candles)
+                if self._sl_or_tp:
+                    self._minute_to_ticks(candles)
         except StopIteration:
             if modeling:
                 sys.stdout.write("\n")
@@ -161,6 +165,7 @@ class Backtest(Environment):
         ticker = list(self.ticker_timeframes)[0]
         if ticker in candles.keys():
             self.recent_price = (candles[ticker].open, 1)
+
 
     def _minute_to_ticks(self, candles):
         ticker = list(self.ticker_timeframes)[0]
@@ -175,6 +180,7 @@ class Backtest(Environment):
             else:
                 self.recent_price = (candles[ticker].low, 1)
             self.recent_price = (candles[ticker].close, 1)
+
 
     def _iterate_data(self, start_date, end_date, history_data):
         current_time = start_date
@@ -198,6 +204,7 @@ class Backtest(Environment):
             backtest_time = int(current_time.strftime("%Y%m%d%H%M%S"))
             yield ans
 
+
     def _update_instruments(self, candles):
         for instrument in self.instruments:
             ticker = instrument.ticker
@@ -217,10 +224,8 @@ class Backtest(Environment):
             instrument.close[0] = candle['close']
             instrument.vol[0] += candle['vol']
 
-    def _reload_instrument(self, instrument, candles, show_bar=True):
-        if show_bar:
-            self._update_progress_bar()
 
+    def _reload_instrument(self, instrument, candles, show_bar=True):
         def correct_candle_time(time_, timeframe):
             minutes_ = ((time_ // 100) % 100)
             hours_ = ((time_ // 10000) % 100)
@@ -234,6 +239,8 @@ class Backtest(Environment):
             time_ = int(time_.strftime("%Y%m%d%H%M%S"))
             return time_
 
+        if show_bar:
+            self._update_progress_bar()
         candle = candles[instrument.ticker]
         for instr in self.instruments:
             if instr.ticker == instrument.ticker and \
@@ -270,6 +277,7 @@ class Backtest(Environment):
                     instr.candle_ind += 1
         return instrument
 
+
     def _update_last_candle(self, instr):
         open_price = np.array([0.])
         time_ = datetime(*(time.strptime(str(instr.time[0]), \
@@ -293,13 +301,13 @@ class Backtest(Environment):
                                 instr.high[0], instr.low[0],\
                                 instr.close[0], instr.vol[0])],\
                                 dtype = dt)
-        if instr.candles is not None:
-            instr.candles[instr.candle_ind] = last_candle
-            instr.candle_ind += 1
+        instr.candles[instr.candle_ind] = last_candle
+        # instr.candles[instr.candle_ind + 1] = new_candle
         instr.rates[0] = last_candle[0]
         instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
         if instr.ticker in limits.moex_tickers:
             instr.time[0] = int(self.start_date.strftime("%Y%m%d%H%M%S"))
+        instr.candles = instr.candles[50:][::-1]
 
 
     def _completed_instruments(self, tickers, timeframes):
@@ -311,16 +319,19 @@ class Backtest(Environment):
                 instr |= {instrument}
         return instr
 
+
     def _list_all_timeframes(self):
         time_frames = set()
         for value in self.ticker_timeframes.values():
             time_frames |= set(value)
         return sorted(list(time_frames))
 
+
     def _completed_timeframes(self, minutes_left, timeframes):
         completed_tfs = [timeframe\
                 for timeframe in timeframes if minutes_left % timeframe == 0]
         return sorted(completed_tfs)
+
 
     def _completed_tickers(self, completed_timeframes, ct):
         ticker_set = {ticker for ticker, timeframes \
@@ -328,11 +339,10 @@ class Backtest(Environment):
                           if set(completed_timeframes) & set(timeframes)}
         return list(ticker_set | set(ct))
 
+
     def _load_data(self, start_date, end_date, shift, modeling):
-        
         for ticker in self.ticker_timeframes.keys():
-            self._load_pre_data(shift, False)
-            ticker_data = Data.load_data(ticker, start_date, end_date)
+            ticker_data = Data.load_data(ticker, self.pre_start_date, end_date)
             if shift:
                 self.history_data[ticker] = ticker_data[:-shift]
             else:
@@ -344,27 +354,9 @@ class Backtest(Environment):
                 instr.candle_start_time = int(
                     start_date.strftime("%Y%m%d%H%M%S"))
 
+
     def _foo(self, instrument):
         pass
-
-    def _load_pre_data(self, shift, modeling):
-        pre_data = dict.fromkeys(self.ticker_timeframes)
-        for ticker in self.ticker_timeframes.keys():
-            pre_start_date = self._calculate_pre_start_date()
-            pre_end_date = self.start_date
-            ticker_data = Data.load_data(
-                ticker, pre_start_date, pre_end_date, pre=1)
-            pre_data[ticker] = ticker_data
-            ticker_instrs = [
-                instr for instr in self.instruments if instr.ticker == ticker
-            ]
-            for instr in ticker_instrs:
-                instr.candle_start_time = int(
-                    pre_start_date.strftime("%Y%m%d%H%M%S"))
-        pre_data_candles_generator = self._iterate_data(
-            pre_start_date, pre_end_date, pre_data)
-        self._run_generator(pre_data_candles_generator, self._foo, shift,
-                            modeling)
 
 
     def _update_progress_bar(self):
@@ -385,17 +377,9 @@ class Backtest(Environment):
     def _initialize_candles(self):
         mins = self._calculate_number_of_minutes()
         for instr in self.instruments:
-            number_of_bars = mins // instr.timeframe + 1
+            number_of_bars = mins // instr.timeframe + 1 + 50
             instr.candles = np.empty(number_of_bars, dtype=dt)
             instr.candle_ind = 0
-
-
-    def _delete_unused_candles(self):
-        mins = self._calculate_number_of_minutes()
-        for instr in self.instruments:
-            number_of_bars = mins // instr.timeframe + 1
-            instr.candles = instr.candles[:instr.candle_ind]
-            instr.candles = instr.candles[::-1]
 
 
     def _calculate_number_of_minutes(self):
@@ -422,7 +406,6 @@ class Backtest(Environment):
         elif pre_start.weekday() in [5,6]:
             shift = timedelta(days=(2*weeks+4))
         return shift
-            
 
 
     def _calculate_pre_start_date(self):
