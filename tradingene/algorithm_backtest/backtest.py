@@ -56,9 +56,6 @@ class Backtest(Environment):
         self._now = 0
         self._recent_price = (0, 0)
         self.slippage = 0
-        self.instruments = set()
-        self.time_events = list()
-        self.price_events = list()
         self._sl_or_tp = False
 
 ################################################################################
@@ -300,11 +297,17 @@ class Backtest(Environment):
                                 instr.close[0], instr.vol[0])],\
                                 dtype = dt)
         instr.candles[instr.candle_ind] = last_candle
+        instr.candles[instr.candle_ind+1] = new_candle
         instr.rates[0] = last_candle[0]
         instr.rates = np.concatenate((new_candle, instr.rates[:-1]))
         if instr.ticker in limits.moex_tickers:
             instr.time[0] = int(self.start_date.strftime("%Y%m%d%H%M%S"))
-        instr.candles = instr.candles[50:][::-1]
+        last_ind = instr.candles.shape[0]
+        for i in range(instr.candles.shape[0]-1, 0, -1):
+            if instr.candles[i][0] == self._now:
+                last_ind = i
+                break
+        instr.candles = instr.candles[50:last_ind][::-1]
 
 
     def _completed_instruments(self, tickers, timeframes):
@@ -350,10 +353,6 @@ class Backtest(Environment):
             for instr in ticker_instrs:
                 instr.candle_start_time = int(
                     start_date.strftime("%Y%m%d%H%M%S"))
-
-
-    def _foo(self, instrument):
-        pass
 
 
     def _update_progress_bar(self):

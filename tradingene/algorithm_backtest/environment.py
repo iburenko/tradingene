@@ -29,6 +29,9 @@ class Environment(Algorithm):
         self.start_date_int = int(args[2].strftime("%Y%m%d%H%M%S"))
         self._end_date = args[3]
         self.ticker_timeframes = dict()
+        self.instruments = set()
+        self.time_events = list()
+        self.price_events = list()
 
     def addInstrument(self, ticker):
         """ Adds specified instrument to an algorithm.
@@ -98,6 +101,7 @@ class Environment(Algorithm):
             self.instruments -= {instr for instr in self.instruments\
                                 if instr.ticker == ticker}
 
+
     def addTimeframe(self, ticker, *timeframes):
         """ Adds specified timeframes to an algorithm.
 
@@ -139,6 +143,7 @@ class Environment(Algorithm):
             }
             self.instruments |= ticker_set
 
+
     def deleteTimeframe(self, ticker, *timeframes):
         """ Deletes specified timeframes from an algorithm.
 
@@ -177,6 +182,43 @@ class Environment(Algorithm):
             self.instruments -= {instr for instr in self.instruments\
                                 if instr.timeframe in timeframes and
                                    instr.ticker == ticker}
+
+
+    def getInstrument(self, ticker, timeframe):
+        """ Finds specified instruments between existed.
+
+            Example:
+
+            ```python
+            # Add two instruments and in onBar get needed one.
+            alg = tng(name, regime, start_date, end_date)
+            alg.addInstrument("btcusd")
+            alg.addTimeframe("btcusd", 5, 15)
+            def onBar(instrument):
+                if instrument.timeframe == 15:
+                    another_instr = alg.getInstrument("btcusd", 5)
+            ```
+        """
+        
+        try:
+            assert isinstance(ticker, str)
+        except AssertionError:
+            print("In getInstrument ticker must be string!")
+        try:
+            assert isinstance(ticker, int)
+        except AssertionError:
+            print("In getInstrument timeframe must be integer!")
+        found = None
+        for instr in self.instruments:
+            if instr.ticker == ticker and instr.timeframe == timeframe:
+                found = instr
+        if found is not None:
+            return instr
+        else:
+            warn_str = "In getInstrument there was not instrument with "+\
+                        "ticker {} and timeframe = ".format(ticker, timeframe)
+            warn(warn_str)
+
 
 
 ###############################################################################
