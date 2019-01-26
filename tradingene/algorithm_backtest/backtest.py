@@ -306,8 +306,7 @@ class Backtest(Environment):
         pre_end_date = self.end_date - timedelta(minutes=instr.timeframe)
         pre_end_date_int = int(pre_end_date.strftime("%Y%m%d%H%M%S"))
         for i in range(instr.candles.shape[0]-1, first_ind, -1):
-            r = range(pre_end_date_int, self.end_date_int+1)
-            if instr.candles[i][0] in r:
+            if instr.candles[i][0] != 0:
                 last_ind = i
                 break
         for i in range(50, last_ind):
@@ -384,7 +383,7 @@ class Backtest(Environment):
         for instr in self.instruments:
             number_of_bars = mins // min_timeframe + 1 \
                              + (50*max_timeframe//min_timeframe + 1)
-            instr.candles = np.empty(number_of_bars, dtype=dt)
+            instr.candles = np.zeros(number_of_bars, dtype=dt)
             instr.candle_ind = 0
 
 
