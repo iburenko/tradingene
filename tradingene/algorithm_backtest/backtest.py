@@ -104,9 +104,7 @@ class Backtest(Environment):
         self._initialize_candles()
         candle_generator = self._iterate_data(self.pre_start_date, self.end_date,
                                               self.history_data)
-        t = time.time()
         self._run_generator(candle_generator, on_bar_function, shift, modeling)
-        print("actual time = ", time.time() - t)
 
 
     def _run_generator(self,
@@ -308,7 +306,8 @@ class Backtest(Environment):
         pre_end_date = self.end_date - timedelta(minutes=instr.timeframe)
         pre_end_date_int = int(pre_end_date.strftime("%Y%m%d%H%M%S"))
         for i in range(instr.candles.shape[0]-1, first_ind, -1):
-            if instr.candles[i][0] in range(pre_end_date_int, self.end_date_int+1):
+            r = range(pre_end_date_int, self.end_date_int+1)
+            if instr.candles[i][0] in r:
                 last_ind = i
                 break
         for i in range(50, last_ind):

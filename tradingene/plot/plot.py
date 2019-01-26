@@ -384,7 +384,6 @@ def plot_cs_prof(alg, filename):
     close_df['neg'] = close_df.loc[close_df['cumsum'] < 0, 'cumsum']
     close_df.loc[np.isnan(close_df['neg']), 'neg'] = 0.0
     close_df['zeros'] = 0.0
-    print(close_df)
     plot_prof = figure(
         title="Profit plot",
         x_axis_type="datetime",
