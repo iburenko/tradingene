@@ -28,6 +28,7 @@ class Environment(Algorithm):
         self._start_date = args[2]
         self.start_date_int = int(args[2].strftime("%Y%m%d%H%M%S"))
         self._end_date = args[3]
+        self.end_date_int = int(args[3].strftime("%Y%m%d%H%M%S"))
         self.ticker_timeframes = dict()
         self.instruments = set()
         self.time_events = list()
@@ -198,16 +199,28 @@ class Environment(Algorithm):
                 if instrument.timeframe == 15:
                     another_instr = alg.getInstrument("btcusd", 5)
             ```
+
+            Args:
+                ticker (str): ticker of an instrument
+                timeframe (int): timeframe of an instrument
+
+            Returns:
+                instr (instrument): if specified instrument was found
+                None: else
+
+            Warns:
+                warn: If no instrument was found
+
         """
         
         try:
             assert isinstance(ticker, str)
         except AssertionError:
-            print("In getInstrument ticker must be string!")
+            warn("In getInstrument ticker must be string!")
         try:
             assert isinstance(ticker, int)
         except AssertionError:
-            print("In getInstrument timeframe must be integer!")
+            warn("In getInstrument timeframe must be integer!")
         found = None
         for instr in self.instruments:
             if instr.ticker == ticker and instr.timeframe == timeframe:
@@ -218,6 +231,7 @@ class Environment(Algorithm):
             warn_str = "In getInstrument there was not instrument with "+\
                         "ticker {} and timeframe = ".format(ticker, timeframe)
             warn(warn_str)
+            return None
 
 
 
@@ -246,10 +260,11 @@ class Environment(Algorithm):
     def end_date(self, value):
         assert type(value) is datetime
         today = datetime.today()
-        today = datetime(today.yeay, today.month, today.day)
+        today = datetime(today.year, today.month, today.day)
         if value > today:
             value = today
         self._end_date = value
+        self.end_date_int = int(value.strftime("%Y%m%d%H%M%S"))
 
     @end_date.deleter
     def end_date(self):

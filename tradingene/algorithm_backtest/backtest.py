@@ -9,6 +9,7 @@ from tradingene.algorithm_backtest.time_event import TimeEvent
 from tradingene.algorithm_backtest.price_event import PriceEvent
 import tradingene.algorithm_backtest.limits as limits
 from tradingene.data.data import Data, dt
+from tradingene.data.date_init import date_init
 
 #from tradingene.ind.slippage_estimation_corwin_schultz import corwin_schultz
 
@@ -95,9 +96,7 @@ class Backtest(Environment):
         ###############################################################
         #           Only for one instrument
         ###############################################################
-        if list(self.instruments)[0].ticker in limits.moex_tickers:
-            self.start_date = self._set_moex_start_date(self.start_date)
-        self.pre_start_date = self._calculate_pre_start_date()
+        self.pre_start_date, self.start_date, self.end_date = date_init(self)
         self._load_data(self.start_date, self.end_date, shift, modeling)
         if modeling:
             sys.stdout.write("Data loaded!\n")
@@ -105,7 +104,9 @@ class Backtest(Environment):
         self._initialize_candles()
         candle_generator = self._iterate_data(self.pre_start_date, self.end_date,
                                               self.history_data)
+        t = time.time()
         self._run_generator(candle_generator, on_bar_function, shift, modeling)
+        print("actual time = ", time.time() - t)
 
 
     def _run_generator(self,
@@ -303,11 +304,18 @@ class Backtest(Environment):
         if instr.ticker in limits.moex_tickers:
             instr.time[0] = int(self.start_date.strftime("%Y%m%d%H%M%S"))
         last_ind = instr.candles.shape[0]
-        for i in range(instr.candles.shape[0]-1, 0, -1):
-            if instr.candles[i][0] == self._now:
+        first_ind = 50
+        pre_end_date = self.end_date - timedelta(minutes=instr.timeframe)
+        pre_end_date_int = int(pre_end_date.strftime("%Y%m%d%H%M%S"))
+        for i in range(instr.candles.shape[0]-1, first_ind, -1):
+            if instr.candles[i][0] in range(pre_end_date_int, self.end_date_int+1):
                 last_ind = i
                 break
-        instr.candles = instr.candles[50:last_ind][::-1]
+        for i in range(50, last_ind):
+            if instr.candles[i][0] == self.start_date_int:
+                first_ind = i
+                break
+        instr.candles = instr.candles[first_ind:last_ind][::-1]
 
 
     def _completed_instruments(self, tickers, timeframes):
@@ -372,8 +380,11 @@ class Backtest(Environment):
 
     def _initialize_candles(self):
         mins = self._calculate_number_of_minutes()
+        all_timeframe = self._list_all_timeframes()
+        min_timeframe, max_timeframe = min(all_timeframe), max(all_timeframe)
         for instr in self.instruments:
-            number_of_bars = mins // instr.timeframe + 51
+            number_of_bars = mins // min_timeframe + 1 \
+                             + (50*max_timeframe//min_timeframe + 1)
             instr.candles = np.empty(number_of_bars, dtype=dt)
             instr.candle_ind = 0
 
@@ -382,73 +393,6 @@ class Backtest(Environment):
         td = (self.end_date - self.start_date)
         minutes = 1440 * td.days + td.seconds // 60
         return minutes
-
-
-    def _tickers_from_moscow_exchange(self):
-        if [ticker for ticker in self.ticker_timeframes.keys() if ticker in limits.moex_tickers]:
-            return True
-        else:
-            return False
-
-
-    def _calculate_shift_in_days(self, pre_start):
-        pre_end = self.start_date
-        shift = timedelta(days=0)
-        weeks = (pre_end - pre_start).days//7
-        if pre_start.weekday() not in [0, 1] and pre_end.weekday() in [5,6]:
-            shift = timedelta(days=(2*weeks+4))
-        elif pre_start.weekday() in [0,1] and pre_end.weekday() in [5,6]:
-            shift = timedelta(days=(2*weeks)+4)
-        elif pre_start.weekday() in [5,6]:
-            shift = timedelta(days=(2*weeks+4))
-        return shift
-
-
-    def _calculate_pre_start_date(self):
-        lookback = limits.LOOKBACK_PERIOD
-        earliest_start = limits.EARLISET_START
-        pre_start_array = list()
-        for ticker in self.ticker_timeframes.keys():
-            timeframe = max(self.ticker_timeframes[ticker])
-            pre_start_date = \
-                    self.start_date -  timedelta(minutes = lookback * timeframe)
-            pre_start_array.append(pre_start_date)
-        pre_start_date = min(pre_start_array)
-        if self._tickers_from_moscow_exchange():
-            days_to_shift = self._calculate_shift_in_days(pre_start_date)
-            pre_start_date -= days_to_shift
-        if pre_start_date < earliest_start:
-            pre_start_date = earliest_start
-        return pre_start_date
-
-
-    def _set_moex_start_date(self, start_date):
-        if start_date.weekday() == 5:
-            start_date += timedelta(days=2)
-        elif start_date.weekday() == 6:
-            start_date += timedelta(days=1)
-        if start_date.hour < 7:
-            new_hour = 7
-            new_minute = 0
-            new_second = 0
-        elif start_date.hour >= 22 and start_date.minutes > 45:
-            start_date += timedelta(days=1)
-            new_hour = 7
-            new_minute = 0
-            new_second = 0
-        else:
-            new_hour = start_date.hour
-            new_minute = start_date.minute
-            new_second = start_date.second
-        new_start_date = datetime(
-            start_date.year, 
-            start_date.month,
-            start_date.day,
-            new_hour,
-            new_minute,
-            new_second
-            )
-        return new_start_date
 
 
 ################################################################################
