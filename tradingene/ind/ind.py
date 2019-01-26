@@ -9,7 +9,7 @@ class Indicators:
         self._indicators = list()
 
         self._available_indicators = [ 'ad', 'adx', 'apo', 'aroon', 'atr', 'bollinger', 'cci', 'chande', 'ema', 'keltner', 
-            'macd', 'momentum', 'roc', 'sma', 'rsi', 'stochastic', 'trima', 'williams' ]
+            'macd', 'momentum', 'roc', 'rr', 'rsi', 'sma', 'stochastic', 'trima', 'williams' ]
 
     @property
     def available_indicators(self):
@@ -240,6 +240,7 @@ class Indicators:
             return ind.getValues()
         return None
 
+
     def roc(self, period=9, priceType='close'):
         indParameters = {'name': 'roc', 'period': period, \
                          'priceType': priceType}
@@ -252,6 +253,21 @@ class Indicators:
             ind.recalculate(self.rates)
             return ind.getValues()
         return None
+
+
+    def rr(self, period=9, priceType='close'):
+        indParameters = {'name': 'rr', 'period': period, \
+                         'priceType': priceType}
+        ind = IndHlp.findIndicator(self.indicators, indParameters)
+        if ind is None:
+            ind = IndRR(period, priceType)
+            indParameters['ind'] = ind
+            self.indicators.append(indParameters)
+        if ind is not None:
+            ind.recalculate(self.rates)
+            return ind.getValues()
+        return None
+
 
     def sma(self, period=9, priceType='close'):
         indParameters = {'name': 'sma', 'period': period, \
@@ -1106,6 +1122,37 @@ class IndROC(Indicator):
         for i in range(lenRates - 1, -1, -1):
             values[i] = ti.roc(period=self.period, shift=i, rates=rates1d)
         return {'roc': values}
+
+
+# end of IndROC
+
+
+class IndRR(Indicator):
+    def __init__(self, period=9, priceType="close"):
+        Indicator.__init__(self, period, priceType)
+
+    def calculate(self, rates, shift=0, overwrite=False, useHistorySize=True):
+        if len(self.values) >= IndHlp.historySize and useHistorySize:
+            self.values.pop()
+            self.dtms.pop()
+
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        new = ti.rr(period=self.period, shift=shift, rates=rates1d)
+        if overwrite:
+            self.values[0] = new
+        else:
+            self.values.insert(0, new)
+            IndHlp.insertTime(
+                0, self.dtms, shift,
+                rates['time'])  # dtmsIndex, dtms, timeIndex, time
+
+    def calculateRates(self, rates):
+        rates1d = IndHlp.getRatesByPriceType(rates, self.priceType)
+        lenRates = len(rates1d)
+        values = np.empty(lenRates)
+        for i in range(lenRates - 1, -1, -1):
+            values[i] = ti.rr(period=self.period, shift=i, rates=rates1d)
+        return {'rr': values}
 
 
 # end of IndROC
