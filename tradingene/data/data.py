@@ -189,6 +189,7 @@ class Data:
         req_end_date = iter_end_date * 1000
         url = "https://candles.tradingene.com/candles?instrument_id=" + \
             str(instr_id)+"&from="+str(req_start_date)+"&to="+str(req_end_date)
+        print(url)
         data = requests.get(url)
         if not data:
             raise Exception("Data was not downloaded! Please try again!")

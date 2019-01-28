@@ -21,7 +21,7 @@ def reindex_by_df(reindex_df, by_df, timeframe):
                 break
     return reindex_df
 
-def plot_cs_prof(alg, filename):
+def plot_cs_prof(alg, instr, filename):
     def update_triangle(source):
         return CustomJS(
             args=dict(source=source, xr=p.x_range),

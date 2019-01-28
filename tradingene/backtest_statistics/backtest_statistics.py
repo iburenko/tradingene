@@ -11,11 +11,12 @@ class BacktestStatistics:
         positions = alg.positions
         self.alg = alg
         self.all_positions_ = list()
-        self.winning_trades_ = list()
-        self.losing_trades_ = list()
+        self.winning_trades = list()
+        self.losing_trades = list()
+        self.profit_list = list()
         self.number_of_positions = 0
-        self.winning_trades = 0
-        self.losing_trades = 0
+        self.number_of_wins = 0
+        self.number_of_loses = 0
         self.PnL = None
         self.max_drawdown = 0
         self.reliability = 0
@@ -40,37 +41,43 @@ class BacktestStatistics:
                 self.all_positions_ = positions[:-1]
             else:
                 self.all_positions_ = positions
-            self.winning_trades_ = [
+            self.winning_trades = [
                 pos for pos in self.all_positions_ if pos.profit >= 0
             ]
-            self.losing_trades_ = [
+            self.losing_trades = [
                 pos for pos in self.all_positions_ if pos.profit < 0
             ]
+            self.profit_list = [pos.profit for pos in self.all_positions_]
             self.number_of_positions = len(self.all_positions_)
-            self.winning_trades = len(self.winning_trades_)
-            self.losing_trades = len(self.losing_trades_)
+            self.number_of_wins = len(self.winning_trades)
+            self.number_of_loses = len(self.losing_trades)
         except AssertionError:
             print("No positions was open while backtest!")
 
+
     def calculate_PnL(self):
-        pnl = 0.
+        return np.cumsum(self.profit_list)[-1]        
+
+
+    def calculate_profit_list(self):
+        profit_list = list()
         for pos in self.all_positions_:
-            pnl += pos.profit
-        if self.alg.positions and self.alg.positions[-1].close_time != 0:
-            pnl += self.alg.positions[-1].profit
-        self.PnL = pnl
-        return pnl
+            profit_list.append(pos.profit)
+        return profit_list
+
 
     def calculate_number_of_trades(self):
         return self.number_of_positions
+
 
     def calculate_reliability(self):
         if self.number_of_positions == 0:
             return 0
         else:
-            self.reliability = len(self.winning_trades_) / len(
+            self.reliability = len(self.winning_trades) / len(
                 self.all_positions_)
             return self.reliability
+
 
     def calculate_RRR(self):
         if self.average_winning_trade is None:
@@ -86,6 +93,7 @@ class BacktestStatistics:
         else:
             self.risk_reward_ratio = average_loss / average_win
             return self.risk_reward_ratio
+
 
     def calculate_drawdown(self):
         cumulative_profit = np.zeros((len(self.all_positions_) + 1))
@@ -140,6 +148,7 @@ class BacktestStatistics:
             self.max_drawdown = drawdown
             return (self.max_drawdown, int(drawdown_len))
 
+
     def calculate_AT(self):
         if self.PnL is None:
             pnl = self.calculate_PnL()
@@ -150,6 +159,7 @@ class BacktestStatistics:
         else:
             self.average_trade = pnl / self.number_of_positions
             return self.average_trade
+
 
     def calculate_ATT(self):
         overall_time = 0
@@ -167,6 +177,7 @@ class BacktestStatistics:
             self.average_time_in_trade = overall_time / self.number_of_positions
             return self.average_time_in_trade
 
+
     def calculate_ADPD(self):
         if len(self.all_positions_) > 0:
             first_pos = self.all_positions_[0]
@@ -183,9 +194,10 @@ class BacktestStatistics:
         else:
             return 0
 
+
     def calculate_profit(self):
         profit = 0
-        for pos in self.winning_trades_:
+        for pos in self.winning_trades:
             profit += pos.profit
         if self.alg.positions:
             last_pos = self.alg.positions[-1]
@@ -194,9 +206,10 @@ class BacktestStatistics:
         self.profit = profit
         return profit
 
+
     def calculate_loss(self):
         loss = 0
-        for pos in self.losing_trades_:
+        for pos in self.losing_trades:
             loss += pos.profit
         if self.alg.positions:
             last_pos = self.alg.positions[-1]
@@ -205,53 +218,60 @@ class BacktestStatistics:
         self.loss = loss
         return loss
 
+
     def calculate_AWT(self):
         if self.profit is None:
             profit = self.calculate_profit()
         else:
             profit = self.profit
-        if self.winning_trades == 0:
+        if self.number_of_wins == 0:
             return 0
         else:
-            self.average_winning_trade = profit / self.winning_trades
+            self.average_winning_trade = profit / self.number_of_wins
             return self.average_winning_trade
+
 
     def calculate_ALT(self):
         if self.loss is None:
             loss = self.calculate_loss()
         else:
             loss = self.loss
-        if self.losing_trades == 0:
+        if self.number_of_loses == 0:
             return 0
         else:
-            self.average_losing_trade = loss / self.losing_trades
+            self.average_losing_trade = loss / self.number_of_loses
             return self.average_losing_trade
 
+
     def calculate_WT(self):
-        return self.winning_trades
+        return self.number_of_wins
+
 
     def calculate_LT(self):
-        return self.losing_trades
+        return self.number_of_loses
+
 
     def calculate_LWT(self):
-        profits = [pos.profit for pos in self.winning_trades_]
+        profits = [pos.profit for pos in self.winning_trades]
         if profits:
             self.largest_winning_trade = max(profits)
             return self.largest_winning_trade
         else:
             return 0
 
+
     def calculate_LLT(self):
-        losses = [pos.profit for pos in self.losing_trades_]
+        losses = [pos.profit for pos in self.losing_trades]
         if losses:
             self.largest_losing_trade = min(losses)
             return self.largest_losing_trade
         else:
             return 0
 
+
     def calculate_ATWT(self):
         overall_time = 0
-        for pos in self.winning_trades_:
+        for pos in self.winning_trades:
             open_time = datetime.datetime(*(time.strptime(str(pos.open_time), \
                                            "%Y%m%d%H%M%S")[0:6]))
             close_time = datetime.datetime(*(time.strptime(str(pos.close_time), \
@@ -259,15 +279,16 @@ class BacktestStatistics:
             diff = close_time - open_time
             trade_time = 1440 * diff.days + diff.seconds / 60
             overall_time += trade_time
-        if self.winning_trades == 0:
+        if self.number_of_wins == 0:
             return 0
         else:
-            self.average_time_in_winning_trade = overall_time / self.winning_trades
+            self.average_time_in_winning_trade = overall_time / self.number_of_wins
             return self.average_time_in_winning_trade
+
 
     def calculate_ATLT(self):
         overall_time = 0
-        for pos in self.losing_trades_:
+        for pos in self.losing_trades:
             open_time = datetime.datetime(*(time.strptime(str(pos.open_time), \
                                            "%Y%m%d%H%M%S")[0:6]))
             close_time = datetime.datetime(*(time.strptime(str(pos.close_time), \
@@ -275,11 +296,12 @@ class BacktestStatistics:
             diff = close_time - open_time
             trade_time = 1440 * diff.days + diff.seconds / 60
             overall_time += trade_time
-        if self.losing_trades == 0:
+        if self.number_of_loses == 0:
             return 0
         else:
-            self.average_time_in_losing_trade = overall_time / self.losing_trades
+            self.average_time_in_losing_trade = overall_time / self.number_of_loses
             return self.average_time_in_losing_trade
+
 
     def calculate_MCW(self):
         cons_winners = list()
@@ -300,6 +322,7 @@ class BacktestStatistics:
         else:
             return 0
 
+
     def calculate_MCL(self):
         cons_losses = list()
         current_cons_losses = 0
@@ -319,13 +342,22 @@ class BacktestStatistics:
         else:
             return 0
 
-    def backtest_results(self, plot=True, filename="stats"):
+
+    def backtest_results(self, plot=True, timeframe = None, filename="stats"):
         stats_filename = filename + ".html"
         if not self._calculated:
             self._do_all_caclulations()
             self._calculated = 1
         if self.all_positions_:
-            plot_cs_prof(self.alg, stats_filename)
+            all_instrs_list = list(self.alg.instruments)
+            instr = all_instrs_list[0]
+            if timeframe not in {instr.timeframe for instr in all_instrs_list}:
+                timeframe = all_instrs_list[0].timeframe
+            else:
+                plot_instr = [instr for instr in all_instrs_list if instr.timeframe == timeframe]
+                instr = plot_instr[0]
+            print("plot timeframe = ", timeframe)
+            plot_cs_prof(self.alg, instr, stats_filename)
             html = "<table>"
             for elem in sorted(self.__dict__):
                 if elem[-1] == "_" or elem[0] == "_":
