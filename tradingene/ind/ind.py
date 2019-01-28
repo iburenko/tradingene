@@ -21,9 +21,9 @@ class Indicators:
             values[ self._available_indicators[i] ] = eval("self." + self._available_indicators[i] + "()")
         return values
 
-    def calc_indicators(indicators):
-        values = {}
 
+    def calc_indicators(self, indicators):
+        values = {}
         for key in indicators: # keys of indicators
             params = indicators[key]
             name = params[0]
@@ -36,10 +36,10 @@ class Indicators:
                 else:
                     to_eval += str(params[p])
             to_eval += ")"  
-
             values[key] = eval(to_eval)
         return values
     # end of calc_indicator()        
+
 
     @property
     def timeframe(self):
@@ -1287,7 +1287,6 @@ class IndStochastic(Indicator):
             else:
                 k[i] = None
                 d[i] = None
-
         return {'stochastic.k': k, 'stochastic.d': d}
 
 
