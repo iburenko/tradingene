@@ -1,6 +1,7 @@
 import datetime as dt
 import numpy as np
 import pandas as pd
+import math
 from bokeh import events
 from bokeh.core import properties
 from bokeh.plotting import figure, save, output_file, show
@@ -17,10 +18,27 @@ def reindex_by_df(reindex_df, by_df, timeframe):
                 reindex_df.at[j,'index'] = by_df.at[i,'index']
                 break
             elif reindex_df.at[j,'date'] > by_df.at[i,'date'] and reindex_df.at[j,'date'] < by_df.at[i,'date'] + dt.timedelta(minutes=timeframe):
+                reindex_df.at[j,'date'] = by_df.at[i,'date']
                 reindex_df.at[j,'index'] = ((reindex_df.at[j,'date'] - by_df.at[i,'date']) / dt.timedelta(minutes=timeframe)) + by_df.at[i,'index']
                 break
     return reindex_df
 
+def calc_cumsum_and_drop(df):
+    print(df['profit'])
+    df.at[df.index[0], 'cumsum'] = df.at[df.index[0], 'profit']
+    prev_index = df.index[0]
+    duplicates = []
+    for i in range(1, df.shape[0]):
+        if math.isnan(df.at[df.index[i], 'profit']):
+            continue
+        print(df.at[df.index[0], 'profit'],df.at[df.index[0], 'cumsum'])
+        df.at[df.index[i], 'cumsum'] = df.at[df.index[prev_index], 'cumsum'] + df.at[df.index[i], 'profit']
+        if df.at[df.index[prev_index], 'date'] == df.at[df.index[i], 'date']:
+            duplicates.append(prev_index)
+        prev_index = i
+    
+    df = df.drop(duplicates, axis = 0)
+    return df
 def plot_cs_prof(alg, instr, filename):
     def update_triangle(source):
         return CustomJS(
@@ -144,10 +162,13 @@ def plot_cs_prof(alg, instr, filename):
     close_df['index'] = df['index'].astype(np.float64)
     open_df['index'] = df['index'].astype(np.float64)
 
+    close_df['date_prof_plot'] = close_df['date']
+    open_df['date_prof_plot'] = close_df['date']
+
     close_df = reindex_by_df(close_df, df, timeframe)
     open_df = reindex_by_df(open_df, df, timeframe)
     w = (0.5)
-
+    
     output_file(filename, title="Graphs")
     TOOLS = "pan,wheel_zoom,reset,save"
 
@@ -359,6 +380,8 @@ def plot_cs_prof(alg, instr, filename):
     close_df = close_df[close_df['last_indic'] == 1]
     close_df.loc[np.isnan(close_df['profit']), 'profit'] = 0.0
     prof = close_df['profit'].iloc[-1]
+    close_df['date'] = close_df['date_prof_plot']
+    open_df['date'] = open_df['date_prof_plot']
     if (open_df['date'].iloc[-1] > close_df['date'].iloc[-1]):
         prof = open_df['profit'].iloc[-1]
 
@@ -372,10 +395,13 @@ def plot_cs_prof(alg, instr, filename):
 
     close_df = close_df.append(first_el, sort=True)
     close_df = close_df.append(last_el, sort=True)
-
     close_df = close_df.sort_values(by=['date'])
     close_df = close_df.reset_index()
-    close_df['cumsum'] = close_df['profit'].cumsum(skipna=True)
+    print(close_df['profit'])
+
+    close_df['cumsum'] = 0.0
+    close_df = calc_cumsum_and_drop(close_df)
+    print(close_df['cumsum'])
     close_df['pos'] = 0.0
 
     close_df['pos'] = close_df.loc[close_df['cumsum'] > 0, 'cumsum']
