@@ -56,7 +56,8 @@ class BacktestStatistics:
 
 
     def calculate_PnL(self):
-        return np.cumsum(self.profit_list)[-1]        
+        self.PnL = np.cumsum(self.profit_list)[-1]        
+        return self.PnL
 
 
     def calculate_profit_list(self):
@@ -356,7 +357,6 @@ class BacktestStatistics:
             else:
                 plot_instr = [instr for instr in all_instrs_list if instr.timeframe == timeframe]
                 instr = plot_instr[0]
-            print("plot timeframe = ", timeframe)
             plot_cs_prof(self.alg, instr, stats_filename)
             html = "<table>"
             for elem in sorted(self.__dict__):
