@@ -38,10 +38,7 @@ def plot_cs_prof(alg, instr, filename):
         source.change.emit();
         """)
 
-    try:
-        timeframe = list(alg.instruments)[0].timeframe
-    except:
-        timeframe = alg.timeframe
+    timeframe = instr.timeframe
     close_df = pd.DataFrame(columns=[
         'time', 'close_price', 'open_price_oncl', 'close_side', 'last_indic',
         'profit'
@@ -106,13 +103,9 @@ def plot_cs_prof(alg, instr, filename):
                             'open_side', 'first_indic', 'profit'
                         ]),
                     ignore_index=True)
-
-    try:
-        df = instr.candles
-        df = pd.DataFrame(df)
-    except:
-        df = alg.data[:-50]
-
+        
+    df = pd.DataFrame(instr.candles)
+    
     opendf_len = len(open_df)
     closedf_len = len(close_df)
 
