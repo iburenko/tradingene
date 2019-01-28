@@ -24,14 +24,12 @@ def reindex_by_df(reindex_df, by_df, timeframe):
     return reindex_df
 
 def calc_cumsum_and_drop(df):
-    print(df['profit'])
     df.at[df.index[0], 'cumsum'] = df.at[df.index[0], 'profit']
     prev_index = df.index[0]
     duplicates = []
     for i in range(1, df.shape[0]):
         if math.isnan(df.at[df.index[i], 'profit']):
             continue
-        print(df.at[df.index[0], 'profit'],df.at[df.index[0], 'cumsum'])
         df.at[df.index[i], 'cumsum'] = df.at[df.index[prev_index], 'cumsum'] + df.at[df.index[i], 'profit']
         if df.at[df.index[prev_index], 'date'] == df.at[df.index[i], 'date']:
             duplicates.append(prev_index)
@@ -39,6 +37,7 @@ def calc_cumsum_and_drop(df):
     
     df = df.drop(duplicates, axis = 0)
     return df
+
 def plot_cs_prof(alg, instr, filename):
     def update_triangle(source):
         return CustomJS(
@@ -390,11 +389,9 @@ def plot_cs_prof(alg, instr, filename):
     close_df = close_df.append(last_el, sort=True)
     close_df = close_df.sort_values(by=['date'])
     close_df = close_df.reset_index()
-    print(close_df['profit'])
 
     close_df['cumsum'] = 0.0
     close_df = calc_cumsum_and_drop(close_df)
-    print(close_df['cumsum'])
     close_df['pos'] = 0.0
 
     close_df['pos'] = close_df.loc[close_df['cumsum'] > 0, 'cumsum']
