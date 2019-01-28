@@ -58,17 +58,18 @@ class Backtest(Environment):
         self._recent_price = (0, 0)
         self.slippage = 0
         self._sl_or_tp = False
+        self._data_initialized = False
+
 
 ################################################################################
 
-    def run_backtest(self, on_bar_function, shift=0, modeling=True):
+    def run_backtest(self, on_bar_function, shift=0, show_progress=True):
         """ Runs backtest of an algorithm. 
         
         Args:
             on_bar_function (function): user-define function
                 that is called after each fully formed candle.
             shift (int): 
-            modeling (bool): 
 
         Returns:
             None.
@@ -89,29 +90,29 @@ class Backtest(Environment):
         code_methods = on_bar_function.__code__.co_names
         if any(elem in code_methods for elem in ('setSL', 'setTP', 'setSLTP')):
             self._sl_or_tp = True
-        if modeling:
+        if not self._data_initialized:
             sys.stdout.write("Loading data!\n")
             sys.stdout.flush()
-        
-        ###############################################################
-        #           Only for one instrument
-        ###############################################################
-        self.pre_start_date, self.start_date, self.end_date = date_init(self)
-        self._load_data(self.start_date, self.end_date, shift, modeling)
-        if modeling:
+            
+            ###############################################################
+            #           Only for one instrument
+            ###############################################################
+            self.pre_start_date, self.start_date, self.end_date = date_init(self)
+            self._load_data(self.start_date, self.end_date, shift)
             sys.stdout.write("Data loaded!\n")
-        self._set_slippage()
-        self._initialize_candles()
-        candle_generator = self._iterate_data(self.pre_start_date, self.end_date,
-                                              self.history_data)
-        self._run_generator(candle_generator, on_bar_function, shift, modeling)
+            self._set_slippage()
+            self._initialize_candles()
+            self._data_initialized = True
+        candle_generator = self._iterate_data(self.pre_start_date, self.end_date)
+        self._run_generator(candle_generator, on_bar_function, show_progress, shift)
 
 
     def _run_generator(self,
                        generator,
                        on_bar_function,
-                       shift=0,
-                       modeling=True):
+                       show_progress,
+                       shift=0
+                       ):
         candles = next(generator)
         minutes_left = -shift + 1
         self._update_instruments(candles)
@@ -138,7 +139,7 @@ class Backtest(Environment):
                 }
                 for instr in call:
                     instr = self._reload_instrument(
-                        instr, candles, show_bar=modeling)
+                        instr, candles, show_bar=show_progress)
                 instrs -= call
                 complete_tickers = list(set(complete_tickers) - on_bar_tickers)
                 if self.start_date_int < self._now:
@@ -148,9 +149,8 @@ class Backtest(Environment):
                 if self._sl_or_tp:
                     self._minute_to_ticks(candles)
         except StopIteration:
-            if modeling:
-                sys.stdout.write("\n")
-                sys.stdout.flush()
+            sys.stdout.write("\n")
+            sys.stdout.flush()
             instr_list = [instr for instr in self.instruments]
             list(map(self._update_last_candle, instr_list))
             
@@ -176,7 +176,7 @@ class Backtest(Environment):
             self.recent_price = (candles[ticker].close, 1)
 
 
-    def _iterate_data(self, start_date, end_date, history_data):
+    def _iterate_data(self, start_date, end_date):
         current_time = start_date
         backtest_time = int(current_time.strftime("%Y%m%d%H%M%S"))
         time_ticks = dict.fromkeys(self.ticker_timeframes, -1)
@@ -186,12 +186,12 @@ class Backtest(Environment):
             for ticker in self.ticker_timeframes:
                 ind = time_ticks[ticker]
                 try:
-                    ticker_time = history_data[ticker]['time'].iloc[ind]
+                    ticker_time = self.history_data[ticker]['time'].iloc[ind]
                 except:
                     continue
                 if ticker_time == backtest_time:
                     time_ticks[ticker] -= 1
-                    ans[ticker] = history_data[ticker].iloc[ind]
+                    ans[ticker] = self.history_data[ticker].iloc[ind]
                 else:
                     pass
             current_time = current_time + timedelta(minutes=1)
@@ -219,7 +219,7 @@ class Backtest(Environment):
             instrument.vol[0] += candle['vol']
 
 
-    def _reload_instrument(self, instrument, candles, show_bar=True):
+    def _reload_instrument(self, instrument, candles, show_bar):
         def correct_candle_time(time_, timeframe):
             minutes_ = ((time_ // 100) % 100)
             hours_ = ((time_ // 10000) % 100)
@@ -346,7 +346,7 @@ class Backtest(Environment):
         return list(ticker_set | set(ct))
 
 
-    def _load_data(self, start_date, end_date, shift, modeling):
+    def _load_data(self, start_date, end_date, shift):
         for ticker in self.ticker_timeframes.keys():
             ticker_data = Data.load_data(ticker, self.pre_start_date, end_date)
             if shift:
