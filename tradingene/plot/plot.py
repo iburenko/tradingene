@@ -108,7 +108,7 @@ def plot_cs_prof(alg, instr, filename):
                     ignore_index=True)
 
     try:
-        df = list(alg.instruments)[0].candles
+        df = instr.candles
         df = pd.DataFrame(df)
     except:
         df = alg.data[:-50]
