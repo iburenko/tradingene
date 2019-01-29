@@ -59,11 +59,12 @@ class Backtest(Environment):
         self.slippage = 0
         self._sl_or_tp = False
         self._data_initialized = False
+        self._on_bar_params = None
 
 
 ################################################################################
 
-    def run_backtest(self, on_bar_function, shift=0, show_progress=True):
+    def run_backtest(self, on_bar_function, *args, shift=0, show_progress=True, **kargs):
         """ Runs backtest of an algorithm. 
         
         Args:
@@ -102,6 +103,9 @@ class Backtest(Environment):
             sys.stdout.write("Data loaded!\n")
             self._set_slippage()
             self._data_initialized = True
+        else:
+            self._reinitialize_data()
+        self._set_parameters_for_onbar(on_bar_function, args = args, kargs = kargs)
         self._initialize_candles()
         candle_generator = self._iterate_data(self.pre_start_date, self.end_date)
         self._run_generator(candle_generator, on_bar_function, show_progress, shift)
@@ -143,7 +147,7 @@ class Backtest(Environment):
                 instrs -= call
                 complete_tickers = list(set(complete_tickers) - on_bar_tickers)
                 if self.start_date_int < self._now:
-                    list(map(on_bar_function, call))
+                    [on_bar_function(onbar_call, *self._on_bar_params) for onbar_call in call]
                 minutes_left += 1
                 self._update_instruments(candles)
                 if self._sl_or_tp:
@@ -153,7 +157,26 @@ class Backtest(Environment):
             sys.stdout.flush()
             instr_list = [instr for instr in self.instruments]
             list(map(self._update_last_candle, instr_list))
-            
+
+
+    def _set_parameters_for_onbar(self, on_bar_function, **params):
+        number_of_arguments = on_bar_function.__code__.co_argcount
+        on_bar_args = on_bar_function.__code__.co_varnames[1:number_of_arguments]
+        total_len = 0
+        for value in params['kargs'].values():
+            if not isinstance(value, (str, int, float, complex)):
+                raise TypeError("Parameter should be str, int, float or complex!")
+            else:
+                total_len += 1
+        if total_len != number_of_arguments - 1:
+            err_str = "Number of variables that were sent greater than "\
+                        + "number of arguments of {}".format(on_bar_function.__name__)
+            raise RuntimeError(err_str) 
+        if set(on_bar_args) == set(params['kargs'].keys()):
+            self._on_bar_params = tuple(params['kargs'][key] for key in on_bar_args)
+        else:
+            raise NameError("Names of variables in run_backtest and onBar do not coincide!")
+     
 
     def _update_recent_price(self, candles):
         ticker = list(self.ticker_timeframes)[0]
@@ -391,6 +414,12 @@ class Backtest(Environment):
         td = (self.end_date - self.start_date)
         minutes = 1440 * td.days + td.seconds // 60
         return minutes
+
+
+    def _reinitialize_data(self):
+        self.positions = list()
+        self.time_events = list()
+        self.price_events = list()
 
 
 ################################################################################
