@@ -101,8 +101,8 @@ class Backtest(Environment):
             self._load_data(self.start_date, self.end_date, shift)
             sys.stdout.write("Data loaded!\n")
             self._set_slippage()
-            self._initialize_candles()
             self._data_initialized = True
+        self._initialize_candles()
         candle_generator = self._iterate_data(self.pre_start_date, self.end_date)
         self._run_generator(candle_generator, on_bar_function, show_progress, shift)
 
