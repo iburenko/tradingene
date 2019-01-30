@@ -344,6 +344,32 @@ class BacktestStatistics:
             return 0
 
 
+    def save_statistics(self, filename=None):
+        if filename is None:
+            warn("filename not provided! Saving statistics to stats.csv!")
+            filename = "stats.csv"
+        if not self._calculated:
+            self._do_all_caclulations()
+            self._calculated = 1
+        stat_str = ""
+        names = ""
+        for elem in sorted(self.__dict__):
+            if elem[-1] == "_" or elem[0] == "_":
+                continue
+            value = eval("self." + elem)
+            if type(value) in (int, float, np.float64):
+                stat_str += str(value) + ","
+                names += elem + ","
+        stat_str = stat_str[:-1]+"\n"
+        names = names[:-1]+"\n"
+        if os.path.isfile(filename):
+            with open(filename, "a") as f:
+                f.write(stat_str)
+        else:
+            with open(filename, "w") as f:
+                f.write(names)
+                f.write(stat_str)
+
     def backtest_results(self, plot=True, timeframe = None, filename="stats"):
         stats_filename = filename + ".html"
         if not self._calculated:
