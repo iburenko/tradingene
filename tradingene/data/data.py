@@ -8,6 +8,8 @@ import requests
 import json
 from tradingene.algorithm_backtest.limits import instrument_ids
 import tradingene.algorithm_backtest.limits as limits
+from tradingene.data.date_init import moex_start_date, moex_end_date
+from tradingene.algorithm_backtest.limits import moex_tickers
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -96,6 +98,7 @@ class Data:
         else:
             new_dates = cls._find_uncached_dates(start_date, end_date,
                                                  filename)
+            
             for dates in new_dates:
                 data = cls._download_minute_data(dates[0], dates[1], filename)
                 flag = dates[2]
@@ -167,8 +170,12 @@ class Data:
             if file_.startswith(filename)
         ][0]
         df = pd.read_csv(Data.hist_path + saved)
-        cached_start_time = str(df['time'].iloc[0])
-        cached_end_time = str(df['time'].iloc[-1])
+        if filename.startswith("__"):    
+            cached_start_time = str(df['time'].iloc[-1])
+            cached_end_time = str(df['time'].iloc[0])    
+        else:
+            cached_start_time = str(df['time'].iloc[0])
+            cached_end_time = str(df['time'].iloc[-1])
         prev_start_date = \
                 datetime(*(time.strptime(cached_start_time, "%Y%m%d%H%M%S")[0:6]))
         prev_end_date = \

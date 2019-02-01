@@ -8,6 +8,8 @@ from tradingene.algorithm_backtest.tng import TNG
 from tradingene.data.data import Data
 from tradingene.data.data_separation import separate_data
 import tradingene.ind.ind as tngind
+from tradingene.data.date_init import moex_start_date, moex_end_date
+from tradingene.algorithm_backtest.limits import moex_tickers
 
 dt = np.dtype({
     'names': ['time', 'open', 'high', 'low', 'close', 'vol'],
@@ -90,9 +92,12 @@ def import_candles(ticker,
 
     check_home_folder()
     delete_old_files()
-    filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
+    
     if indicators:
         indicators = _check_indicators(indicators)
+    if ticker in moex_tickers:
+        start_date, end_date = moex_start_date(start_date), moex_end_date(end_date)
+    filename = _get_filename(ticker, timeframe, start_date, end_date, shift)
     if _is_cached(ticker, timeframe, start_date, end_date, shift):
         data, ind_str = _load_cached_data(ticker, timeframe, start_date,
                                           end_date, indicators, shift)

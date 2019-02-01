@@ -11,9 +11,9 @@ def date_init(alg):
     if ticker not in limits.moex_tickers:
         pre_start_date = calculate_crypto_dates(instr_list, start_date)
     else:
-        start_date = _moex_start_date(start_date)
-        pre_start_date = _moex_pre_start_date(start_date, max(timeframes))
-        end_date = _moex_end_date(end_date)
+        start_date = moex_start_date(start_date)
+        pre_start_date = moex_pre_start_date(start_date, max(timeframes))
+        end_date = moex_end_date(end_date)
     return pre_start_date, start_date, end_date
 
 
@@ -28,7 +28,7 @@ def calculate_crypto_dates(instruments, start_date):
     return pre_start_date
 
 
-def _moex_start_date(start_date):
+def moex_start_date(start_date):
     if start_date.weekday() == 5:
         start_date += timedelta(days=2)
     elif start_date.weekday() == 6:
@@ -63,7 +63,7 @@ def _moex_start_date(start_date):
     return new_start_date
 
 
-def _moex_pre_start_date(moex_start_date, max_timeframe):
+def moex_pre_start_date(moex_start_date, max_timeframe):
     pre_start_date = moex_start_date
     evening_sesson = 285
     day_session = 700
@@ -89,7 +89,7 @@ def _moex_pre_start_date(moex_start_date, max_timeframe):
     return moex_pre_start_date
 
     
-def _moex_end_date(end_date):
+def moex_end_date(end_date):
     if end_date.weekday() == 5:
         end_date += timedelta(days=2)
     elif end_date.weekday() == 6:
