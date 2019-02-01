@@ -35,6 +35,7 @@ class BacktestStatistics:
         self.max_consecutive_winners = 0
         self.max_consecutive_losers = 0
         self._calculated = 0
+        self._stat_is_not_available = False
         try:
             assert len(positions) > 0
             if positions[-1].close_time == 0:
@@ -52,6 +53,7 @@ class BacktestStatistics:
             self.number_of_wins = len(self.winning_trades)
             self.number_of_loses = len(self.losing_trades)
         except AssertionError:
+            self._stat_is_not_available = True
             print("No positions was open while backtest!")
 
 
@@ -348,31 +350,31 @@ class BacktestStatistics:
         if filename is None:
             warn("filename not provided! Saving statistics to stats.csv!")
             filename = "stats.csv"
-        if not self._calculated:
+        if not self._calculated and not self._stat_is_not_available:
             self._do_all_caclulations()
             self._calculated = 1
-        stat_str = ""
-        names = ""
-        for elem in sorted(self.__dict__):
-            if elem[-1] == "_" or elem[0] == "_":
-                continue
-            value = eval("self." + elem)
-            if type(value) in (int, float, np.float64):
-                stat_str += str(value) + ","
-                names += elem + ","
-        stat_str = stat_str[:-1]+"\n"
-        names = names[:-1]+"\n"
-        if os.path.isfile(filename):
-            with open(filename, "a") as f:
-                f.write(stat_str)
-        else:
-            with open(filename, "w") as f:
-                f.write(names)
-                f.write(stat_str)
+            stat_str = ""
+            names = ""
+            for elem in sorted(self.__dict__):
+                if elem[-1] == "_" or elem[0] == "_":
+                    continue
+                value = eval("self." + elem)
+                if type(value) in (int, float, np.float64):
+                    stat_str += str(value) + ","
+                    names += elem + ","
+            stat_str = stat_str[:-1]+"\n"
+            names = names[:-1]+"\n"
+            if os.path.isfile(filename):
+                with open(filename, "a") as f:
+                    f.write(stat_str)
+            else:
+                with open(filename, "w") as f:
+                    f.write(names)
+                    f.write(stat_str)
 
     def backtest_results(self, plot=True, timeframe = None, filename="stats"):
         stats_filename = filename + ".html"
-        if not self._calculated:
+        if not self._calculated and not self._stat_is_not_available:
             self._do_all_caclulations()
             self._calculated = 1
         if self.all_positions_:

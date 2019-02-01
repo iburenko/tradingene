@@ -99,3 +99,32 @@ class Export:
         else:
             assert isinstance(filename, str)
             ans.to_csv(filename + ".csv", index=False)
+
+
+    def export_positions(self, filename = "all_positions.csv"):
+        try:
+            assert len(self.alg.positions) > 0
+        except AssertionError:
+            print("Can't export positions! No position were opened!")
+            return
+        try:
+            assert isinstance(filename, str)
+        except AssertionError:
+            print("filename must be str! All statistics will be saved into \"all_positions.csv\"")
+            filename = "all_positions.csv"
+        columns_names = ['open_time', 'close_time', 'open_price', 'close_price', 'profit', 'side']
+        df = pd.DataFrame(np.zeros((len(self.alg.positions), 6)), columns = columns_names)
+        for i, pos in enumerate(self.alg.positions):
+            df.iloc[i] = np.array([
+                pos.open_time, 
+                pos.close_time, 
+                pos.trades[0].open_price, 
+                pos.trades[-1].close_price, 
+                pos.profit, 
+                pos.trades[0].side
+                ])
+        df.open_time = df.open_time.astype(np.int64)
+        df.close_time = df.close_time.astype(np.int64)
+        df.side = df.side.astype(np.int8)
+        df.to_csv(filename, index=False)
+            
