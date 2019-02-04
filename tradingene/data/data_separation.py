@@ -15,10 +15,10 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
     inp_len = -1  # Stores the shape of input
     for i in range(lookback, len(data) - lookforward - 1):
         inp = np.array([calculate_input(data[i - lookback:i + 1][::-1])])
-        if inp is None:
+        if inp[0] is None:
             continue
         out = calculate_output(data[i:i + lookforward + 1])
-        if out is None:
+        if out[0] is None:
             continue
         # SH
         if bootstrap > 0:  # If bootstrapping is required...
