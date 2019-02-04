@@ -37,7 +37,7 @@ def moex_start_date(start_date):
         new_hour = 7
         new_minute = 0
         new_second = 0
-    elif start_date.hour >= 20 and start_date.minutes > 49:
+    elif start_date.hour >= 20 and start_date.minute > 49:
         start_date += timedelta(days=1)
         new_hour = 7
         new_minute = 0
@@ -99,7 +99,7 @@ def moex_end_date(end_date):
         new_hour = 20
         new_minute = 49
         new_second = 0
-    elif start_date.hour >= 20 and start_date.minutes > 49:
+    elif start_date.hour >= 20 and start_date.minute > 49:
         new_hour = 20
         new_minute = 49
         new_second = 0
