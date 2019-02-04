@@ -99,7 +99,7 @@ def moex_end_date(end_date):
         new_hour = 20
         new_minute = 49
         new_second = 0
-    elif start_date.hour >= 20 and start_date.minute > 49:
+    elif end_date.hour >= 20 and end_date.minute > 49:
         new_hour = 20
         new_minute = 49
         new_second = 0
