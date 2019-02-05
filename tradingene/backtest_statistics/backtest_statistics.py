@@ -380,9 +380,8 @@ class BacktestStatistics:
             self._calculated = 1
         if self.all_positions_:
             all_instrs_list = list(self.alg.instruments)
-            instr = all_instrs_list[0]
             if timeframe not in {instr.timeframe for instr in all_instrs_list}:
-                timeframe = all_instrs_list[0].timeframe
+                instr = all_instrs_list[0]
             else:
                 plot_instr = [instr for instr in all_instrs_list if instr.timeframe == timeframe]
                 instr = plot_instr[0]

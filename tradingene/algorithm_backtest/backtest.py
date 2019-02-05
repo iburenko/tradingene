@@ -332,7 +332,7 @@ class Backtest(Environment):
             if instr.candles[i][0] != 0:
                 last_ind = i
                 break
-        for i in range(50, last_ind):
+        for i in range(last_ind):
             if instr.candles[i][0] == self.start_date_int:
                 first_ind = i
                 break

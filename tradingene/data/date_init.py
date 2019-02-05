@@ -64,12 +64,13 @@ def moex_start_date(start_date):
 
 
 def moex_pre_start_date(moex_start_date, max_timeframe):
+    full_days = max_timeframe//1440
     pre_start_date = moex_start_date
     evening_sesson = 285
     day_session = 700
     day_minutes = day_session + evening_sesson
-    days = max_timeframe*50//day_minutes + 1
-    i = days
+    nonfull_days = (max_timeframe%1440)*50//day_minutes + 1
+    i = 50*full_days + nonfull_days
     while i > 0:
         foo = pre_start_date - timedelta(days=1)
         candidate = datetime(
