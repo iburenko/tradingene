@@ -58,7 +58,7 @@ class BacktestStatistics:
 
 
     def calculate_PnL(self):
-        if self.profit_list is not None:
+        if len(self.profit_list) > 0:
             self.PnL = np.cumsum(self.profit_list)[-1]        
         return self.PnL
 

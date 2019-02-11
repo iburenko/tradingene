@@ -69,6 +69,11 @@ class Instrument(Indicators):
         self.candle_ind = 0
         self.candle_start_time = None
 
+
+    def getTimeframe(self):
+        return self.timeframe        
+
+
     def __getitem__(self, indices):
         if isinstance(indices, int):
             if indices <= -lookback or indices >= lookback:
