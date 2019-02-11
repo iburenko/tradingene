@@ -400,20 +400,21 @@ class Backtest(Environment):
 
 
     def _initialize_candles(self):
-        mins = self._calculate_number_of_minutes()
-        all_timeframe = self._list_all_timeframes()
-        min_timeframe, max_timeframe = min(all_timeframe), max(all_timeframe)
+        train_mins = self._calculate_number_of_minutes()
+        # all_timeframe = self._list_all_timeframes()
+        # min_timeframe, max_timeframe = min(all_timeframe), max(all_timeframe)
         for instr in self.instruments:
-            number_of_bars = mins // min_timeframe + 1 \
-                             + (50*max_timeframe//min_timeframe + 1)
+            number_of_bars = train_mins // instr.timeframe + 1
             instr.candles = np.zeros(number_of_bars, dtype=dt)
             instr.candle_ind = 0
 
 
     def _calculate_number_of_minutes(self):
-        td = (self.end_date - self.start_date)
-        minutes = 1440 * td.days + td.seconds // 60
-        return minutes
+        train_td = self.end_date - self.start_date
+        train_minutes = 1440 * train_td.days + train_td.seconds // 60
+        pre_td = self.start_date - self.pre_start_date
+        pre_minutes = 1440 * pre_td.days + pre_td.seconds // 60
+        return train_minutes+pre_minutes
 
 
     def _reinitialize_data(self):

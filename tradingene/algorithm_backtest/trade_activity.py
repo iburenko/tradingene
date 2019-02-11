@@ -823,6 +823,7 @@ class TradeActivity(Backtest):
                 return sign(pos.volume_used)
         raise ValueError("Position with id {} was not found!".format(pos_id))
 
+
     def on(self, type_=None, params=None, arguments=None, handler=None):
         """ Wait for specified event and call handler.
 
@@ -891,6 +892,7 @@ class TradeActivity(Backtest):
         else:
             raise ValueError("Unknown type of an event {}!".format(type_))
 
+
     def off(self, id):
         """ Disables event.
 
@@ -942,6 +944,10 @@ class TradeActivity(Backtest):
                 self.time_events.remove(time_event)
                 return
         warn("Event with id {} was not found!\n".format(id))
+
+
+    def isLastPositionClosed(self):
+        return self._is_last_pos_closed()
 
 
 ###############################################################################
