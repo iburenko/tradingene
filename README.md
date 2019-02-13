@@ -2,6 +2,8 @@
 
 ![image](tradingene/docs/img/logo_tg_large_1stroke.png)
 
+**See full documentation [here](https://package.tradingene.com/)**
+
 The Tradingene package turns your computer into a tool for developing and backtesting trading strategies you write in the Python programming language. Having been developed and backtested, these ones can be then easily adapted for live trading at the [Tradingene Platform](https://tradingene.com).
 
 ## Installation
