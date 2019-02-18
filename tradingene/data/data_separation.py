@@ -18,7 +18,7 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
         if inp[0] is None:
             continue
         out = calculate_output(data[i:i + lookforward + 1])
-        if out[0] is None:
+        if not isinstance(out, (int, float, str)) and out[0] is None:
             continue
         # SH
         if bootstrap > 0:  # If bootstrapping is required...
