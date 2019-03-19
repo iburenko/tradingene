@@ -3,6 +3,61 @@ from tradingene.algorithm_backtest.limits import LOOKBACK_PERIOD
 import numpy as np
 
 
+# indicators_by_keys = { 'ema1': ['ema', 3], 'sto1':['stochastic', 2, 4, 3], 'rsi1': ['rsi', 10, 'open'] }
+# raw_values = calc_indicators( indicators_by_keys )
+# values = ind.format_values_ti_df( indicators_by_keys, raw_values )
+def format_values_ti_df( indicators, raw_values ):
+    values = {}
+    max_value_index=LOOKBACK_PERIOD-1
+
+    for key in indicators:
+        params = indicators[key]
+        name = params[0]
+        if name == 'keltner':
+            values[key + ".basis"] = [None] * (max_value_index+1)
+            values[key + ".upper"] = [None] * (max_value_index+1)
+            values[key + ".lower"] = [None] * (max_value_index+1)
+            #values[key + ".atr"] = [None] * (max_value_index+1)
+        elif name == 'macd':
+            #values[key + ".slow"] = [None] * (max_value_index+1)
+            #values[key + ".fast"] = [None] * (max_value_index+1)
+            values[key + ".macd"] = [None] * (max_value_index+1)
+            values[key + ".signal"] = [None] * (max_value_index+1)
+            values[key + ".histogram"] = [None] * (max_value_index+1)
+        elif name == 'stochastic':
+            values[key + ".k"] = [None] * (max_value_index+1)
+            values[key + ".d"] = [None] * (max_value_index+1)
+        else:
+            values[key] = [None] * (max_value_index+1)
+
+    for key in indicators:
+        params = indicators[key]
+        name = params[0]
+        if name == 'keltner':
+            for i in range(len(raw_values[key].basis)):
+                values[key + ".basis"][i] = raw_values[key].basis[i]
+                values[key + ".upper"][i] = raw_values[key].upper[i]
+                values[key + ".lower"][i] = raw_values[key].lower[i]
+            #values[key + ".atr"] = raw_values[key].atr[i]
+        elif name == 'macd':
+            #values[key + ".slow"] = raw_values[key].slow[i]
+            #values[key + ".fast"] = raw_values[key].fast[i]
+            for i in range(len(raw_values[key].macd)):
+                values[key + ".macd"][i] = raw_values[key].macd[i]
+                values[key + ".signal"][i] = raw_values[key].signal[i]
+                values[key + ".histogram"][i] = raw_values[key].histogram[i]
+        elif name == 'stochastic':
+            for i in range(len(raw_values[key].k)):
+                values[key + ".k"][i] = raw_values[key].k[i]
+                values[key + ".d"][i] = raw_values[key].d[i]
+        else:
+            for i in range(len(raw_values[key])):
+                values[key][i] = raw_values[key][i]
+
+    return values
+# end of format_values_ti_df
+
+
 class Indicators:
     def __init__(self, _timeframeMin):
         self._timeframe = _timeframeMin
