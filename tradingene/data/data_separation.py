@@ -13,8 +13,8 @@ def separate_data(data, split, calculate_input, calculate_output, lookback,
     )  # For each output stores starting and ending indexes of candles involved.
     out_len = -1  # Stores the shape of output
     inp_len = -1  # Stores the shape of input
-    for i in range(lookback, len(data) - lookforward - 1):
-        inp = np.array([calculate_input(data[i - lookback:i + 1][::-1])])
+    for i in range(lookback+1, len(data) - lookforward - 1):
+        inp = np.array([calculate_input(data[i - lookback - 1:i][::-1])])
         if inp[0] is None:
             continue
         out = calculate_output(data[i:i + lookforward + 1])
