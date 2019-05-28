@@ -7,6 +7,7 @@ from keras.layers import Dense
 from keras.initializers import he_uniform
 import keras
 import numpy as np
+import pandas as pd
 
 
 num_features = lookback = 5
